@@ -70,6 +70,9 @@ export default buildConfig({
     ...plugins,
     vercelBlobStorage({
       enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),
+      // Keep prefix and _objectKey in the schema even when the token is unset,
+      // so local migrations match production (where the plugin is enabled).
+      alwaysInsertFields: true,
       collections: {
         media: true,
       },
