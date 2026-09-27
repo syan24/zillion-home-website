@@ -81,3 +81,12 @@ Before completing work:
 ```bash
 pnpm lint
 pnpm build
+```
+
+## Cursor Cloud specific instructions
+
+- Node `24.21.0` (`.nvmrc`) and pnpm `11.28.0` are required. The platform `node` on `PATH` may be older. Put `~/.nvm/versions/node/v24.21.0/bin` first, or run `nvm use`.
+- PostgreSQL 16 is installed on the VM. `policy-rc.d` blocks `service postgresql start`; use `sudo pg_ctlcluster 16 main start`. Database `zillion_home`, user `postgres`, password `postgres`.
+- If `.env` is missing, copy `.env.example`. `BLOB_READ_WRITE_TOKEN` is optional; without it, media stays on local disk.
+- Dev server: `pnpm dev` at `http://localhost:3000`. Admin: `http://localhost:3000/admin`. In development the Postgres adapter pushes schema changes, so a migrate step is not required for local work.
+- `pnpm test:int` needs Postgres and `.env`. `pnpm test:e2e` reuses a running dev server when one is already up (`reuseExistingServer`).
