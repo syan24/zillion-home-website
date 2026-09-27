@@ -90,3 +90,13 @@ pnpm build
 - If `.env` is missing, copy `.env.example`. `BLOB_READ_WRITE_TOKEN` is optional; without it, media stays on local disk.
 - Dev server: `pnpm dev` at `http://localhost:3000`. Admin: `http://localhost:3000/admin`. In development the Postgres adapter pushes schema changes, so a migrate step is not required for local work.
 - `pnpm test:int` needs Postgres and `.env`. `pnpm test:e2e` reuses a running dev server when one is already up (`reuseExistingServer`).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
