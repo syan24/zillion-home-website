@@ -2,14 +2,14 @@ import React, { Fragment } from 'react'
 
 import type { Page } from '@/payload-types'
 
-import { ArchiveBlock } from '@/blocks/ArchiveBlock/Component'
 import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 
-const blockComponents = {
-  archive: ArchiveBlock,
+type BlockType = Page['layout'][0]['blockType']
+
+const blockComponents: Record<BlockType, React.ComponentType<any>> = {
   content: ContentBlock,
   cta: CallToActionBlock,
   formBlock: FormBlock,
@@ -28,18 +28,14 @@ export const RenderBlocks: React.FC<{
       <Fragment>
         {blocks.map((block, index) => {
           const { blockType } = block
+          const Block = blockComponents[blockType]
 
-          if (blockType && blockType in blockComponents) {
-            const Block = blockComponents[blockType]
-
-            if (Block) {
-              return (
-                <div className="my-16" key={index}>
-                  {/* @ts-expect-error there may be some mismatch between the expected types here */}
-                  <Block {...block} disableInnerContainer />
-                </div>
-              )
-            }
+          if (Block) {
+            return (
+              <div className="my-16" key={index}>
+                <Block {...block} disableInnerContainer />
+              </div>
+            )
           }
           return null
         })}
