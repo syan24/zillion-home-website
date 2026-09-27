@@ -93,6 +93,46 @@ pnpm build
 
 <!-- BEGIN:nextjs-agent-rules -->
 
+Cloud Agents must treat this repository as a development environment.
+
+### Safety
+
+- Never use, modify, migrate, seed, or delete production data.
+- Never connect to the production Neon database.
+- Never use production Vercel Blob credentials.
+- Never deploy directly to production.
+- Never push directly to `main`.
+- Never modify infrastructure or environment configuration unless the task explicitly requires it.
+- Never invent product requirements. Follow the documentation in `/docs`.
+
+### Workflow
+
+1. Read `AGENTS.md` and relevant `/docs` files before making changes.
+2. Inspect the existing implementation before proposing changes.
+3. Work on a dedicated feature branch.
+4. Keep changes limited to the requested task.
+5. Run relevant validation before finishing:
+   - `pnpm lint`
+   - `pnpm build`
+   - relevant tests
+6. Report:
+   - files changed
+   - implementation decisions
+   - assumptions
+   - tests performed
+   - known limitations
+7. Create a PR for review rather than merging directly.
+
+### Architecture
+
+- Use the existing Next.js + Payload architecture.
+- Use Payload-native functionality where practical.
+- Do not introduce Prisma.
+- Do not manually edit `src/payload-types.ts`.
+- Do not implement Phase 2 requirements unless explicitly requested.
+- Follow `/docs/02-product-specification.md` as the primary product specification.
+- Follow `/docs/08-ux-ui-design-brief.md` and the approved v0 reference for public UI.
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
