@@ -5,12 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef } from 'react'
 
 type UseClickableCardType<T extends HTMLElement> = {
-  card: {
-    ref: RefObject<T | null>
-  }
-  link: {
-    ref: RefObject<HTMLAnchorElement | null>
-  }
+  card: RefObject<T | null>
+  link: RefObject<HTMLAnchorElement | null>
 }
 
 interface Props {
@@ -96,12 +92,8 @@ function useClickableCard<T extends HTMLElement>({
   }, [card, link, router])
 
   return {
-    card: {
-      ref: card,
-    },
-    link: {
-      ref: link,
-    },
+    card,
+    link,
   }
 }
 
