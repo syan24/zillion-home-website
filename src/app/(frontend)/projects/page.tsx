@@ -82,7 +82,7 @@ const styleFilters = ['All Styles', 'Modern', 'Minimalist', 'Contemporary', 'Cla
 
 export default function ProjectsPage() {
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen scroll-smooth">
       {/* Hero Section */}
       <section className="relative bg-background-warm py-16 lg:py-24">
         <div className="container">
@@ -111,32 +111,42 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          {/* Dual Entry Toggle */}
-          <div className="flex justify-center gap-8 mt-12 pt-8 border-t border-border">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-background flex items-center justify-center">
+          {/* Anchor Tab Navigation */}
+          <nav className="flex justify-center gap-4 mt-12 pt-8 border-t border-border">
+            <a
+              href="#by-project"
+              className="flex items-center gap-3 px-6 py-3 rounded-full bg-background border border-border hover:border-accent hover:bg-background-section transition-all group"
+            >
+              <span className="w-10 h-10 rounded-full bg-background-section group-hover:bg-accent/10 flex items-center justify-center transition-colors">
                 <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
+              </span>
+              <div className="text-left">
+                <p className="font-medium text-sm">By Project</p>
+                <p className="text-xs text-muted-foreground">按项目类型浏览</p>
               </div>
-              <p className="font-medium">By Project</p>
-              <p className="text-xs text-muted-foreground">按项目类型浏览</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-background flex items-center justify-center">
+            </a>
+            <a
+              href="#by-room"
+              className="flex items-center gap-3 px-6 py-3 rounded-full bg-background border border-border hover:border-accent hover:bg-background-section transition-all group"
+            >
+              <span className="w-10 h-10 rounded-full bg-background-section group-hover:bg-accent/10 flex items-center justify-center transition-colors">
                 <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                 </svg>
+              </span>
+              <div className="text-left">
+                <p className="font-medium text-sm">By Room</p>
+                <p className="text-xs text-muted-foreground">按空间浏览</p>
               </div>
-              <p className="font-medium">By Room</p>
-              <p className="text-xs text-muted-foreground">按空间浏览</p>
-            </div>
-          </div>
+            </a>
+          </nav>
         </div>
       </section>
 
       {/* By Project Section */}
-      <section className="bg-background py-16 lg:py-24">
+      <section id="by-project" className="bg-background py-16 lg:py-24 scroll-mt-24">
         <div className="container">
           <div className="mb-10">
             <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2">
@@ -176,7 +186,7 @@ export default function ProjectsPage() {
       </section>
 
       {/* By Room Section */}
-      <section className="bg-background-warm py-16 lg:py-24">
+      <section id="by-room" className="bg-background-warm py-16 lg:py-24 scroll-mt-24">
         <div className="container">
           <div className="mb-10">
             <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2">
@@ -185,16 +195,18 @@ export default function ProjectsPage() {
             <p className="text-sm text-muted-foreground">按空间浏览，从不同生活场景中寻找灵感</p>
           </div>
 
-          {/* Style Filter Pills (placeholder) */}
-          <div className="flex flex-wrap gap-2 mb-8">
+          {/* Style Filter Tabs */}
+          <div className="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Style filters">
             {styleFilters.map((style, index) => (
               <button
                 key={style}
                 type="button"
-                className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                role="tab"
+                aria-selected={index === 0}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium border transition-all ${
                   index === 0
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-background text-foreground hover:bg-background-section'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background text-foreground border-border hover:border-foreground/30 hover:bg-background-section'
                 }`}
               >
                 {style}
