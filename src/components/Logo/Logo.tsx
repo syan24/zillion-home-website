@@ -1,29 +1,36 @@
-import clsx from 'clsx'
+import { cn } from '@/utilities/ui'
 import React from 'react'
 
 interface Props {
   className?: string
   loading?: 'lazy' | 'eager'
   priority?: 'auto' | 'high' | 'low'
+  variant?: 'dark' | 'light'
 }
 
 export const Logo = (props: Props) => {
-  const { loading: loadingFromProps, priority: priorityFromProps, className } = props
+  const { className, variant = 'dark' } = props
 
-  const loading = loadingFromProps || 'lazy'
-  const priority = priorityFromProps || 'low'
+  const textColor = variant === 'light' ? 'text-white' : 'text-foreground'
 
   return (
-    /* eslint-disable @next/next/no-img-element */
-    <img
-      alt="Payload Logo"
-      width={193}
-      height={34}
-      loading={loading}
-      fetchPriority={priority}
-      decoding="async"
-      className={clsx('max-w-[9.375rem] w-full h-[34px]', className)}
-      src="https://raw.githubusercontent.com/payloadcms/payload/3.x/packages/ui/src/assets/payload-logo-light.svg"
-    />
+    <div className={cn('flex flex-col', className)}>
+      <span
+        className={cn(
+          'font-serif text-xl tracking-[0.2em] font-medium uppercase',
+          textColor,
+        )}
+      >
+        Zillion Home
+      </span>
+      <span
+        className={cn(
+          'text-[10px] tracking-[0.15em] uppercase',
+          variant === 'light' ? 'text-white/70' : 'text-muted-foreground',
+        )}
+      >
+        Build Better Living
+      </span>
+    </div>
   )
 }
