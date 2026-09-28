@@ -24,6 +24,10 @@ export const hero: Field = {
           value: 'none',
         },
         {
+          label: 'Builder (Homepage)',
+          value: 'builder',
+        },
+        {
           label: 'High Impact',
           value: 'highImpact',
         },
