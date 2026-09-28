@@ -196,14 +196,14 @@ export default function AboutPage() {
               provide guidance and help you take the next steps.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button asChild size="lg" className="bg-accent hover:bg-accent-hover text-foreground">
-                <Link href="/enquiry">Start an Enquiry</Link>
+              <Button asChild variant="enquiry" size="lg">
+                <Link href="/enquiry">Start an Enquiry →</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 size="lg"
-                className="border-dark-foreground/30 text-dark-foreground hover:bg-dark-foreground/10"
+                className="border-dark-foreground/30 text-dark-foreground hover:bg-dark-foreground/10 hover:text-dark-foreground"
               >
                 <Link href="/services">View Our Services</Link>
               </Button>

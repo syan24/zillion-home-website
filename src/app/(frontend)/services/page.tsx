@@ -216,8 +216,8 @@ export default function ServicesPage() {
                 This means better coordination, consistent quality, and a single point of
                 accountability for your entire project.
               </p>
-              <Button asChild className="bg-accent hover:bg-accent-hover text-foreground">
-                <Link href="/enquiry">Enquire about Custom Joinery</Link>
+              <Button asChild variant="enquiry">
+                <Link href="/enquiry">Enquire about Custom Joinery →</Link>
               </Button>
             </div>
 
@@ -240,7 +240,7 @@ export default function ServicesPage() {
               Tell us about your requirements and we&apos;ll help you understand how we can bring
               your vision to life.
             </p>
-            <Button asChild size="lg">
+            <Button asChild variant="enquiry" size="lg">
               <Link href="/enquiry">Start an Enquiry →</Link>
             </Button>
           </div>

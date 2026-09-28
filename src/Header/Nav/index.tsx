@@ -16,10 +16,15 @@ interface HeaderNavProps {
 
 const defaultNavItems = [
   { href: '/', label: 'Home' },
+  { href: '/services#residential', label: 'Residential' },
+  { href: '/services#commercial', label: 'Commercial' },
+  { href: '/services#joinery', label: 'Custom Joinery' },
+  { href: '/services#interior', label: 'Interior Fit-out' },
+]
+
+const secondaryNavItems = [
   { href: '/projects', label: 'Projects' },
-  { href: '/about', label: 'About' },
-  { href: '/services', label: 'Services' },
-  { href: '/contact', label: 'Contact' },
+  { href: '/about', label: 'About Us' },
 ]
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) => {
@@ -35,8 +40,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) =>
         'text-sm font-medium',
       )}
     >
-      {/* Primary Navigation */}
-      <div className={cn(mobile ? 'flex flex-col gap-3' : 'flex items-center gap-6')}>
+      {/* Primary Navigation - Services */}
+      <div className={cn(mobile ? 'flex flex-col gap-3' : 'flex items-center gap-5')}>
         {navItems
           ? navItems.map(({ link }, i) => (
               <CMSLink
@@ -56,6 +61,24 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) =>
               </Link>
             ))}
       </div>
+
+      {/* Secondary Navigation */}
+      {!navItems && (
+        <div className={cn(
+          mobile ? 'flex flex-col gap-3 pt-3 border-t border-border' : 'flex items-center gap-5',
+          'text-muted-foreground'
+        )}>
+          {secondaryNavItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="hover:text-foreground transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Language Toggle & CTA */}
       <div className={cn(mobile ? 'flex flex-col gap-3 pt-3 border-t border-border' : 'flex items-center gap-4')}>
@@ -90,9 +113,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) =>
           </button>
         </div>
 
-        {/* Enquiry CTA */}
-        <Button asChild className={cn(mobile && 'w-full')}>
-          <Link href="/enquiry">Start an Enquiry</Link>
+        {/* Enquiry CTA - Marketing beige variant */}
+        <Button asChild variant="enquiry" className={cn(mobile && 'w-full')}>
+          <Link href="/enquiry">Start an Enquiry →</Link>
         </Button>
       </div>
     </nav>

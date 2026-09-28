@@ -40,12 +40,7 @@ const processSteps = [
     title: 'Consultation',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
     ),
   },
@@ -54,12 +49,7 @@ const processSteps = [
     title: 'Planning & Coordination',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
   },
@@ -68,12 +58,7 @@ const processSteps = [
     title: 'Construction / Fit-out',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
       </svg>
     ),
   },
@@ -82,12 +67,7 @@ const processSteps = [
     title: 'Joinery & Finishes',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
       </svg>
     ),
   },
@@ -96,23 +76,53 @@ const processSteps = [
     title: 'Handover',
     icon: (
       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={1.5}
-          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-        />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
       </svg>
     ),
   },
 ]
 
 const serviceCategories = [
-  { title: 'Residential Construction', icon: '🏠' },
-  { title: 'Renovation', icon: '🔨' },
-  { title: 'Commercial Fit-out', icon: '🏢' },
-  { title: 'Custom Joinery', icon: '🪑' },
-  { title: 'Interior Fit-out & Delivery', icon: '✨' },
+  {
+    title: 'Residential Construction',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Renovation',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Commercial Fit-out',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Custom Joinery',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Interior Fit-out & Delivery',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
 ]
 
 const trustSignals = [
@@ -143,48 +153,46 @@ const servicesOverview = [
 export function FallbackHome() {
   return (
     <main>
-      {/* Hero Section */}
-      <section className="relative bg-background-warm">
-        <div className="container py-16 lg:py-24">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-            {/* Left: Text Content */}
-            <div className="order-2 lg:order-1">
-              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-6">
-                Residential / Commercial / Joinery
-              </p>
-              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-6">
-                Built from the
-                <br />
-                ground up.
-              </h1>
-              <p className="text-lg text-foreground-soft max-w-md mb-8">
-                Residential construction, renovation, commercial fit-out and custom joinery — built
-                with quality, precision and care.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Button asChild size="lg">
-                  <Link href="/enquiry">Start an Enquiry</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="/projects">View Projects</Link>
-                </Button>
-              </div>
-            </div>
+      {/* Hero Section - Full Bleed with Overlay */}
+      <section className="relative min-h-[80vh] lg:min-h-[90vh] flex items-center">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <PlaceholderImage
+            src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80"
+            alt="Modern residential architecture"
+            className="h-full w-full"
+            aspectRatio="auto"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-transparent" />
+        </div>
 
-            {/* Right: Hero Image */}
-            <div className="relative order-1 lg:order-2">
-              <PlaceholderImage
-                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80"
-                alt="Modern residential architecture"
-                aspectRatio="4/3"
-                className="lg:aspect-auto lg:min-h-[500px] rounded"
-              />
-              <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur px-4 py-2 rounded text-xs">
-                <p className="font-medium uppercase tracking-wider text-accent">Quality</p>
-                <p className="font-medium uppercase tracking-wider">Construction</p>
-                <p className="text-muted-foreground uppercase tracking-wider">Lasting Value</p>
-              </div>
-            </div>
+        {/* Content */}
+        <div className="container relative z-10 py-16 lg:py-24">
+          <div className="max-w-2xl">
+            <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-6">
+              Residential / Commercial / Joinery / Interior Fit-out
+            </p>
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-6">
+              Built from the
+              <br />
+              ground up.
+            </h1>
+            <p className="text-lg text-foreground-soft max-w-md mb-8">
+              Residential construction, renovation, commercial fit-out and custom joinery — built
+              with quality, precision and care.
+            </p>
+            <Button asChild variant="enquiry" size="lg">
+              <Link href="/enquiry">Start an Enquiry →</Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Side Lockup */}
+        <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col items-end text-right">
+          <div className="bg-background/90 backdrop-blur px-4 py-3 rounded">
+            <p className="text-xs font-medium uppercase tracking-[0.15em] text-accent">Quality</p>
+            <p className="text-xs font-medium uppercase tracking-[0.15em]">Construction</p>
+            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">Lasting Value</p>
           </div>
         </div>
       </section>
@@ -206,20 +214,24 @@ export function FallbackHome() {
                 href={service.href}
                 className="group block bg-background-warm rounded overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <PlaceholderImage
-                  src={service.image}
-                  alt={service.title}
-                  aspectRatio="4/3"
-                  className="group-hover:scale-105 transition-transform duration-500"
-                />
+                <div className="overflow-hidden">
+                  <PlaceholderImage
+                    src={service.image}
+                    alt={service.title}
+                    aspectRatio="4/3"
+                    className="group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
                 <div className="p-5">
-                  <h3 className="font-medium mb-1 group-hover:text-accent transition-colors">
+                  <h3 className="font-serif text-lg mb-1 group-hover:text-accent transition-colors">
                     {service.title}
                   </h3>
                   <p className="text-xs text-muted-foreground mb-2">{service.titleZh}</p>
                   <p className="text-sm text-foreground-soft">{service.description}</p>
-                  <span className="inline-flex items-center text-sm mt-3 text-accent group-hover:translate-x-1 transition-transform">
-                    Learn more →
+                  <span className="inline-flex items-center justify-center w-8 h-8 mt-4 rounded-full border border-foreground/20 text-foreground group-hover:bg-accent group-hover:border-accent group-hover:text-white transition-all">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </span>
                 </div>
               </Link>
@@ -361,7 +373,7 @@ export function FallbackHome() {
             <div className="hidden md:flex items-center gap-8">
               {serviceCategories.map((category) => (
                 <div key={category.title} className="text-center">
-                  <div className="text-2xl mb-1">{category.icon}</div>
+                  <div className="flex justify-center mb-2 text-accent">{category.icon}</div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                     {category.title}
                   </p>
@@ -383,8 +395,8 @@ export function FallbackHome() {
               Tell us about your vision and we&apos;ll help bring it to life with quality
               construction, precision joinery and professional project delivery.
             </p>
-            <Button asChild size="lg" className="bg-accent hover:bg-accent-hover text-foreground">
-              <Link href="/enquiry">Start an Enquiry</Link>
+            <Button asChild variant="enquiry" size="lg">
+              <Link href="/enquiry">Start an Enquiry →</Link>
             </Button>
           </div>
         </div>
