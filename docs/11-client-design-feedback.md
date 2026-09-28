@@ -79,3 +79,32 @@ Replace navy (`#1b2f4b`) with:
 | `--accent-gold` | `#b28a68` | Gold highlights |
 
 Navy stays on the separate plumbing/shop site only.
+
+---
+
+## Slice B Implementation Notes (2026-09-28)
+
+### Pages Implemented
+
+| Route | Status | Description |
+|-------|--------|-------------|
+| `/` | Complete | FallbackHome with full sections matching mockups |
+| `/about` | Complete | Short builder-focused introduction |
+| `/services` | Complete | Four core services with detail sections |
+| `/enquiry` | Complete | Split layout form matching mockup 02 |
+| `/projects` | Stub | Coming soon with category previews |
+| `/contact` | Complete | Routes users to enquiry |
+
+### Placeholder Image Strategy
+
+- Uses public Unsplash URLs for warm architectural photography
+- `PlaceholderImage` component provides fallback UI when no image provided
+- Components wired to accept CMS Media replacement via `src` prop
+- No fake brand photos used — all clearly architectural stock or labeled placeholders
+
+### Remaining Work (Out of Scope for Slice B)
+
+- Projects dual entry (By Project / By Room) — Slice C
+- File upload functionality in enquiry form — stubbed
+- Enquiries Payload collection — form shows success state only
+- SWMS quiz/QR/signature — Slice D
