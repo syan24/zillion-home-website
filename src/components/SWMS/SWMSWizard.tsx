@@ -4,7 +4,6 @@ import { submitSWMSAcknowledgement } from '@/app/(swms)/swms/actions'
 import { SignaturePad } from '@/components/SWMS/SignaturePad'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { countQuestions, questionKey, type SwmsQuestionSnapshot } from '@/lib/swms/content'
 import type { WorkerSWMS } from '@/lib/swms/loadWorkerSWMS'
 import { useRouter } from 'next/navigation'
@@ -413,13 +412,13 @@ function Field({
   children: React.ReactNode
 }) {
   return (
-    <div className="space-y-2">
-      <Label>
+    <label className="block space-y-2">
+      <span className="text-sm font-medium">
         {label}
         {required ? <span className="text-destructive"> *</span> : null}
-      </Label>
+      </span>
       {children}
-    </div>
+    </label>
   )
 }
 
