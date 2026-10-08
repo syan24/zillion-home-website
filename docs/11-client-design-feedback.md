@@ -134,4 +134,28 @@ Primary nav includes service-oriented links:
 - Project detail pages (`/projects/residential`, `/projects/room/kitchen`, etc.)
 - File upload functionality in enquiry form — stubbed
 - Enquiries Payload collection — form shows success state only
-- SWMS quiz/QR/signature — Slice D
+- SWMS quiz/QR/signature — implemented in Slice D (see below)
+
+---
+
+## Slice D Implementation Notes (2026-10-08)
+
+Visual source: `docs/design-feedback/04-swms-project-qr-signature.png`.
+
+### Decisions
+
+- Worker routes live at `/swms` (project list) and `/swms/[token]` (QR entry). The token is a random value on the Project SWMS, never a database id.
+- The list only shows projects that have an **active** SWMS. Search filters that list. There is no free-typed address.
+- Flow: confirm project name and address → one question at a time → worker details → signature → submit. Submit uses the charcoal button. Step navigation uses the beige enquiry button.
+- Worker pages use their own layout: logo, step progress, and a short footer. They do not use the marketing header or footer.
+- Admin path is Payload: create a template, create a Project SWMS (sections copy from the template when empty), set status to **Active**. Activation writes an immutable `swms-versions` snapshot. The Project SWMS edit view shows the worker URL and a QR image.
+- Editing an active Project SWMS publishes a new version and supersedes the previous one. The QR token stays the same. Old signatures keep their original version.
+- A repeated submit of the same in-progress attempt returns the original acknowledgement. Reloading the success page does not create another record. Another worker on the same phone can still sign.
+- Seed with `pnpm seed:swms`: Rosebery Residence, Linfield House, and Marrickville Duplex, each with an active placeholder SWMS.
+- Questions are labelled placeholders, not legal SWMS text. CSV/PDF export, email, and re-sign notifications are not in this slice.
+
+### How to demo
+
+1. `pnpm seed:swms`
+2. Open `/swms` and choose a project, or open the token URL printed by the seed.
+3. In admin, open Project SWMS to copy the link or print the QR. Signed records are listed under SWMS Acknowledgements.

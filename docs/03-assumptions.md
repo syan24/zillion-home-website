@@ -51,6 +51,30 @@ Before final SWMS implementation, obtain either:
 ### B7. Signature format
 **[ASSUMPTION]** Browser-drawn signature captured on mobile is acceptable unless the client requires another signature method.
 
+### B8. Placeholder SWMS content
+**[ASSUMPTION]** Slice D ships a clearly labelled placeholder template. It is not the client’s legal SWMS. Question wording, hazards, and controls must be replaced after a real template or WHS review (see B6).
+
+### B9. Answers do not block signing
+**[ASSUMPTION]** Required questions must be answered. A “No” or “Not applicable” answer is stored for review and does not stop submission. Phase 1 treats the flow as an acknowledgement, not a pass/fail exam.
+
+### B10. Worker fields
+**[ASSUMPTION]** Full name, acknowledgement, and signature are required. Company, phone, and trade/role are optional until the client confirms the register fields.
+
+### B11. Stable QR, new version
+**[ASSUMPTION]** The public token on a Project SWMS does not change after it is created, so a printed QR keeps working. Setting the Project SWMS to Active publishes an immutable version. Later edits while Active publish another version and mark the previous one superseded. Signatures remain linked to the version that was current at signing. The QR then resolves to the new active version. Notifying workers to sign again stays deferred (B3).
+
+### B12. Project address on the worker flow
+**[ASSUMPTION]** Workers never type an address. They scan the project QR or choose an admin-created project that has an active SWMS. The worker flow always shows that project’s name and address. `showAddressPublicly` is reserved for the future public portfolio and does not hide the address inside SWMS.
+
+### B13. SWMS chrome
+**[ASSUMPTION]** Worker routes use a focused header (logo and progress) and do not render the marketing header, footer, or admin bar.
+
+### B14. Signature storage
+**[ASSUMPTION]** The signature is stored as a PNG data URL on the acknowledgement record, not in the public Media collection. A private file upload can replace this later if file size or retention requires it.
+
+### B15. Projects collection
+**[ASSUMPTION]** Slice D adds a minimal `projects` collection (name, address, type, status) so SWMS can bind to a project. The portfolio slice should extend this collection rather than create a second project entity.
+
 ## C. Project portfolio assumptions
 
 ### C1. Project vs image metadata

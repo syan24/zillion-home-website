@@ -70,6 +70,11 @@ export interface Config {
     pages: Page;
     media: Media;
     users: User;
+    projects: Project;
+    'swms-templates': SwmsTemplate;
+    'project-swms': ProjectSwm;
+    'swms-versions': SwmsVersion;
+    'swms-acknowledgements': SwmsAcknowledgement;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -89,6 +94,11 @@ export interface Config {
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    'swms-templates': SwmsTemplatesSelect<false> | SwmsTemplatesSelect<true>;
+    'project-swms': ProjectSwmsSelect<false> | ProjectSwmsSelect<true>;
+    'swms-versions': SwmsVersionsSelect<false> | SwmsVersionsSelect<true>;
+    'swms-acknowledgements': SwmsAcknowledgementsSelect<false> | SwmsAcknowledgementsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -153,7 +163,7 @@ export interface Page {
   id: number;
   title: string;
   hero: {
-    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
+    type: 'none' | 'builder' | 'highImpact' | 'mediumImpact' | 'lowImpact';
     richText?: {
       root: {
         type: string;
@@ -647,6 +657,209 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Minimal project records used to bind SWMS. The portfolio slice should extend this collection.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects".
+ */
+export interface Project {
+  id: number;
+  title: string;
+  /**
+   * Full site address. Workers see this on the SWMS flow. It is not a public marketing field.
+   */
+  address: string;
+  suburb?: string | null;
+  type: 'residential' | 'commercial';
+  projectStatus: 'active' | 'completed' | 'on-hold';
+  /**
+   * Reserved for the public portfolio. The SWMS worker flow always shows the address for the bound project.
+   */
+  showAddressPublicly?: boolean | null;
+  summary?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Reusable SWMS source content. Copy a template onto a Project SWMS, then adjust it.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-templates".
+ */
+export interface SwmsTemplate {
+  id: number;
+  name: string;
+  description?: string | null;
+  status: 'active' | 'archived';
+  /**
+   * Questions and notes workers will review after this template is applied.
+   */
+  sections?:
+    | {
+        title: string;
+        content?: string | null;
+        questions?:
+          | {
+              question: string;
+              type: 'yes-no' | 'yes-no-na' | 'acknowledgement';
+              required?: boolean | null;
+              /**
+               * Stored with the question for review. Signing is not blocked when a worker answers differently.
+               */
+              correctAnswer?: ('yes' | 'no' | 'any') | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  acknowledgementText: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Save a draft, then set status to Active. Activation publishes an immutable version and keeps the same worker link.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-swms".
+ */
+export interface ProjectSwm {
+  id: number;
+  /**
+   * Shown to workers, for example “Construction Works SWMS”.
+   */
+  title: string;
+  project: number | Project;
+  /**
+   * If sections are empty on create, they are copied from this template.
+   */
+  sourceTemplate?: (number | null) | SwmsTemplate;
+  /**
+   * Workers can open the QR link only while status is Active.
+   */
+  status: 'draft' | 'active' | 'superseded' | 'archived';
+  /**
+   * Unguessable token used in the worker URL. It does not change after the first save.
+   */
+  publicToken?: string | null;
+  /**
+   * Published version workers sign. Set automatically when the SWMS is active.
+   */
+  currentVersion?: (number | null) | SwmsVersion;
+  activatedAt?: string | null;
+  /**
+   * Project-specific content. Changing this while the SWMS is Active publishes a new version. Signed records stay on the previous version.
+   */
+  sections?:
+    | {
+        title: string;
+        content?: string | null;
+        questions?:
+          | {
+              question: string;
+              type: 'yes-no' | 'yes-no-na' | 'acknowledgement';
+              required?: boolean | null;
+              /**
+               * Stored with the question for review. Signing is not blocked when a worker answers differently.
+               */
+              correctAnswer?: ('yes' | 'no' | 'any') | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  acknowledgementText: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Immutable snapshots. Create a new version by editing and saving the active Project SWMS.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-versions".
+ */
+export interface SwmsVersion {
+  id: number;
+  /**
+   * Example: v1.0
+   */
+  versionLabel: string;
+  projectSwms: number | ProjectSwm;
+  project: number | Project;
+  status: 'draft' | 'published' | 'superseded';
+  /**
+   * Snapshot of the sections a worker signed. Published versions cannot be edited.
+   */
+  sections?:
+    | {
+        title: string;
+        content?: string | null;
+        questions?:
+          | {
+              question: string;
+              type: 'yes-no' | 'yes-no-na' | 'acknowledgement';
+              required?: boolean | null;
+              /**
+               * Stored with the question for review. Signing is not blocked when a worker answers differently.
+               */
+              correctAnswer?: ('yes' | 'no' | 'any') | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  acknowledgementText: string;
+  publishedAt?: string | null;
+  supersededAt?: string | null;
+  publishedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Worker signatures. Records are append-only and point at the exact SWMS version signed.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-acknowledgements".
+ */
+export interface SwmsAcknowledgement {
+  id: number;
+  submissionRef?: string | null;
+  /**
+   * Idempotency key from the worker form. A repeated submit returns the original record.
+   */
+  clientSubmissionId: string;
+  project: number | Project;
+  projectSwms: number | ProjectSwm;
+  /**
+   * Exact version the worker signed.
+   */
+  swmsVersion: number | SwmsVersion;
+  workerName: string;
+  workerCompany?: string | null;
+  workerPhone?: string | null;
+  workerTrade?: string | null;
+  responses:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  acknowledgementAccepted: boolean;
+  signature: string;
+  signedAt: string;
+  metadata?: {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -811,6 +1024,26 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'users';
         value: number | User;
+      } | null)
+    | ({
+        relationTo: 'projects';
+        value: number | Project;
+      } | null)
+    | ({
+        relationTo: 'swms-templates';
+        value: number | SwmsTemplate;
+      } | null)
+    | ({
+        relationTo: 'project-swms';
+        value: number | ProjectSwm;
+      } | null)
+    | ({
+        relationTo: 'swms-versions';
+        value: number | SwmsVersion;
+      } | null)
+    | ({
+        relationTo: 'swms-acknowledgements';
+        value: number | SwmsAcknowledgement;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1109,6 +1342,140 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects_select".
+ */
+export interface ProjectsSelect<T extends boolean = true> {
+  title?: T;
+  address?: T;
+  suburb?: T;
+  type?: T;
+  projectStatus?: T;
+  showAddressPublicly?: T;
+  summary?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-templates_select".
+ */
+export interface SwmsTemplatesSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  status?: T;
+  sections?:
+    | T
+    | {
+        title?: T;
+        content?: T;
+        questions?:
+          | T
+          | {
+              question?: T;
+              type?: T;
+              required?: T;
+              correctAnswer?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  acknowledgementText?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-swms_select".
+ */
+export interface ProjectSwmsSelect<T extends boolean = true> {
+  title?: T;
+  project?: T;
+  sourceTemplate?: T;
+  status?: T;
+  publicToken?: T;
+  currentVersion?: T;
+  activatedAt?: T;
+  sections?:
+    | T
+    | {
+        title?: T;
+        content?: T;
+        questions?:
+          | T
+          | {
+              question?: T;
+              type?: T;
+              required?: T;
+              correctAnswer?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  acknowledgementText?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-versions_select".
+ */
+export interface SwmsVersionsSelect<T extends boolean = true> {
+  versionLabel?: T;
+  projectSwms?: T;
+  project?: T;
+  status?: T;
+  sections?:
+    | T
+    | {
+        title?: T;
+        content?: T;
+        questions?:
+          | T
+          | {
+              question?: T;
+              type?: T;
+              required?: T;
+              correctAnswer?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  acknowledgementText?: T;
+  publishedAt?: T;
+  supersededAt?: T;
+  publishedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-acknowledgements_select".
+ */
+export interface SwmsAcknowledgementsSelect<T extends boolean = true> {
+  submissionRef?: T;
+  clientSubmissionId?: T;
+  project?: T;
+  projectSwms?: T;
+  swmsVersion?: T;
+  workerName?: T;
+  workerCompany?: T;
+  workerPhone?: T;
+  workerTrade?: T;
+  responses?: T;
+  acknowledgementAccepted?: T;
+  signature?: T;
+  signedAt?: T;
+  metadata?:
+    | T
+    | {
+        ipAddress?: T;
+        userAgent?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

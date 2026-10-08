@@ -7,6 +7,11 @@ import { fileURLToPath } from 'url'
 
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
+import { ProjectSWMS } from './collections/ProjectSWMS'
+import { Projects } from './collections/Projects'
+import { SWMSAcknowledgements } from './collections/SWMSAcknowledgements'
+import { SWMSTemplates } from './collections/SWMSTemplates'
+import { SWMSVersions } from './collections/SWMSVersions'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
@@ -61,7 +66,16 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  collections: [Pages, Media, Users],
+  collections: [
+    Pages,
+    Media,
+    Users,
+    Projects,
+    SWMSTemplates,
+    ProjectSWMS,
+    SWMSVersions,
+    SWMSAcknowledgements,
+  ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
   plugins: [
