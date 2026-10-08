@@ -17,9 +17,27 @@ export const Header: GlobalConfig = {
           appearances: false,
         }),
       ],
+      maxRows: 8,
+      admin: {
+        initCollapsed: true,
+        components: {
+          RowLabel: '@/Header/RowLabel#RowLabel',
+        },
+      },
+    },
+    {
+      name: 'secondaryNavItems',
+      type: 'array',
+      labels: { singular: 'Secondary nav item', plural: 'Secondary nav items' },
+      fields: [
+        link({
+          appearances: false,
+        }),
+      ],
       maxRows: 6,
       admin: {
         initCollapsed: true,
+        description: 'Shown in the quieter group beside the primary navigation. Projects and About live here.',
         components: {
           RowLabel: '@/Header/RowLabel#RowLabel',
         },

@@ -10,8 +10,41 @@ export const Footer: GlobalConfig = {
   },
   fields: [
     {
+      name: 'blurb',
+      type: 'textarea',
+      admin: {
+        description: 'Short company description under the logo.',
+      },
+    },
+    {
+      name: 'tagline',
+      type: 'text',
+    },
+    {
+      name: 'location',
+      type: 'text',
+    },
+    {
+      name: 'serviceLinks',
+      type: 'array',
+      labels: { singular: 'Service link', plural: 'Service links' },
+      maxRows: 8,
+      fields: [
+        link({
+          appearances: false,
+        }),
+      ],
+      admin: {
+        initCollapsed: true,
+        components: {
+          RowLabel: '@/Footer/RowLabel#RowLabel',
+        },
+      },
+    },
+    {
       name: 'navItems',
       type: 'array',
+      label: 'Company links',
       fields: [
         link({
           appearances: false,

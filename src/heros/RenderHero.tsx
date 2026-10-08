@@ -7,7 +7,7 @@ import { LowImpactHero } from '@/heros/LowImpact'
 import { MediumImpactHero } from '@/heros/MediumImpact'
 import { BuilderHero } from '@/heros/BuilderHero'
 
-const heroes = {
+const heroes: Record<string, React.ComponentType<any>> = {
   builder: BuilderHero,
   highImpact: HighImpactHero,
   lowImpact: LowImpactHero,
