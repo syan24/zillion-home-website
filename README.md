@@ -23,6 +23,16 @@ Core features:
 - [Jobs and Scheduled Publishing](#jobs-and-scheduled-publish)
 - [Website](#website)
 
+## Zillion Home
+
+Stage 2 marketing pages (Home, About, Services) are edited in Payload admin. Enquiry and Projects are still code stubs. Demo data, including SWMS, is seeded with:
+
+```bash
+pnpm seed:demo
+```
+
+On Vercel Preview and Production, set `SEED_DEMO=true`. The build runs `pnpm payload migrate`, then `pnpm seed:demo:deploy`, then `pnpm build`. Details, including how to turn the seed off, are in [`docs/12-stage-2-cms-and-demo-seed.md`](docs/12-stage-2-cms-and-demo-seed.md).
+
 ## Quick Start
 
 To spin up this example locally, follow these steps:

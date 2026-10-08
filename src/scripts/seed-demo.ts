@@ -1,11 +1,11 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import { seedSwms } from '@/seed/swms'
+import { seedDemo } from '@/seed/demo'
 
 try {
   const payload = await getPayload({ config })
-  await seedSwms(payload)
+  await seedDemo(payload)
   process.exit(0)
 } catch (error) {
   console.error(error)

@@ -4,14 +4,15 @@ import { PayloadRedirects } from '@/components/PayloadRedirects'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { draftMode } from 'next/headers'
-import React, { cache } from 'react'
+import React from 'react'
 
-import { RenderBlocks } from '@/blocks/RenderBlocks'
-import { RenderHero } from '@/heros/RenderHero'
-import { generateMeta } from '@/utilities/generateMeta'
-import PageClient from './page.client'
-import { LivePreviewListener } from '@/components/LivePreviewListener'
+import { PageFromCms } from '@/components/Pages/PageFromCms'
 import { FallbackHome } from '@/components/Home/FallbackHome'
+import { generateMeta } from '@/utilities/generateMeta'
+import { pageHasContent } from '@/utilities/pageContent'
+import { queryPageBySlug } from '@/utilities/queryPageBySlug'
+
+const reservedSlugs = new Set(['home', 'about', 'services', 'enquiry', 'contact', 'projects'])
 
 export async function generateStaticParams() {
   try {
@@ -28,9 +29,7 @@ export async function generateStaticParams() {
     })
 
     const params = pages.docs
-      ?.filter((doc) => {
-        return doc.slug !== 'home'
-      })
+      ?.filter((doc) => doc.slug && !reservedSlugs.has(doc.slug))
       .map(({ slug }) => {
         return { slug }
       })
@@ -59,35 +58,17 @@ export default async function Page({ params: paramsPromise }: Args) {
   })
 
   if (!page) {
-    if (isHome) {
-      return <FallbackHome />
-    }
+    if (isHome) return <FallbackHome />
     return <PayloadRedirects url={url} />
   }
 
-  const { hero, layout } = page
-  const hasContent = (hero && hero.type !== 'none') || (layout && layout.length > 0)
+  if (isHome && !pageHasContent(page)) return <FallbackHome />
 
-  if (isHome && !hasContent) {
-    return <FallbackHome />
-  }
-
-  return (
-    <article className="pt-16 pb-24">
-      <PageClient />
-      <PayloadRedirects disableNotFound url={url} />
-
-      {draft && <LivePreviewListener />}
-
-      <RenderHero {...hero} />
-      <RenderBlocks blocks={layout} />
-    </article>
-  )
+  return <PageFromCms draft={draft} page={page} url={isHome ? '/' : url} />
 }
 
 export async function generateMetadata({ params: paramsPromise }: Args): Promise<Metadata> {
   const { slug = 'home' } = await paramsPromise
-  // Decode to support slugs with special characters
   const decodedSlug = decodeURIComponent(slug)
   const page = await queryPageBySlug({
     slug: decodedSlug,
@@ -95,28 +76,3 @@ export async function generateMetadata({ params: paramsPromise }: Args): Promise
 
   return generateMeta({ doc: page })
 }
-
-const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {
-  try {
-    const { isEnabled: draft } = await draftMode()
-
-    const payload = await getPayload({ config: configPromise })
-
-    const result = await payload.find({
-      collection: 'pages',
-      draft,
-      limit: 1,
-      pagination: false,
-      overrideAccess: draft,
-      where: {
-        slug: {
-          equals: slug,
-        },
-      },
-    })
-
-    return result.docs?.[0] || null
-  } catch {
-    return null
-  }
-})

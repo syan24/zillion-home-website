@@ -2,30 +2,22 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import Link from 'next/link'
 import React from 'react'
 
+import { footerContent } from '@/content/marketing'
 import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
 
-const footerNavigation = {
-  services: [
-    { name: 'Residential Construction', href: '/services#residential' },
-    { name: 'Commercial Fit-out', href: '/services#commercial' },
-    { name: 'Custom Joinery', href: '/services#joinery' },
-    { name: 'Interior Fit-out', href: '/services#interior' },
-  ],
-  company: [
-    { name: 'About Us', href: '/about' },
-    { name: 'Projects', href: '/projects' },
-    { name: 'Enquiry', href: '/enquiry' },
-  ],
-  legal: [
-    { name: 'Privacy Policy', href: '/privacy' },
-    { name: 'Terms of Service', href: '/terms' },
-  ],
-}
+const legal = [
+  { name: 'Privacy Policy', href: '/privacy' },
+  { name: 'Terms of Service', href: '/terms' },
+]
 
 export async function Footer() {
   const footerData = await getCachedGlobal('footer', 1)()
   const navItems = footerData?.navItems ?? []
+  const serviceLinks = footerData?.serviceLinks ?? []
+  const blurb = footerData?.blurb || footerContent.blurb
+  const tagline = footerData?.tagline || footerContent.tagline
+  const location = footerData?.location || footerContent.location
 
   return (
     <footer className="mt-auto border-t border-border bg-dark text-dark-foreground">
@@ -36,29 +28,33 @@ export async function Footer() {
             <Link href="/" className="inline-block">
               <Logo variant="light" />
             </Link>
-            <p className="mt-4 text-sm text-dark-foreground/70 max-w-xs">
-              Melbourne-based builder delivering residential construction, renovations, commercial
-              fit-outs and custom joinery.
-            </p>
-            <p className="mt-4 text-sm text-dark-foreground/70">
-              Built from the ground up.
-            </p>
+            <p className="mt-4 text-sm text-dark-foreground/70 max-w-xs">{blurb}</p>
+            {tagline && <p className="mt-4 text-sm text-dark-foreground/70">{tagline}</p>}
           </div>
 
           {/* Services */}
           <div>
             <h3 className="text-sm font-semibold tracking-wider uppercase">Services</h3>
             <ul className="mt-4 space-y-3">
-              {footerNavigation.services.map((item) => (
-                <li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
-                  >
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
+              {serviceLinks.length > 0
+                ? serviceLinks.map(({ link }, i) => (
+                    <li key={i}>
+                      <CMSLink
+                        {...link}
+                        className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
+                      />
+                    </li>
+                  ))
+                : footerContent.services.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
             </ul>
           </div>
 
@@ -75,13 +71,13 @@ export async function Footer() {
                       />
                     </li>
                   ))
-                : footerNavigation.company.map((item) => (
-                    <li key={item.name}>
+                : footerContent.company.map((item) => (
+                    <li key={item.href}>
                       <Link
                         href={item.href}
                         className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
                       >
-                        {item.name}
+                        {item.label}
                       </Link>
                     </li>
                   ))}
@@ -98,7 +94,7 @@ export async function Footer() {
               >
                 Start an Enquiry →
               </Link>
-              <p className="text-sm text-dark-foreground/70">Melbourne, Victoria</p>
+              <p className="text-sm text-dark-foreground/70">{location}</p>
             </div>
           </div>
         </div>
@@ -110,7 +106,7 @@ export async function Footer() {
               © {new Date().getFullYear()} Zillion Home. All rights reserved.
             </p>
             <div className="flex gap-6">
-              {footerNavigation.legal.map((item) => (
+              {legal.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}

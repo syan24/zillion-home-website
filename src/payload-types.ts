@@ -164,6 +164,15 @@ export interface Page {
   title: string;
   hero: {
     type: 'none' | 'builder' | 'highImpact' | 'mediumImpact' | 'lowImpact';
+    eyebrow?: string | null;
+    /**
+     * Use a new line for a line break.
+     */
+    headline?: string | null;
+    description?: string | null;
+    badgePrimary?: string | null;
+    badgeSecondary?: string | null;
+    badgeMuted?: string | null;
     richText?: {
       root: {
         type: string;
@@ -200,7 +209,21 @@ export interface Page {
       | null;
     media?: (number | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | FormBlock)[];
+  layout: (
+    | CallToActionBlock
+    | ContentBlock
+    | MediaBlock
+    | FormBlock
+    | PageIntroBlock
+    | ServiceCardsBlock
+    | SplitFeatureBlock
+    | ProcessSectionBlock
+    | CategoryBarBlock
+    | CtaBandBlock
+    | ProseSectionBlock
+    | CapabilityListBlock
+    | ServiceDetailsBlock
+  )[];
   meta?: {
     title?: string | null;
     /**
@@ -628,6 +651,251 @@ export interface Form {
     | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PageIntroBlock".
+ */
+export interface PageIntroBlock {
+  layout?: ('text' | 'split') | null;
+  eyebrow?: string | null;
+  /**
+   * Use a new line for a line break.
+   */
+  heading?: string | null;
+  headingAccent?: string | null;
+  description?: string | null;
+  image?: (number | null) | Media;
+  /**
+   * Overrides the alt text stored on the media item for this placement.
+   */
+  imageAlt?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'pageIntro';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceCardsBlock".
+ */
+export interface ServiceCardsBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  cards?:
+    | {
+        image?: (number | null) | Media;
+        /**
+         * Overrides the alt text stored on the media item for this placement.
+         */
+        imageAlt?: string | null;
+        title: string;
+        /**
+         * Optional second line, such as a Chinese label.
+         */
+        subtitle?: string | null;
+        description?: string | null;
+        href?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'serviceCards';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SplitFeatureBlock".
+ */
+export interface SplitFeatureBlock {
+  variant: 'briefs' | 'checklist' | 'darkCopy';
+  eyebrow?: string | null;
+  heading?: string | null;
+  headingAccent?: string | null;
+  /**
+   * Separate paragraphs with a blank line.
+   */
+  body?: string | null;
+  image?: (number | null) | Media;
+  /**
+   * Overrides the alt text stored on the media item for this placement.
+   */
+  imageAlt?: string | null;
+  items?:
+    | {
+        image?: (number | null) | Media;
+        /**
+         * Overrides the alt text stored on the media item for this placement.
+         */
+        imageAlt?: string | null;
+        title: string;
+        subtitle?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  links?:
+    | {
+        label: string;
+        /**
+         * Path or URL, for example /enquiry or /services#joinery.
+         */
+        href: string;
+        variant?: ('enquiry' | 'outline' | 'default') | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'splitFeature';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProcessSectionBlock".
+ */
+export interface ProcessSectionBlock {
+  /**
+   * Icons on the split layout are chosen by step order and stay in code.
+   */
+  variant: 'split' | 'centered';
+  eyebrow?: string | null;
+  heading?: string | null;
+  body?: string | null;
+  trustItems?:
+    | {
+        image?: (number | null) | Media;
+        /**
+         * Overrides the alt text stored on the media item for this placement.
+         */
+        imageAlt?: string | null;
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  steps?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'processSection';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CategoryBarBlock".
+ */
+export interface CategoryBarBlock {
+  eyebrow?: string | null;
+  /**
+   * Use a new line for a line break.
+   */
+  heading?: string | null;
+  /**
+   * Icons are chosen by item order and stay in code.
+   */
+  items?:
+    | {
+        title: string;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'categoryBar';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CtaBandBlock".
+ */
+export interface CtaBandBlock {
+  tone?: ('dark' | 'light') | null;
+  heading?: string | null;
+  body?: string | null;
+  links?:
+    | {
+        label: string;
+        /**
+         * Path or URL, for example /enquiry or /services#joinery.
+         */
+        href: string;
+        variant?: ('enquiry' | 'outline' | 'default') | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'ctaBand';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProseSectionBlock".
+ */
+export interface ProseSectionBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  /**
+   * Separate paragraphs with a blank line.
+   */
+  body?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'proseSection';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CapabilityListBlock".
+ */
+export interface CapabilityListBlock {
+  eyebrow?: string | null;
+  heading?: string | null;
+  items?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'capabilityList';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceDetailsBlock".
+ */
+export interface ServiceDetailsBlock {
+  services?:
+    | {
+        /**
+         * Hash without #, for example residential. Used by /services#residential.
+         */
+        anchor?: string | null;
+        title: string;
+        subtitle?: string | null;
+        description?: string | null;
+        features?:
+          | {
+              text: string;
+              id?: string | null;
+            }[]
+          | null;
+        image?: (number | null) | Media;
+        /**
+         * Overrides the alt text stored on the media item for this placement.
+         */
+        imageAlt?: string | null;
+        /**
+         * Links to /enquiry. Leave blank to hide.
+         */
+        enquireLabel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'serviceDetails';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1113,6 +1381,12 @@ export interface PagesSelect<T extends boolean = true> {
     | T
     | {
         type?: T;
+        eyebrow?: T;
+        headline?: T;
+        description?: T;
+        badgePrimary?: T;
+        badgeSecondary?: T;
+        badgeMuted?: T;
         richText?: T;
         links?:
           | T
@@ -1138,6 +1412,15 @@ export interface PagesSelect<T extends boolean = true> {
         content?: T | ContentBlockSelect<T>;
         mediaBlock?: T | MediaBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
+        pageIntro?: T | PageIntroBlockSelect<T>;
+        serviceCards?: T | ServiceCardsBlockSelect<T>;
+        splitFeature?: T | SplitFeatureBlockSelect<T>;
+        processSection?: T | ProcessSectionBlockSelect<T>;
+        categoryBar?: T | CategoryBarBlockSelect<T>;
+        ctaBand?: T | CtaBandBlockSelect<T>;
+        proseSection?: T | ProseSectionBlockSelect<T>;
+        capabilityList?: T | CapabilityListBlockSelect<T>;
+        serviceDetails?: T | ServiceDetailsBlockSelect<T>;
       };
   meta?:
     | T
@@ -1220,6 +1503,191 @@ export interface FormBlockSelect<T extends boolean = true> {
   form?: T;
   enableIntro?: T;
   introContent?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PageIntroBlock_select".
+ */
+export interface PageIntroBlockSelect<T extends boolean = true> {
+  layout?: T;
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  description?: T;
+  image?: T;
+  imageAlt?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceCardsBlock_select".
+ */
+export interface ServiceCardsBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  cards?:
+    | T
+    | {
+        image?: T;
+        imageAlt?: T;
+        title?: T;
+        subtitle?: T;
+        description?: T;
+        href?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "SplitFeatureBlock_select".
+ */
+export interface SplitFeatureBlockSelect<T extends boolean = true> {
+  variant?: T;
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  body?: T;
+  image?: T;
+  imageAlt?: T;
+  items?:
+    | T
+    | {
+        image?: T;
+        imageAlt?: T;
+        title?: T;
+        subtitle?: T;
+        id?: T;
+      };
+  links?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        variant?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProcessSectionBlock_select".
+ */
+export interface ProcessSectionBlockSelect<T extends boolean = true> {
+  variant?: T;
+  eyebrow?: T;
+  heading?: T;
+  body?: T;
+  trustItems?:
+    | T
+    | {
+        image?: T;
+        imageAlt?: T;
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  steps?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CategoryBarBlock_select".
+ */
+export interface CategoryBarBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CtaBandBlock_select".
+ */
+export interface CtaBandBlockSelect<T extends boolean = true> {
+  tone?: T;
+  heading?: T;
+  body?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        variant?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProseSectionBlock_select".
+ */
+export interface ProseSectionBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  body?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CapabilityListBlock_select".
+ */
+export interface CapabilityListBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ServiceDetailsBlock_select".
+ */
+export interface ServiceDetailsBlockSelect<T extends boolean = true> {
+  services?:
+    | T
+    | {
+        anchor?: T;
+        title?: T;
+        subtitle?: T;
+        description?: T;
+        features?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        image?: T;
+        imageAlt?: T;
+        enquireLabel?: T;
+        id?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -1746,6 +2214,24 @@ export interface Header {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Shown in the quieter group beside the primary navigation. Projects and About live here.
+   */
+  secondaryNavItems?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?: {
+            relationTo: 'pages';
+            value: number | Page;
+          } | null;
+          url?: string | null;
+          label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1755,6 +2241,27 @@ export interface Header {
  */
 export interface Footer {
   id: number;
+  /**
+   * Short company description under the logo.
+   */
+  blurb?: string | null;
+  tagline?: string | null;
+  location?: string | null;
+  serviceLinks?:
+    | {
+        link: {
+          type?: ('reference' | 'custom') | null;
+          newTab?: boolean | null;
+          reference?: {
+            relationTo: 'pages';
+            value: number | Page;
+          } | null;
+          url?: string | null;
+          label: string;
+        };
+        id?: string | null;
+      }[]
+    | null;
   navItems?:
     | {
         link: {
@@ -1792,6 +2299,20 @@ export interface HeaderSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  secondaryNavItems?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1801,6 +2322,23 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
+  blurb?: T;
+  tagline?: T;
+  location?: T;
+  serviceLinks?:
+    | T
+    | {
+        link?:
+          | T
+          | {
+              type?: T;
+              newTab?: T;
+              reference?: T;
+              url?: T;
+              label?: T;
+            };
+        id?: T;
+      };
   navItems?:
     | T
     | {

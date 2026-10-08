@@ -24,6 +24,7 @@ Do not silently convert assumptions into client requirements. If an assumption a
 7. `07-phase-1-development-roadmap.md` - recommended vertical-slice delivery plan.
 8. `08-ux-ui-design-brief.md` - visual/interaction direction based on the supplied AQUA reference prototype.
 9. `09-v0-prototype-prompt.md` - credit-conscious first prompt for Home, Projects and Mobile SWMS prototypes.
+10. `12-stage-2-cms-and-demo-seed.md` - which primary pages are CMS-editable, what is still a stub, and how demo seed runs on Vercel.
 
 ## Recommended next planning steps
 

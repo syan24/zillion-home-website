@@ -30,8 +30,8 @@ const secondaryNavItems = [
 export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) => {
   const [locale, setLocale] = useState<'en' | 'zh'>('en')
   const cmsNavItems = data?.navItems || []
-
-  const navItems = cmsNavItems.length > 0 ? cmsNavItems : null
+  const cmsSecondaryItems = data?.secondaryNavItems || []
+  const navItems = cmsNavItems.length > 0 || cmsSecondaryItems.length > 0 ? cmsNavItems : null
 
   return (
     <nav
@@ -63,20 +63,29 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) =>
       </div>
 
       {/* Secondary Navigation */}
-      {!navItems && (
+      {(navItems ? cmsSecondaryItems.length > 0 : true) && (
         <div className={cn(
           mobile ? 'flex flex-col gap-3 pt-3 border-t border-border' : 'flex items-center gap-5',
           'text-muted-foreground'
         )}>
-          {secondaryNavItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="hover:text-foreground transition-colors"
-            >
-              {item.label}
-            </Link>
-          ))}
+          {navItems
+            ? cmsSecondaryItems.map(({ link }, i) => (
+                <CMSLink
+                  key={i}
+                  {...link}
+                  appearance="link"
+                  className="hover:text-foreground transition-colors"
+                />
+              ))
+            : secondaryNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
         </div>
       )}
 

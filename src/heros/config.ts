@@ -43,6 +43,52 @@ export const hero: Field = {
       required: true,
     },
     {
+      name: 'eyebrow',
+      type: 'text',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'builder',
+      },
+    },
+    {
+      name: 'headline',
+      type: 'textarea',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'builder',
+        description: 'Use a new line for a line break.',
+      },
+    },
+    {
+      name: 'description',
+      type: 'textarea',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'builder',
+      },
+    },
+    {
+      name: 'badgePrimary',
+      type: 'text',
+      label: 'Badge line 1',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'builder',
+      },
+    },
+    {
+      name: 'badgeSecondary',
+      type: 'text',
+      label: 'Badge line 2',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'builder',
+      },
+    },
+    {
+      name: 'badgeMuted',
+      type: 'text',
+      label: 'Badge line 3',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'builder',
+      },
+    },
+    {
       name: 'richText',
       type: 'richText',
       editor: lexicalEditor({
@@ -56,6 +102,9 @@ export const hero: Field = {
         },
       }),
       label: false,
+      admin: {
+        condition: (_, siblingData) => siblingData?.type !== 'builder',
+      },
     },
     linkGroup({
       overrides: {
@@ -66,7 +115,7 @@ export const hero: Field = {
       name: 'media',
       type: 'upload',
       admin: {
-        condition: (_, { type } = {}) => ['highImpact', 'mediumImpact'].includes(type),
+        condition: (_, { type } = {}) => ['highImpact', 'mediumImpact', 'builder'].includes(type),
       },
       relationTo: 'media',
       required: true,
