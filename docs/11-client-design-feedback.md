@@ -151,11 +151,11 @@ Visual source: `docs/design-feedback/04-swms-project-qr-signature.png`.
 - Admin path is Payload: create a template, create a Project SWMS (sections copy from the template when empty), set status to **Active**. Activation writes an immutable `swms-versions` snapshot. The Project SWMS edit view shows the worker URL and a QR image.
 - Editing an active Project SWMS publishes a new version and supersedes the previous one. The QR token stays the same. Old signatures keep their original version.
 - A repeated submit of the same in-progress attempt returns the original acknowledgement. Reloading the success page does not create another record. Another worker on the same phone can still sign.
-- Seed with `pnpm seed:swms`: Rosebery Residence, Linfield House, and Marrickville Duplex, each with an active placeholder SWMS.
+- Seed with `pnpm seed:swms` or `pnpm seed:demo`: Rosebery Residence, Linfield House, and Marrickville Duplex, each with an active placeholder SWMS. `seed:demo` also publishes the Stage 2 website pages.
 - Questions are labelled placeholders, not legal SWMS text. CSV/PDF export, email, and re-sign notifications are not in this slice.
 
 ### How to demo
 
-1. `pnpm seed:swms`
+1. `pnpm seed:demo` (or `pnpm seed:swms` for the worker flow only)
 2. Open `/swms` and choose a project, or open the token URL printed by the seed.
 3. In admin, open Project SWMS to copy the link or print the QR. Signed records are listed under SWMS Acknowledgements.

@@ -57,7 +57,7 @@ Recommended fields:
 
 Status: [ASSUMPTION] - the client requires service scope but not a specific content model.
 
-Could be omitted in favour of page blocks if services are simple.
+Stage 2 uses Pages layout blocks for Home, About and Services instead of a Services collection. See `docs/12-stage-2-cms-and-demo-seed.md`.
 
 ---
 

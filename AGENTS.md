@@ -97,7 +97,7 @@ Cloud Agents must treat this repository as a development environment.
 
 ### Safety
 
-- Never use, modify, migrate, seed, or delete production data.
+- Never use, modify, migrate, seed, or delete production data from a laptop or an ad-hoc script. The only production write allowed is the env-gated deploy seed (`SEED_DEMO=true` during Vercel migrate/build). It is idempotent and does not overwrite existing pages. Do not point a local seed at the production database.
 - Never connect to the production Neon database.
 - Never use production Vercel Blob credentials.
 - Never deploy directly to production.

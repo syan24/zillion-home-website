@@ -129,6 +129,29 @@ This is a convenience feature and not client-specified.
 ### E6. Payload admin vs custom admin
 **[ASSUMPTION]** Use Payload Admin whenever it gives an acceptable experience. Build custom staff screens only where workflow/user experience clearly requires it.
 
+## G. Stage 2 website CMS and demo seed
+
+### G1. Pages blocks instead of a Services collection
+**[ASSUMPTION]** Home, About and Services are documents in the existing Pages collection, using marketing layout blocks. A separate Services collection is not added. `docs/06-payload-collections.md` already allows page blocks when services are simple.
+
+### G2. Bilingual lines are fields, not locales
+**[ASSUMPTION]** Chinese lines on service cards are editable subtitle fields. Payload localisation is not turned on in this stage (see A1).
+
+### G3. Demo seed is skip-if-exists, including production
+**[ASSUMPTION]** The project owner has asked for demo data on Preview and Production after each deploy. `pnpm seed:demo` creates missing website pages, placeholder media and the existing SWMS demo. It does not overwrite an existing page, media file or SWMS record. Empty header and footer fields are filled. The deploy runs this only when `SEED_DEMO=true`, using the deployment’s existing `DATABASE_URL`.
+
+### G4. Icons stay in code
+**[ASSUMPTION]** Process-step icons and the category-bar icons are chosen by item order. Admins edit the labels. Adding a sixth item reuses the last icon.
+
+### G5. Enquiry and Projects stay stubs
+**[ASSUMPTION]** The Enquiry form shell and the Projects listing shell stay hardcoded until Stages 4 and 3. `/contact` keeps redirecting to `/enquiry`.
+
+### G6. Header chrome that is not navigation
+**[ASSUMPTION]** The header enquiry button always uses the beige enquiry style and links to `/enquiry`. The EN / 中文 control does not change locale.
+
+### G7. About hero photo
+**[ASSUMPTION]** The Unsplash id previously labelled “Construction team at work” (`photo-1581094794329`) is an office photograph. The seed and the no-CMS fallback use a construction-site photo (`photo-1541888946425`) for that placement.
+
 ## F. Decisions that should be confirmed internally before implementation
 
 1. Is Phase 1 English-only at launch?

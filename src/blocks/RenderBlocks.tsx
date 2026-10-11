@@ -6,14 +6,33 @@ import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
+import {
+  CapabilityListBlock,
+  CategoryBarBlock,
+  CtaBandBlock,
+  PageIntroBlock,
+  ProcessSectionBlock,
+  ProseSectionBlock,
+  ServiceCardsBlock,
+  ServiceDetailsBlock,
+  SplitFeatureBlock,
+} from '@/blocks/marketing/components'
+import { MARKETING_BLOCK_TYPES } from '@/utilities/pageContent'
 
-type BlockType = Page['layout'][0]['blockType']
-
-const blockComponents: Record<BlockType, React.ComponentType<any>> = {
+const blockComponents: Record<string, React.ComponentType<any>> = {
+  capabilityList: CapabilityListBlock,
+  categoryBar: CategoryBarBlock,
   content: ContentBlock,
   cta: CallToActionBlock,
+  ctaBand: CtaBandBlock,
   formBlock: FormBlock,
   mediaBlock: MediaBlock,
+  pageIntro: PageIntroBlock,
+  processSection: ProcessSectionBlock,
+  proseSection: ProseSectionBlock,
+  serviceCards: ServiceCardsBlock,
+  serviceDetails: ServiceDetailsBlock,
+  splitFeature: SplitFeatureBlock,
 }
 
 export const RenderBlocks: React.FC<{
@@ -31,8 +50,12 @@ export const RenderBlocks: React.FC<{
           const Block = blockComponents[blockType]
 
           if (Block) {
+            if (MARKETING_BLOCK_TYPES.has(blockType)) {
+              return <Block {...block} key={block.id || index} />
+            }
+
             return (
-              <div className="my-16" key={index}>
+              <div className="my-16" key={block.id || index}>
                 <Block {...block} disableInnerContainer />
               </div>
             )
