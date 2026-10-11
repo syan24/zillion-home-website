@@ -1,8 +1,8 @@
 export const marketingImages = {
   heroHouse: {
     file: 'hero-house.jpg',
-    alt: 'Modern residential architecture',
-    src: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80',
+    alt: 'Modern house at dusk',
+    src: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=75',
   },
   serviceResidential: {
     file: 'service-residential.jpg',
@@ -72,7 +72,7 @@ export const homeContent = {
     headline: 'Built from the\nground up.',
     description:
       'Residential construction, renovation, commercial fit-out and custom joinery — built with quality, precision and care.',
-    image: image('heroHouse', 'Modern residential architecture'),
+    image: image('heroHouse', 'Modern house at dusk'),
     badgePrimary: 'Quality',
     badgeSecondary: 'Construction',
     badgeMuted: 'Lasting Value',

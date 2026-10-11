@@ -95,27 +95,27 @@ export function HomeHero({
           className="h-full w-full"
           aspectRatio="auto"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/55 md:from-background/95 md:via-background/70 md:to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/62 to-black/40 md:from-black/80 md:via-black/50 md:to-black/25" />
       </div>
 
       <div className="container relative z-10 py-16 lg:py-24">
         <div className="max-w-2xl">
           {eyebrow && (
-            <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-6">{eyebrow}</p>
+            <p className="text-xs tracking-[0.2em] uppercase text-white/75 mb-6">{eyebrow}</p>
           )}
           {headline && (
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-6">
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-[1.1] mb-6 text-white">
               {lines(headline)}
             </h1>
           )}
-          {description && <p className="text-lg text-foreground-soft max-w-md mb-8">{description}</p>}
+          {description && <p className="text-lg text-white/85 max-w-md mb-8">{description}</p>}
           <MarketingLinks links={links} />
         </div>
       </div>
 
       {showBadge && (
         <div className="hidden lg:flex absolute right-8 top-1/2 -translate-y-1/2 flex-col items-end text-right">
-          <div className="bg-background/90 backdrop-blur px-4 py-3 rounded">
+          <div className="bg-black/50 backdrop-blur-sm px-4 py-3 text-white">
             {badgePrimary && (
               <p className="text-xs font-medium uppercase tracking-[0.15em] text-accent">{badgePrimary}</p>
             )}
@@ -123,7 +123,7 @@ export function HomeHero({
               <p className="text-xs font-medium uppercase tracking-[0.15em]">{badgeSecondary}</p>
             )}
             {badgeMuted && (
-              <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground">{badgeMuted}</p>
+              <p className="text-xs uppercase tracking-[0.15em] text-white/70">{badgeMuted}</p>
             )}
           </div>
         </div>

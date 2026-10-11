@@ -52,7 +52,7 @@ Chinese lines on service cards are ordinary subtitle fields, not Payload localis
 
 The About hero photo is a construction site. An earlier hotlink labelled “Construction team at work” pointed at an office photograph, so the seed does not use that file.
 
-On a phone, the homepage hero keeps a stronger light wash over the photo so the headline and paragraph stay readable. Desktop keeps the original left-to-right fade.
+The homepage hero uses a dusk architectural photograph with a dark left-to-right overlay so the white headline and paragraph stay readable on the photo.
 
 ## Demo seed
 
