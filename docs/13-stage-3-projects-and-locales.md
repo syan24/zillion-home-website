@@ -4,7 +4,7 @@ Status: Stage 3 portfolio, plus the public English / 中文 switch.
 
 ## Homepage hero
 
-The Home hero uses the Media item `hero-house.jpg`: a dusk architectural photograph with a dark left-to-right overlay and light text. `pnpm seed:demo` replaces that file when the stored size differs, including on a Home page an admin has already edited, as long as the hero still points at this media item. A different image chosen on the hero is left alone.
+The Home hero uses the Media item `hero-house.jpg`: a dusk architectural photograph with a dark left-to-right overlay and light text. `pnpm seed:demo` replaces that file when the stored size differs, including on a Home page an admin has already edited, as long as the hero still points at this media item. A different image chosen on the hero is left alone. If `hero-house.jpg` is still the media item but the file 404s or is missing from Vercel Blob, the same row is re-uploaded. See `docs/12-stage-2-cms-and-demo-seed.md`.
 
 ## Locale
 
@@ -43,7 +43,7 @@ Demo projects:
 | Richmond Studio | Suburb only | Commercial |
 | South Yarra Courtyard | Suburb only | Classic outdoor and home office |
 
-`pnpm seed:demo` creates these when the slug is missing, and does not overwrite a project an admin has edited. Images are added only when that project has none. Delete the project to re-seed it.
+`pnpm seed:demo` creates these when the slug is missing, and does not overwrite a project an admin has edited. Project-image rows are added only when that project has none. Delete the project to re-seed its gallery rows. Seed image files (`kew-kitchen.jpg`, the Armadale images, and the other portfolio filenames) are still repaired when the Media row exists but the file is missing or returns 404. That keeps the existing project-image relationship and replaces the bytes in place.
 
 ## Demo
 

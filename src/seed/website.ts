@@ -1,4 +1,3 @@
-import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Payload, TypedLocale } from 'payload'
@@ -9,6 +8,7 @@ import {
   type ImageRef,
   type MarketingImageKey,
 } from '@/content/marketing'
+import { ensureSeedMedia } from '@/seed/ensureSeedMedia'
 import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
 
 const assetsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'assets')
@@ -16,27 +16,6 @@ const seedContext = { disableRevalidate: true }
 
 function filePathFor(filename: string) {
   return path.join(assetsDir, filename)
-}
-
-async function replaceSeedFile(
-  payload: Payload,
-  doc: { id: number; filesize?: number | null },
-  filePath: string,
-  alt: string,
-) {
-  if (!fs.existsSync(filePath)) return
-  const size = fs.statSync(filePath).size
-  if (doc.filesize === size) return
-
-  await payload.update({
-    collection: 'media',
-    id: doc.id,
-    overrideAccess: true,
-    context: seedContext,
-    overwriteExistingFiles: true,
-    data: { alt },
-    filePath,
-  })
 }
 
 type MediaIds = Record<MarketingImageKey, number>
@@ -82,36 +61,11 @@ async function ensureMedia(payload: Payload): Promise<MediaIds> {
 
   for (const key of Object.keys(marketingImages) as MarketingImageKey[]) {
     const image = marketingImages[key]
-    const existing = await payload.find({
-      collection: 'media',
-      depth: 0,
-      limit: 1,
-      overrideAccess: true,
-      pagination: false,
-      where: { filename: { equals: image.file } },
+    ids[key] = await ensureSeedMedia(payload, {
+      alt: image.alt,
+      filePath: filePathFor(image.file),
+      filename: image.file,
     })
-
-    if (existing.docs[0]) {
-      ids[key] = existing.docs[0].id
-      if (image.file === 'hero-house.jpg') {
-        await replaceSeedFile(payload, existing.docs[0], filePathFor(image.file), image.alt)
-      }
-      continue
-    }
-
-    const filePath = filePathFor(image.file)
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`Missing seed image ${filePath}`)
-    }
-
-    const created = await payload.create({
-      collection: 'media',
-      overrideAccess: true,
-      context: seedContext,
-      data: { alt: image.alt },
-      filePath,
-    })
-    ids[key] = created.id
   }
 
   return ids

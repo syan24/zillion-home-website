@@ -56,16 +56,30 @@ The homepage hero uses a dusk architectural photograph with a dark left-to-right
 
 ## Demo seed
 
-`pnpm seed:demo` is idempotent:
+`pnpm seed:demo` is idempotent for pages and records:
 
-- uploads the stock images in `src/seed/assets` when that filename is not already in Media
 - creates published Home, About and Services pages only when that slug does not already exist
 - fills Header and Footer fields that are still empty
 - runs the existing SWMS demo (Rosebery Residence, Linfield House, Marrickville Duplex)
+- uploads stock images from `src/seed/assets` (marketing images and portfolio images)
 
-Running it again does **not** overwrite pages, media or SWMS records an admin has changed. To re-seed a page, delete that page in admin and run `pnpm seed:demo` again. To re-seed an image, delete the media item with that filename first.
+Running it again does **not** overwrite pages, project records, project-image rows, or SWMS records an admin has changed. To re-seed a page, delete that page in admin and run `pnpm seed:demo` again.
 
-`pnpm seed:swms` still seeds only the SWMS demo.
+### Media files
+
+A Media row whose filename already exists is not treated as success by itself. The seed re-uploads that file in place (`overwriteExistingFiles: true`) when any of these are true:
+
+- the row has no usable URL
+- the URL is local-only (localhost, a `file:` path, or `/media/...` on the build disk) and `BLOB_READ_WRITE_TOKEN` is set
+- `filesize` is missing or 0
+- the token is set and the object is missing or empty in Vercel Blob
+- `GET /api/media/file/<filename>` on this deployment’s server URL returns 404
+
+The same Media id is kept, so pages and project images do not need to be deleted. A file is left alone when it is actually healthy: non-zero size, a usable URL, and the bytes are reachable. The same filesize as the seed asset plus a working URL is enough. `hero-house.jpg` is still replaced when the stored size differs from the seed asset, even if the current file answers.
+
+This repairs orphan rows. A previous deploy can insert Media documents whose files never reached Vercel Blob (no token, or the file only existed on the build machine). The filename is then already in Media, so an older seed skipped the upload forever and `/api/media/file/<filename>` kept returning 404. The next deploy with `SEED_DEMO=true` and a Blob token re-uploads those files. This repository change does not itself update the live site; Production is fixed when that deploy finishes.
+
+`pnpm seed:swms` still seeds only the SWMS demo. It does not repair website images.
 
 ### Local
 
@@ -80,7 +94,7 @@ pnpm seed:demo
 The project owner has asked for demo data on Preview and Production after each deploy. The app uses the deployment’s existing `DATABASE_URL`. Do not add a second production database URL for seeding.
 
 1. In the Vercel project, set `SEED_DEMO` to `true` for **Preview** and **Production**.
-2. Keep `BLOB_READ_WRITE_TOKEN` set in those environments so seeded images are stored in Vercel Blob. Without it, uploads stay on the build filesystem and can disappear on serverless.
+2. Set `BLOB_READ_WRITE_TOKEN` in those environments and make it available at **build** time. The seed runs during `vercel-build`, before the new deployment is serving traffic. `seed:demo:deploy` exits with an error if `SEED_DEMO=true` and the token is missing or not a `vercel_blob_rw_...` token, so the build cannot create more Media rows whose files only exist on the build machine.
 3. Use the default build, or set the build command to `pnpm ci`.
 
 Both `pnpm ci` and `vercel-build` run:
@@ -89,7 +103,9 @@ Both `pnpm ci` and `vercel-build` run:
 pnpm payload migrate && pnpm seed:demo:deploy && pnpm build
 ```
 
-`seed:demo:deploy` seeds only when `SEED_DEMO=true`. Any other value, including empty, skips the seed and the deploy continues. A failed seed fails the deploy.
+`seed:demo:deploy` seeds only when `SEED_DEMO=true`. Any other value, including empty, skips the seed and the deploy continues. A failed seed fails the deploy. With `SEED_DEMO=true`, a missing Blob token also fails the deploy.
+
+One Production redeploy with `SEED_DEMO=true` and the Blob token re-uploads broken seed files, including `service-residential.jpg` and the Kew and Armadale portfolio images, without deleting pages or project records. After that deploy, `/api/media/file/<filename>` for those seed files should return 200. Do not treat the live site as fixed until that deploy has finished.
 
 If the Vercel project overrides the build command and does not call `pnpm ci` or `vercel-build`, add `pnpm seed:demo:deploy` after `pnpm payload migrate`.
 
