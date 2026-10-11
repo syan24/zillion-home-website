@@ -1,7 +1,8 @@
-import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Payload, TypedLocale } from 'payload'
+
+import { ensureSeedMedia } from '@/seed/ensureSeedMedia'
 
 const assetsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'assets/projects')
 const seedContext = { disableRevalidate: true }
@@ -271,26 +272,11 @@ const projects: ProjectSeed[] = [
 ]
 
 async function ensureMedia(payload: Payload, file: string, alt: string) {
-  const existing = await payload.find({
-    collection: 'media',
-    depth: 0,
-    limit: 1,
-    overrideAccess: true,
-    where: { filename: { equals: file } },
+  return ensureSeedMedia(payload, {
+    alt,
+    filePath: path.join(assetsDir, file),
+    filename: file,
   })
-  if (existing.docs[0]) return existing.docs[0].id
-
-  const filePath = path.join(assetsDir, file)
-  if (!fs.existsSync(filePath)) throw new Error(`Missing portfolio image ${filePath}`)
-
-  const created = await payload.create({
-    collection: 'media',
-    overrideAccess: true,
-    context: seedContext,
-    data: { alt },
-    filePath,
-  })
-  return created.id
 }
 
 async function ensureTerm(
@@ -428,14 +414,20 @@ export async function seedPortfolio(payload: Payload) {
       overrideAccess: true,
       where: { project: { equals: id } },
     })
+    // Project image rows stay. Media files are still checked so a filename
+    // that exists only as a database row is uploaded again.
+    const mediaIds: number[] = []
+    for (const image of project.images) {
+      mediaIds.push(await ensureMedia(payload, image.file, image.alt))
+    }
     if (imageCount.totalDocs > 0) {
       summary.push(`project ${project.slug}: images kept`)
       continue
     }
 
     let featured: number | undefined
-    for (const image of project.images) {
-      const mediaId = await ensureMedia(payload, image.file, image.alt)
+    for (const [index, image] of project.images.entries()) {
+      const mediaId = mediaIds[index]
       featured ??= mediaId
       const created = await payload.create({
         collection: 'project-images',
