@@ -25,6 +25,7 @@ Do not silently convert assumptions into client requirements. If an assumption a
 8. `08-ux-ui-design-brief.md` - visual/interaction direction based on the supplied AQUA reference prototype.
 9. `09-v0-prototype-prompt.md` - credit-conscious first prompt for Home, Projects and Mobile SWMS prototypes.
 10. `12-stage-2-cms-and-demo-seed.md` - which primary pages are CMS-editable, what is still a stub, and how demo seed runs on Vercel.
+11. `13-stage-3-projects-and-locales.md` - project library, English / 中文 switching, and demo seed behaviour.
 
 ## Recommended next planning steps
 
