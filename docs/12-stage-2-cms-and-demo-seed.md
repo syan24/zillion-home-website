@@ -72,10 +72,12 @@ A Media row whose filename already exists is not treated as success by itself. T
 - the row has no usable URL
 - the URL is local-only (localhost, a `file:` path, or `/media/...` on the build disk) and `BLOB_READ_WRITE_TOKEN` is set
 - `filesize` is missing or 0
-- the token is set and the object is missing or empty in Vercel Blob
-- `GET /api/media/file/<filename>` on this deployment’s server URL returns 404
+- the token is set and the Vercel Blob API does not have the object (the check is `head` with `BLOB_READ_WRITE_TOKEN`, on the Blob URL stored on the Media document, or on the `prefix` / `_objectKey` / filename path that `/api/media/file/<filename>` reads)
+- `GET /api/media/file/<filename>` on this deployment’s server URL returns 404 and Blob does not already have the object
 
 The same Media id is kept, so pages and project images do not need to be deleted. A file is left alone when it is actually healthy: non-zero size, a usable URL, and the bytes are reachable. The same filesize as the seed asset plus a working URL is enough. `hero-house.jpg` is still replaced when the stored size differs from the seed asset, even if the current file answers.
+
+An anonymous GET of the public Blob CDN is not used as proof. That URL can keep serving a cached 404 immediately after a successful upload. The file route itself asks the Blob API with the token, and the seed does the same.
 
 This repairs orphan rows. A previous deploy can insert Media documents whose files never reached Vercel Blob (no token, or the file only existed on the build machine). The filename is then already in Media, so an older seed skipped the upload forever and `/api/media/file/<filename>` kept returning 404. The next deploy with `SEED_DEMO=true` and a Blob token re-uploads those files. This repository change does not itself update the live site; Production is fixed when that deploy finishes.
 
