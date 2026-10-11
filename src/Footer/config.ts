@@ -12,6 +12,7 @@ export const Footer: GlobalConfig = {
     {
       name: 'blurb',
       type: 'textarea',
+      localized: true,
       admin: {
         description: 'Short company description under the logo.',
       },
@@ -19,10 +20,12 @@ export const Footer: GlobalConfig = {
     {
       name: 'tagline',
       type: 'text',
+      localized: true,
     },
     {
       name: 'location',
       type: 'text',
+      localized: true,
     },
     {
       name: 'serviceLinks',
@@ -32,6 +35,7 @@ export const Footer: GlobalConfig = {
       fields: [
         link({
           appearances: false,
+          localizedLabel: true,
         }),
       ],
       admin: {
@@ -48,6 +52,7 @@ export const Footer: GlobalConfig = {
       fields: [
         link({
           appearances: false,
+          localizedLabel: true,
         }),
       ],
       maxRows: 6,

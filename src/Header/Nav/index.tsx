@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 
 import type { Header as HeaderType } from '@/payload-types'
 
@@ -8,30 +8,34 @@ import { CMSLink } from '@/components/Link'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
+import type { SiteLocale } from '@/i18n/config'
+import { getMessages } from '@/i18n/messages'
+import { setLocale } from '@/i18n/setLocale'
 
 interface HeaderNavProps {
   data: HeaderType
+  locale: SiteLocale
   mobile?: boolean
 }
 
-const defaultNavItems = [
-  { href: '/', label: 'Home' },
-  { href: '/services#residential', label: 'Residential' },
-  { href: '/services#commercial', label: 'Commercial' },
-  { href: '/services#joinery', label: 'Custom Joinery' },
-  { href: '/services#interior', label: 'Interior Fit-out' },
-]
-
-const secondaryNavItems = [
-  { href: '/projects', label: 'Projects' },
-  { href: '/about', label: 'About Us' },
-]
-
-export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) => {
-  const [locale, setLocale] = useState<'en' | 'zh'>('en')
+export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = false }) => {
+  const copy = getMessages(locale)
   const cmsNavItems = data?.navItems || []
   const cmsSecondaryItems = data?.secondaryNavItems || []
   const navItems = cmsNavItems.length > 0 || cmsSecondaryItems.length > 0 ? cmsNavItems : null
+
+  const defaultNavItems = [
+    { href: '/', label: locale === 'zh' ? '首页' : 'Home' },
+    { href: '/services#residential', label: locale === 'zh' ? '住宅施工' : 'Residential' },
+    { href: '/services#commercial', label: locale === 'zh' ? '商业装修' : 'Commercial' },
+    { href: '/services#joinery', label: locale === 'zh' ? '定制木作' : 'Custom Joinery' },
+    { href: '/services#interior', label: locale === 'zh' ? '室内交付' : 'Interior Fit-out' },
+  ]
+
+  const secondaryNavItems = [
+    { href: '/projects', label: locale === 'zh' ? '项目' : 'Projects' },
+    { href: '/about', label: locale === 'zh' ? '关于我们' : 'About Us' },
+  ]
 
   return (
     <nav
@@ -40,7 +44,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) =>
         'text-sm font-medium',
       )}
     >
-      {/* Primary Navigation - Services */}
       <div className={cn(mobile ? 'flex flex-col gap-3' : 'flex items-center gap-5')}>
         {navItems
           ? navItems.map(({ link }, i) => (
@@ -62,7 +65,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) =>
             ))}
       </div>
 
-      {/* Secondary Navigation */}
       {(navItems ? cmsSecondaryItems.length > 0 : true) && (
         <div className={cn(
           mobile ? 'flex flex-col gap-3 pt-3 border-t border-border' : 'flex items-center gap-5',
@@ -89,42 +91,43 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, mobile = false }) =>
         </div>
       )}
 
-      {/* Language Toggle & CTA */}
       <div className={cn(mobile ? 'flex flex-col gap-3 pt-3 border-t border-border' : 'flex items-center gap-4')}>
-        {/* Language Toggle */}
         <div className="flex items-center gap-1 text-sm">
-          <button
-            type="button"
-            onClick={() => setLocale('en')}
-            className={cn(
-              'px-2 py-1 rounded transition-colors',
-              locale === 'en'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-            aria-label="Switch to English"
-          >
-            EN
-          </button>
+          <form action={setLocale.bind(null, 'en')}>
+            <button
+              type="submit"
+              className={cn(
+                'px-2 py-1 rounded transition-colors',
+                locale === 'en'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-label={copy.switchToEnglish}
+              aria-pressed={locale === 'en'}
+            >
+              EN
+            </button>
+          </form>
           <span className="text-border">|</span>
-          <button
-            type="button"
-            onClick={() => setLocale('zh')}
-            className={cn(
-              'px-2 py-1 rounded transition-colors',
-              locale === 'zh'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-            aria-label="切换到中文"
-          >
-            中文
-          </button>
+          <form action={setLocale.bind(null, 'zh')}>
+            <button
+              type="submit"
+              className={cn(
+                'px-2 py-1 rounded transition-colors',
+                locale === 'zh'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+              aria-label={copy.switchToChinese}
+              aria-pressed={locale === 'zh'}
+            >
+              中文
+            </button>
+          </form>
         </div>
 
-        {/* Enquiry CTA - Marketing beige variant */}
         <Button asChild variant="enquiry" className={cn(mobile && 'w-full')}>
-          <Link href="/enquiry">Start an Enquiry →</Link>
+          <Link href="/enquiry">{copy.enquiryCta}</Link>
         </Button>
       </div>
     </nav>

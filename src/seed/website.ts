@@ -1,18 +1,15 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import type { Payload } from 'payload'
+import type { Payload, TypedLocale } from 'payload'
 
+import { getMarketing } from '@/content/getMarketing'
 import {
-  aboutContent,
-  footerContent,
-  headerNav,
-  homeContent,
   marketingImages,
-  servicesContent,
   type ImageRef,
   type MarketingImageKey,
 } from '@/content/marketing'
+import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
 
 const assetsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'assets')
 const seedContext = { disableRevalidate: true }
@@ -64,8 +61,8 @@ function bandLinks(
   }))
 }
 
-async function pageExists(payload: Payload, slug: string) {
-  for (const draft of [true, false]) {
+async function findPage(payload: Payload, slug: string) {
+  for (const draft of [false, true]) {
     const existing = await payload.find({
       collection: 'pages',
       depth: 0,
@@ -75,9 +72,9 @@ async function pageExists(payload: Payload, slug: string) {
       pagination: false,
       where: { slug: { equals: slug } },
     })
-    if (existing.docs[0]) return true
+    if (existing.docs[0]) return { id: existing.docs[0].id, draft }
   }
-  return false
+  return null
 }
 
 async function ensureMedia(payload: Payload): Promise<MediaIds> {
@@ -124,7 +121,10 @@ function imageId(ids: MediaIds, image?: ImageRef) {
   return image ? ids[image.key] : undefined
 }
 
-async function seedPages(payload: Payload, ids: MediaIds) {
+function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
+  const homeContent = copy.home
+  const aboutContent = copy.about
+  const servicesContent = copy.services
   const pages = [
     {
       slug: 'home',
@@ -332,71 +332,243 @@ async function seedPages(payload: Payload, ids: MediaIds) {
     },
   ]
 
+  return pages
+}
+
+async function seedPages(payload: Payload, ids: MediaIds) {
+  const english = pageDefinitions(getMarketing('en'), ids)
+  const chinese = pageDefinitions(getMarketing('zh'), ids)
   const summary: string[] = []
 
-  for (const page of pages) {
-    if (await pageExists(payload, page.slug)) {
-      summary.push(`page ${page.slug}: skipped`)
+  for (const page of english) {
+    const zhPage = chinese.find((item) => item.slug === page.slug)
+    const existing = await findPage(payload, page.slug)
+    let id = existing?.id
+    const draft = existing?.draft ?? false
+
+    if (!id) {
+      const created = await payload.create({
+        collection: 'pages',
+        overrideAccess: true,
+        draft: false,
+        locale: 'en',
+        context: seedContext,
+        data: page.data,
+      })
+      id = created.id
+      summary.push(`page ${page.slug}: created`)
+    } else {
+      const saved = await payload.findByID({
+        collection: 'pages',
+        id,
+        depth: 0,
+        draft,
+        locale: 'en',
+        fallbackLocale: false,
+        overrideAccess: true,
+      })
+      const stripped = stripLegacyBilingualCopy(saved)
+      if (stripped.changed && isRecord(stripped.value)) {
+        const value = stripped.value
+        await payload.update({
+          collection: 'pages',
+          id,
+          draft,
+          locale: 'en',
+          overrideAccess: true,
+          context: seedContext,
+          data: {
+            hero: value.hero as Record<string, unknown>,
+            layout: value.layout as never,
+          },
+        })
+        summary.push(`page ${page.slug}: cleared mixed-language subtitles`)
+      } else {
+        summary.push(`page ${page.slug}: english kept`)
+      }
+    }
+
+    if (!zhPage) continue
+
+    const zhSaved = await payload.findByID({
+      collection: 'pages',
+      id,
+      depth: 0,
+      draft,
+      locale: 'zh' as TypedLocale,
+      fallbackLocale: false,
+      overrideAccess: true,
+    })
+
+    if (zhSaved.title) {
+      summary.push(`page ${page.slug}: zh kept`)
       continue
     }
 
-    await payload.create({
+    const enSaved = await payload.findByID({
       collection: 'pages',
+      id,
+      depth: 0,
+      draft,
+      locale: 'en',
+      fallbackLocale: false,
       overrideAccess: true,
-      draft: false,
-      context: seedContext,
-      data: page.data,
     })
-    summary.push(`page ${page.slug}: created`)
+
+    await payload.update({
+      collection: 'pages',
+      id,
+      draft,
+      locale: 'zh' as TypedLocale,
+      overrideAccess: true,
+      context: seedContext,
+      data: {
+        title: ({ home: '首页', about: '关于我们', services: '服务' } as Record<string, string>)[page.slug] || zhPage.data.title,
+        hero: mergeLocale(enSaved.hero, zhPage.data.hero) as never,
+        layout: mergeLocale(enSaved.layout, zhPage.data.layout) as never,
+        meta: mergeLocale(enSaved.meta, zhPage.data.meta) as never,
+      },
+    })
+    summary.push(`page ${page.slug}: zh filled`)
   }
 
   return summary
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
 async function seedGlobals(payload: Payload) {
   const summary: string[] = []
-  const header = await payload.findGlobal({ slug: 'header', overrideAccess: true })
+  const english = getMarketing('en')
+  const chinese = getMarketing('zh')
+  const header = await payload.findGlobal({ slug: 'header', overrideAccess: true, locale: 'en' })
   const headerData: Record<string, unknown> = {}
 
   if (!header.navItems?.length) {
-    headerData.navItems = headerNav.primary.map(navLink)
+    headerData.navItems = english.header.primary.map(navLink)
   }
   if (!header.secondaryNavItems?.length) {
-    headerData.secondaryNavItems = headerNav.secondary.map(navLink)
+    headerData.secondaryNavItems = english.header.secondary.map(navLink)
   }
   if (Object.keys(headerData).length) {
     await payload.updateGlobal({
       slug: 'header',
       overrideAccess: true,
+      locale: 'en',
       context: seedContext,
       data: headerData,
     })
     summary.push('header: filled empty navigation')
   } else {
-    summary.push('header: skipped')
+    summary.push('header: english kept')
   }
 
-  const footer = await payload.findGlobal({ slug: 'footer', overrideAccess: true })
+  const footer = await payload.findGlobal({ slug: 'footer', overrideAccess: true, locale: 'en' })
   const footerData: Record<string, unknown> = {}
-  if (!footer.blurb) footerData.blurb = footerContent.blurb
-  if (!footer.tagline) footerData.tagline = footerContent.tagline
-  if (!footer.location) footerData.location = footerContent.location
-  if (!footer.serviceLinks?.length) footerData.serviceLinks = footerContent.services.map(navLink)
-  if (!footer.navItems?.length) footerData.navItems = footerContent.company.map(navLink)
+  if (!footer.blurb) footerData.blurb = english.footer.blurb
+  if (!footer.tagline) footerData.tagline = english.footer.tagline
+  if (!footer.location) footerData.location = english.footer.location
+  if (!footer.serviceLinks?.length) footerData.serviceLinks = english.footer.services.map(navLink)
+  if (!footer.navItems?.length) footerData.navItems = english.footer.company.map(navLink)
 
   if (Object.keys(footerData).length) {
     await payload.updateGlobal({
       slug: 'footer',
       overrideAccess: true,
+      locale: 'en',
       context: seedContext,
       data: footerData,
     })
     summary.push('footer: filled empty fields')
   } else {
-    summary.push('footer: skipped')
+    summary.push('footer: english kept')
   }
 
+  summary.push(await fillHeaderLocale(payload, chinese.header))
+  summary.push(await fillFooterLocale(payload, chinese.footer))
+
   return summary
+}
+
+async function fillHeaderLocale(
+  payload: Payload,
+  copy: ReturnType<typeof getMarketing>['header'],
+) {
+  const header = await payload.findGlobal({
+    slug: 'header',
+    overrideAccess: true,
+    locale: 'zh' as TypedLocale,
+    fallbackLocale: false,
+  })
+  const navItems = localizeNav(header.navItems, copy.primary)
+  const secondaryNavItems = localizeNav(header.secondaryNavItems, copy.secondary)
+  if (!navItems && !secondaryNavItems) return 'header: zh kept'
+
+  await payload.updateGlobal({
+    slug: 'header',
+    overrideAccess: true,
+    locale: 'zh' as TypedLocale,
+    context: seedContext,
+    data: {
+      ...(navItems ? { navItems } : {}),
+      ...(secondaryNavItems ? { secondaryNavItems } : {}),
+    },
+  })
+  return 'header: zh filled'
+}
+
+async function fillFooterLocale(
+  payload: Payload,
+  copy: ReturnType<typeof getMarketing>['footer'],
+) {
+  const footer = await payload.findGlobal({
+    slug: 'footer',
+    overrideAccess: true,
+    locale: 'zh' as TypedLocale,
+    fallbackLocale: false,
+  })
+  const data: Record<string, unknown> = {}
+  if (!footer.blurb) data.blurb = copy.blurb
+  if (!footer.tagline) data.tagline = copy.tagline
+  if (!footer.location) data.location = copy.location
+  const serviceLinks = localizeNav(footer.serviceLinks, copy.services)
+  const navItems = localizeNav(footer.navItems, copy.company)
+  if (serviceLinks) data.serviceLinks = serviceLinks
+  if (navItems) data.navItems = navItems
+  if (!Object.keys(data).length) return 'footer: zh kept'
+
+  await payload.updateGlobal({
+    slug: 'footer',
+    overrideAccess: true,
+    locale: 'zh' as TypedLocale,
+    context: seedContext,
+    data,
+  })
+  return 'footer: zh filled'
+}
+
+function localizeNav(
+  items: { id?: string | null; link?: { type?: string | null; url?: string | null; label?: string | null; newTab?: boolean | null } | null }[] | null | undefined,
+  translations: { label: string; href: string }[],
+) {
+  if (!items?.length) return null
+  if (items.every((item) => item.link?.label)) return null
+
+  return items.map((item) => {
+    const href = item.link?.url
+    const match = translations.find((entry) => entry.href === href)
+    return {
+      id: item.id,
+      link: {
+        type: item.link?.type === 'reference' ? ('reference' as const) : ('custom' as const),
+        url: item.link?.url,
+        newTab: item.link?.newTab,
+        label: item.link?.label || match?.label || '',
+      },
+    }
+  })
 }
 
 export async function seedWebsite(payload: Payload) {

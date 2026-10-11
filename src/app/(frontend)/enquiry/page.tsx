@@ -1,76 +1,68 @@
 import type { Metadata } from 'next'
-import React from 'react'
-import { EnquiryForm } from './EnquiryForm'
-import { PlaceholderImage } from '@/components/PlaceholderImage'
+import React, { Fragment } from 'react'
 
-export const metadata: Metadata = {
-  title: 'Start an Enquiry | Zillion Home',
-  description:
-    'Tell us about your project. Our team will be in touch to discuss your needs, provide guidance and next steps.',
+import { PlaceholderImage } from '@/components/PlaceholderImage'
+import { getLocale } from '@/i18n/getLocale'
+import { getMessages } from '@/i18n/messages'
+
+import { EnquiryForm } from './EnquiryForm'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = getMessages(await getLocale()).enquiry
+  return {
+    title: copy.metaTitle,
+    description: copy.metaDescription,
+  }
 }
 
-export default function EnquiryPage() {
+function lines(text: string) {
+  return text.split('\n').map((line, index) => (
+    <Fragment key={`${line}-${index}`}>
+      {index > 0 && <br />}
+      {line}
+    </Fragment>
+  ))
+}
+
+export default async function EnquiryPage() {
+  const copy = getMessages(await getLocale()).enquiry
+
   return (
     <main className="min-h-screen">
-      {/* Hero Section - contained */}
       <section className="bg-background-warm py-16 lg:py-24">
         <div className="container">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
-            {/* Left: Image with Content Overlay */}
             <div className="relative min-h-[400px] lg:min-h-[600px] rounded-lg overflow-hidden">
-              {/* Background Image */}
               <div className="absolute inset-0">
                 <PlaceholderImage
                   src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80"
-                  alt="Modern kitchen interior"
+                  alt={copy.imageAlt}
                   className="h-full rounded-lg"
                   aspectRatio="auto"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/50 to-transparent rounded-lg" />
               </div>
 
-              {/* Content Overlay */}
               <div className="relative h-full p-6 lg:p-10 flex flex-col justify-end text-white">
-                <p className="text-sm tracking-widest uppercase text-white/70 mb-4">
-                  Let&apos;s Create Together
-                </p>
+                <p className="text-sm tracking-widest uppercase text-white/70 mb-4">{copy.overlayEyebrow}</p>
                 <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl leading-tight mb-4">
-                  Start an
-                  <br />
-                  Enquiry
+                  {lines(copy.overlayTitle)}
                 </h1>
-                <p className="text-white/80 max-w-md">
-                  Tell us about your project and our team will be in touch to discuss your needs,
-                  provide guidance and next steps.
-                </p>
-
-                {/* Decorative Text */}
+                <p className="text-white/80 max-w-md">{copy.overlayBody}</p>
                 <div className="hidden lg:block mt-8 pt-8 border-t border-white/20">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/50">
-                    Tailored Joinery
-                  </p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/50">
-                    For Better Living
-                  </p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/50">{copy.overlayLine1}</p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/50">{copy.overlayLine2}</p>
                 </div>
               </div>
             </div>
 
-            {/* Right: Form Section */}
             <div className="bg-background rounded-lg p-6 lg:p-10">
               <div className="mb-8">
-                <p className="text-sm tracking-widest uppercase text-muted-foreground mb-2">
-                  Contact Us
-                </p>
-                <h2 className="font-serif text-2xl md:text-3xl mb-2">Tell us about your project</h2>
-                <p className="text-sm text-muted-foreground">告诉我们您的项目需求</p>
-                <p className="mt-4 text-foreground-soft">
-                  Please fill out the form below and we&apos;ll get back to you as soon as possible.
-                  We&apos;ll provide expert advice and help guide your next steps.
-                </p>
+                <p className="text-sm tracking-widest uppercase text-muted-foreground mb-2">{copy.formEyebrow}</p>
+                <h2 className="font-serif text-2xl md:text-3xl mb-2">{copy.formHeading}</h2>
+                <p className="mt-4 text-foreground-soft">{copy.formIntro}</p>
               </div>
-
-              <EnquiryForm />
+              <EnquiryForm copy={copy} />
             </div>
           </div>
         </div>

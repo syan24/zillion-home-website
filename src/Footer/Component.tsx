@@ -2,22 +2,26 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import Link from 'next/link'
 import React from 'react'
 
-import { footerContent } from '@/content/marketing'
+import { getMarketing } from '@/content/getMarketing'
 import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
-
-const legal = [
-  { name: 'Privacy Policy', href: '/privacy' },
-  { name: 'Terms of Service', href: '/terms' },
-]
+import { getLocale } from '@/i18n/getLocale'
+import { getMessages } from '@/i18n/messages'
 
 export async function Footer() {
-  const footerData = await getCachedGlobal('footer', 1)()
+  const locale = await getLocale()
+  const copy = getMessages(locale)
+  const footerContent = getMarketing(locale).footer
+  const footerData = await getCachedGlobal('footer', 1, locale)()
   const navItems = footerData?.navItems ?? []
   const serviceLinks = footerData?.serviceLinks ?? []
   const blurb = footerData?.blurb || footerContent.blurb
   const tagline = footerData?.tagline || footerContent.tagline
   const location = footerData?.location || footerContent.location
+  const legal = [
+    { name: copy.footer.privacy, href: '/privacy' },
+    { name: copy.footer.terms, href: '/terms' },
+  ]
 
   return (
     <footer className="mt-auto border-t border-border bg-dark text-dark-foreground">
@@ -34,7 +38,7 @@ export async function Footer() {
 
           {/* Services */}
           <div>
-            <h3 className="text-sm font-semibold tracking-wider uppercase">Services</h3>
+            <h3 className="text-sm font-semibold tracking-wider uppercase">{copy.footer.services}</h3>
             <ul className="mt-4 space-y-3">
               {serviceLinks.length > 0
                 ? serviceLinks.map(({ link }, i) => (
@@ -60,7 +64,7 @@ export async function Footer() {
 
           {/* Company */}
           <div>
-            <h3 className="text-sm font-semibold tracking-wider uppercase">Company</h3>
+            <h3 className="text-sm font-semibold tracking-wider uppercase">{copy.footer.company}</h3>
             <ul className="mt-4 space-y-3">
               {navItems.length > 0
                 ? navItems.map(({ link }, i) => (
@@ -86,13 +90,13 @@ export async function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="text-sm font-semibold tracking-wider uppercase">Get in Touch</h3>
+            <h3 className="text-sm font-semibold tracking-wider uppercase">{copy.footer.contact}</h3>
             <div className="mt-4 space-y-3">
               <Link
                 href="/enquiry"
                 className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors"
               >
-                Start an Enquiry →
+                {copy.enquiryCta}
               </Link>
               <p className="text-sm text-dark-foreground/70">{location}</p>
             </div>
@@ -103,7 +107,7 @@ export async function Footer() {
         <div className="mt-12 pt-8 border-t border-dark-foreground/10">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-xs text-dark-foreground/60">
-              © {new Date().getFullYear()} Zillion Home. All rights reserved.
+              © {new Date().getFullYear()} Zillion Home. {copy.footer.rights}
             </p>
             <div className="flex gap-6">
               {legal.map((item) => (

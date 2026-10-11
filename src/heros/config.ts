@@ -7,9 +7,10 @@ import {
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
 
+import { localizeCopyField } from '@/fields/localizeCopy'
 import { linkGroup } from '@/fields/linkGroup'
 
-export const hero: Field = {
+export const hero: Field = localizeCopyField({
   name: 'hero',
   type: 'group',
   fields: [
@@ -122,4 +123,4 @@ export const hero: Field = {
     },
   ],
   label: false,
-}
+})

@@ -10,15 +10,20 @@ import { Logo } from '@/components/Logo/Logo'
 import { HeaderNav } from './Nav'
 import { Menu, X } from 'lucide-react'
 
+import type { SiteLocale } from '@/i18n/config'
+import { getMessages } from '@/i18n/messages'
+
 interface HeaderClientProps {
   data: Header
+  locale: SiteLocale
 }
 
 function subscribe() {
   return () => {}
 }
 
-export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
+export const HeaderClient: React.FC<HeaderClientProps> = ({ data, locale }) => {
+  const copy = getMessages(locale)
   const [theme, setTheme] = useState<string | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { headerTheme, setHeaderTheme } = useHeaderTheme()
@@ -52,7 +57,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:gap-6">
-            <HeaderNav data={data} />
+            <HeaderNav data={data} locale={locale} />
           </div>
 
           {/* Mobile Menu Button */}
@@ -60,7 +65,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
             type="button"
             className="md:hidden p-2 -mr-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={mobileMenuOpen ? copy.closeMenu : copy.openMenu}
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -69,7 +74,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4">
-            <HeaderNav data={data} mobile />
+            <HeaderNav data={data} locale={locale} mobile />
           </div>
         )}
       </div>

@@ -7,8 +7,11 @@ import { fileURLToPath } from 'url'
 
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
+import { ProjectImages } from './collections/ProjectImages'
 import { ProjectSWMS } from './collections/ProjectSWMS'
 import { Projects } from './collections/Projects'
+import { Spaces } from './collections/Spaces'
+import { Styles } from './collections/Styles'
 import { SWMSAcknowledgements } from './collections/SWMSAcknowledgements'
 import { SWMSTemplates } from './collections/SWMSTemplates'
 import { SWMSVersions } from './collections/SWMSVersions'
@@ -61,6 +64,14 @@ export default buildConfig({
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
+  localization: {
+    locales: [
+      { label: 'English', code: 'en' },
+      { label: '中文', code: 'zh' },
+    ],
+    defaultLocale: 'en',
+    fallback: true,
+  },
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
@@ -71,6 +82,9 @@ export default buildConfig({
     Media,
     Users,
     Projects,
+    Styles,
+    Spaces,
+    ProjectImages,
     SWMSTemplates,
     ProjectSWMS,
     SWMSVersions,
