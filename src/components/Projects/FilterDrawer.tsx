@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import React, { useState } from 'react'
 
 import type { Messages } from '@/i18n/messages'
@@ -59,9 +60,9 @@ export function FilterDrawer({
               <button type="submit" className="flex-1 rounded bg-primary px-4 py-3 text-sm text-primary-foreground">
                 {copy.apply}
               </button>
-              <a href="/projects" className="flex-1 rounded border border-border px-4 py-3 text-center text-sm">
+              <Link href="/projects" className="flex-1 rounded border border-border px-4 py-3 text-center text-sm">
                 {copy.clear}
-              </a>
+              </Link>
             </div>
           </form>
         </div>
@@ -90,9 +91,9 @@ export function DesktopProjectFilter({
         <button type="submit" className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground">
           {copy.apply}
         </button>
-        <a href="/projects" className="rounded border border-border px-4 py-2 text-sm">
+        <Link href="/projects" className="rounded border border-border px-4 py-2 text-sm">
           {copy.clear}
-        </a>
+        </Link>
       </div>
     </form>
   )

@@ -96,8 +96,17 @@ function sortImages(images: GalleryImage[], docs: ProjectImage[]) {
   })
 }
 
-async function publishedImages(locale: SiteLocale, where: Where) {
+function relationIds(value: Relation<{ id: number }>[] | null | undefined) {
+  return (value || [])
+    .map((item) => (typeof item === 'number' ? item : item?.id))
+    .filter((id): id is number => typeof id === 'number')
+}
+
+async function publishedImages(locale: SiteLocale, projectIds: number[]) {
   const payload = await getPayload({ config: configPromise })
+  const where: Where = projectIds.length
+    ? { and: [{ published: { equals: true } }, { project: { in: projectIds } }] }
+    : { id: { equals: -1 } }
   const result = await payload.find({
     collection: 'project-images',
     where,
@@ -109,20 +118,25 @@ async function publishedImages(locale: SiteLocale, where: Where) {
     fallbackLocale: 'en',
   })
   const images = result.docs.map((doc) => toGalleryImage(doc)).filter((image): image is GalleryImage => Boolean(image))
-  return sortImages(images, result.docs)
-}
-
-const publishedImageWhere: Where = {
-  and: [{ published: { equals: true } }, { 'project._status': { equals: 'published' } }],
+  return { images: sortImages(images, result.docs), docs: result.docs }
 }
 
 export async function loadPortfolio(locale: SiteLocale, filters: ProjectFilters) {
   const payload = await getPayload({ config: configPromise })
   const localeOptions = { locale: locale as TypedLocale, fallbackLocale: 'en' as const, overrideAccess: false as const }
 
-  const [styleResult, spaceResult] = await Promise.all([
+  const [styleResult, spaceResult, projectResult] = await Promise.all([
     payload.find({ collection: 'styles', limit: 50, sort: 'displayOrder', pagination: false, ...localeOptions }),
     payload.find({ collection: 'spaces', limit: 50, sort: 'displayOrder', pagination: false, ...localeOptions }),
+    payload.find({
+      collection: 'projects',
+      where: { _status: { equals: 'published' } },
+      depth: 0,
+      limit: 200,
+      pagination: false,
+      sort: 'displayOrder',
+      ...localeOptions,
+    }),
   ])
 
   const styles: PortfolioTerm[] = styleResult.docs.map((doc: Style) => ({
@@ -137,41 +151,45 @@ export async function loadPortfolio(locale: SiteLocale, filters: ProjectFilters)
     slug: doc.slug || '',
   })).filter((doc) => doc.slug)
 
-  const covers = await publishedImages(locale, publishedImageWhere)
-  const projects = projectOptions(covers)
+  const publishedProjects = projectResult.docs.filter((doc) => doc.slug)
+  const styleId = filters.style ? styles.find((item) => item.slug === filters.style)?.id : undefined
+  const spaceId = filters.space ? spaces.find((item) => item.slug === filters.space)?.id : undefined
+  const knownStyle = !filters.style || Boolean(styleId)
+  const knownSpace = !filters.space || Boolean(spaceId)
 
-  let images = covers
-  if (hasProjectFilters(filters)) {
-    const and: Where[] = [{ published: { equals: true } }, { 'project._status': { equals: 'published' } }]
-    if (filters.type) and.push({ 'project.type': { equals: filters.type } })
+  const candidateIds = publishedProjects
+    .filter((project) => {
+      if (!knownStyle || !knownSpace) return false
+      if (filters.type && project.type !== filters.type) return false
+      if (filters.project && project.slug !== filters.project) return false
+      return true
+    })
+    .map((project) => project.id)
 
-    if (filters.project) {
-      const project = projects.find((item) => item.slug === filters.project)
-      and.push(project ? { 'project.slug': { equals: project.slug } } : { id: { equals: -1 } })
+  const loaded = await publishedImages(locale, candidateIds)
+  const covers = hasProjectFilters(filters) ? (await publishedImages(locale, publishedProjects.map((project) => project.id))).images : loaded.images
+
+  const styleIdsByProject = new Map(publishedProjects.map((project) => [project.id, relationIds(project.styles)]))
+  const spaceIdsByProject = new Map(publishedProjects.map((project) => [project.id, relationIds(project.spaces)]))
+  const projectIdBySlug = new Map(publishedProjects.map((project) => [project.slug as string, project.id]))
+
+  const images = loaded.images.filter((image) => {
+    const projectId = projectIdBySlug.get(image.projectSlug)
+    if (!projectId) return false
+    if (styleId) {
+      const onImage = loaded.docs.find((doc) => doc.id === image.id)
+      const imageStyleIds = relationIds(onImage?.styles)
+      if (!imageStyleIds.includes(styleId) && !styleIdsByProject.get(projectId)?.includes(styleId)) return false
     }
-
-    if (filters.style) {
-      const style = styles.find((item) => item.slug === filters.style)
-      and.push(
-        style
-          ? { or: [{ styles: { in: [style.id] } }, { 'project.styles': { in: [style.id] } }] }
-          : { id: { equals: -1 } },
-      )
+    if (spaceId) {
+      const onImage = loaded.docs.find((doc) => doc.id === image.id)
+      const imageSpaceIds = relationIds(onImage?.spaces)
+      if (!imageSpaceIds.includes(spaceId) && !spaceIdsByProject.get(projectId)?.includes(spaceId)) return false
     }
+    return true
+  })
 
-    if (filters.space) {
-      const space = spaces.find((item) => item.slug === filters.space)
-      and.push(
-        space
-          ? { or: [{ spaces: { in: [space.id] } }, { 'project.spaces': { in: [space.id] } }] }
-          : { id: { equals: -1 } },
-      )
-    }
-
-    images = await publishedImages(locale, { and })
-  }
-
-  return { styles, spaces, images, covers, projects }
+  return { styles, spaces, images: hasProjectFilters(filters) ? images : covers, covers, projects: projectOptions(covers) }
 }
 
 function projectOptions(images: GalleryImage[]): PortfolioProjectOption[] {
@@ -220,9 +238,7 @@ export async function loadProjectDetail(slug: string, locale: SiteLocale) {
   const project = result.docs[0] as Project | undefined
   if (!project?.slug) return null
 
-  const images = await publishedImages(locale, {
-    and: [{ published: { equals: true } }, { project: { equals: project.id } }],
-  })
+  const images = (await publishedImages(locale, [project.id])).images
 
   const relatedResult = await payload.find({
     collection: 'projects',
