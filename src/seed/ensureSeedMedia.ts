@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { BlobNotFoundError, head, put } from '@vercel/blob'
 import type { Payload } from 'payload'
 
 const seedContext = { disableRevalidate: true }
@@ -125,7 +126,9 @@ export function assessSeedMedia(probe: SeedMediaProbe): { repair: boolean; reaso
     }
   }
 
-  if (probe.publicFile === 'missing') {
+  // A cached 404 from the previous deployment is not proof the Blob object is missing.
+  // Authenticated Blob head is the durability check when the token is set.
+  if (probe.publicFile === 'missing' && probe.blob !== 'present') {
     return { repair: true, reason: 'public file returned 404' }
   }
 
@@ -206,12 +209,68 @@ function probeIsPresent(probe: HttpProbe): boolean {
   return probe.status === 200 || probe.status === 206
 }
 
-export async function blobObjectState(url: string): Promise<'present' | 'missing'> {
-  const probe = await probeUrl(url)
-  if (!probe) throw new Error(`Could not verify Vercel Blob object ${url}`)
-  if (probe.status === 404 || probe.status === 416 || probe.length === 0) return 'missing'
-  if (probeIsPresent(probe)) return 'present'
-  throw new Error(`Could not verify Vercel Blob object ${url} (HTTP ${probe.status})`)
+/** Blob CDN URL stored on the Media doc, without a cache-busting query. */
+export function absoluteBlobUrl(url: string | null | undefined): string | null {
+  if (!url?.trim()) return null
+  let parsed: URL
+  try {
+    parsed = new URL(url.trim())
+  } catch {
+    return null
+  }
+  if (!parsed.hostname.endsWith('.blob.vercel-storage.com')) return null
+  parsed.search = ''
+  parsed.hash = ''
+  return parsed.toString()
+}
+
+/**
+ * URL to confirm with the Blob API.
+ * Payload usually stores `/api/media/file/<filename>` and the file route resolves the
+ * object from `prefix`, `_objectKey`, and `filename`. When the document already stores
+ * a Blob URL, that URL is the one to check.
+ */
+export function blobUrlToVerify(doc: SeedMediaDoc, filename: string, token: string): string {
+  return absoluteBlobUrl(doc.url) ?? seedBlobObjectUrl(doc.filename || filename, doc, token)
+}
+
+function blobPathname(blobUrl: string): string {
+  const pathname = new URL(blobUrl).pathname.replace(/^\/+/, '')
+  return decodeURIComponent(pathname)
+}
+
+function isBlobMissing(error: unknown): boolean {
+  if (error instanceof BlobNotFoundError) return true
+  return error instanceof Error && error.name === 'BlobNotFoundError'
+}
+
+/** Same check the `/api/media/file` handler uses: Blob API `head` with the read/write token. */
+export async function blobHeadPresent(url: string, token: string, attempts = 1): Promise<boolean> {
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const meta = await head(url, { token })
+      return meta.size > 0
+    } catch (error) {
+      if (!isBlobMissing(error)) throw error
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 400))
+      }
+    }
+  }
+  return false
+}
+
+async function putSeedFileAt(blobUrl: string, filePath: string, token: string) {
+  const ext = path.extname(filePath).toLowerCase()
+  const contentType =
+    ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : ext === '.gif' ? 'image/gif' : 'image/jpeg'
+  await put(blobPathname(blobUrl), fs.readFileSync(filePath), {
+    access: 'public',
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType,
+    token,
+  })
 }
 
 async function publicFileState(filename: string): Promise<'ok' | 'missing' | 'unknown'> {
@@ -244,8 +303,8 @@ async function probeExisting(
   let blob: SeedMediaProbe['blob'] = 'unknown'
 
   if (token) {
-    const objectUrl = seedBlobObjectUrl(storedName, doc, token)
-    blob = await blobObjectState(objectUrl)
+    const objectUrl = blobUrlToVerify(doc, storedName, token)
+    blob = (await blobHeadPresent(objectUrl, token)) ? 'present' : 'missing'
   }
 
   const publicFile = await publicFileState(storedName)
@@ -279,14 +338,49 @@ async function uploadSeedFile(
   return updated
 }
 
-async function assertBlobLanded(filename: string, doc: SeedMediaDoc) {
+async function freshMedia(payload: Payload, doc: SeedMediaDoc): Promise<SeedMediaDoc> {
+  if (typeof payload.findByID !== 'function') return doc
+  const loaded = await payload.findByID({
+    collection: 'media',
+    id: doc.id,
+    depth: 0,
+    overrideAccess: true,
+  })
+  return loaded ?? doc
+}
+
+async function assertBlobLanded(
+  payload: Payload,
+  filename: string,
+  doc: SeedMediaDoc,
+  filePath: string,
+) {
   const token = blobReadWriteToken()
   if (!token) return
-  const objectUrl = seedBlobObjectUrl(doc.filename || filename, doc, token)
-  const state = await blobObjectState(objectUrl)
-  if (state !== 'present') {
+
+  const fresh = await freshMedia(payload, doc)
+  const handlerUrl = seedBlobObjectUrl(fresh.filename || filename, fresh, token)
+  const storedUrl = absoluteBlobUrl(fresh.url)
+  const preferred = storedUrl ?? handlerUrl
+
+  let durable = await blobHeadPresent(preferred, token, 2)
+  if (!durable && preferred !== handlerUrl) {
+    durable = await blobHeadPresent(handlerUrl, token)
+  }
+  if (!durable) {
+    await putSeedFileAt(handlerUrl, filePath, token)
+    durable = await blobHeadPresent(handlerUrl, token, 2)
+    if (durable) {
+      console.log(`media ${filename}: Blob API confirmed ${handlerUrl}`)
+    }
+  }
+  if (durable && preferred !== handlerUrl && !(await blobHeadPresent(handlerUrl, token))) {
+    await putSeedFileAt(handlerUrl, filePath, token)
+    durable = await blobHeadPresent(handlerUrl, token, 2)
+  }
+  if (!durable) {
     throw new Error(
-      `Seed upload for ${filename} did not land in Vercel Blob (${objectUrl}). The deploy seed will not leave another orphan Media row.`,
+      `Seed upload for ${filename} did not land in Vercel Blob (${preferred}). Stored media url: ${fresh.url || '(empty)'}; prefix: ${fresh.prefix || '(empty)'}; _objectKey: ${fresh._objectKey || '(empty)'}. The deploy seed will not leave another orphan Media row.`,
     )
   }
 }
@@ -322,7 +416,7 @@ export async function ensureSeedMedia(
       data: { alt },
       filePath,
     })
-    await assertBlobLanded(filename, created)
+    await assertBlobLanded(payload, filename, created, filePath)
     console.log(`media ${filename}: created`)
     return created.id
   }
@@ -336,7 +430,7 @@ export async function ensureSeedMedia(
     }
     console.log(`media ${filename}: re-upload (${decision.reason})`)
     const updated = await uploadSeedFile(payload, doc, filePath, alt)
-    await assertBlobLanded(filename, updated)
+    await assertBlobLanded(payload, filename, updated, filePath)
     if (doc.id === primaryId) primaryId = updated.id
   }
 

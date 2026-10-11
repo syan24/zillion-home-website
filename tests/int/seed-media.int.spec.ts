@@ -1,16 +1,32 @@
 import fs from 'fs'
 import path from 'path'
 
+import { BlobNotFoundError, head } from '@vercel/blob'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
 
 import {
   assessSeedMedia,
+  blobUrlToVerify,
   deployBlobTokenProblem,
   ensureSeedMedia,
   seedBlobObjectUrl,
   urlLooksLocalOnly,
 } from '@/seed/ensureSeedMedia'
+
+vi.mock('@vercel/blob', () => {
+  class BlobNotFoundError extends Error {
+    constructor() {
+      super('The requested blob does not exist')
+      this.name = 'BlobNotFoundError'
+    }
+  }
+  return {
+    BlobNotFoundError,
+    head: vi.fn(),
+    put: vi.fn(),
+  }
+})
 
 const healthy = {
   filename: 'service-residential.jpg',
@@ -59,12 +75,57 @@ describe('seed media repair', () => {
 
   it('re-uploads orphan rows whose filename exists but the blob object or public file does not', () => {
     expect(assessSeedMedia({ ...healthy, blob: 'missing' }).reason).toBe('blob object is missing')
-    expect(assessSeedMedia({ ...healthy, publicFile: 'missing' }).reason).toBe(
-      'public file returned 404',
-    )
     expect(assessSeedMedia({ ...healthy, blob: 'unknown' }).reason).toBe(
       'blob durability was not confirmed',
     )
+    expect(
+      assessSeedMedia({
+        ...healthy,
+        blobRequired: false,
+        blob: 'unknown',
+        publicFile: 'missing',
+        localFileExists: false,
+      }).reason,
+    ).toBe('public file returned 404')
+  })
+
+  it('keeps a file when Blob head confirms it, even if the public CDN still returns 404', () => {
+    expect(assessSeedMedia({ ...healthy, publicFile: 'missing' }).repair).toBe(false)
+  })
+
+  it('verifies the Blob URL stored on the media doc, otherwise the file-route object path', () => {
+    const token = 'vercel_blob_rw_store1_secret9'
+    expect(
+      blobUrlToVerify(
+        { id: 1, filename: 'service-commercial.jpg', url: '/api/media/file/service-commercial.jpg' },
+        'service-commercial.jpg',
+        token,
+      ),
+    ).toBe('https://store1.public.blob.vercel-storage.com/service-commercial.jpg')
+    expect(
+      blobUrlToVerify(
+        {
+          id: 1,
+          filename: 'service-commercial.jpg',
+          prefix: 'media',
+          _objectKey: 'abc',
+          url: '/api/media/file/service-commercial.jpg?prefix=media',
+        },
+        'service-commercial.jpg',
+        token,
+      ),
+    ).toBe('https://store1.public.blob.vercel-storage.com/media/abc/service-commercial.jpg')
+    expect(
+      blobUrlToVerify(
+        {
+          id: 1,
+          filename: 'service-commercial.jpg',
+          url: 'https://store1.public.blob.vercel-storage.com/media/abc/service-commercial.jpg?download=1',
+        },
+        'service-commercial.jpg',
+        token,
+      ),
+    ).toBe('https://store1.public.blob.vercel-storage.com/media/abc/service-commercial.jpg')
   })
 
   it('keeps a reachable admin replacement except the homepage hero', () => {
@@ -188,15 +249,21 @@ describe('seed media repair', () => {
     process.env.NEXT_PUBLIC_SERVER_URL = 'https://zillion-home.vercel.app'
 
     let uploaded = false
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
-      const href = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
-      if (href.includes('blob.vercel-storage.com')) {
-        if (!uploaded) return new Response(null, { status: 404 })
-        return new Response('x', {
-          status: 206,
-          headers: { 'content-range': `bytes 0-0/${seedBytes}` },
-        })
+    vi.mocked(head).mockImplementation(async () => {
+      if (!uploaded) throw new BlobNotFoundError()
+      return {
+        url: `https://store1.public.blob.vercel-storage.com/${filename}`,
+        downloadUrl: `https://store1.public.blob.vercel-storage.com/${filename}?download=1`,
+        pathname: filename,
+        size: seedBytes,
+        uploadedAt: new Date(),
+        contentType: 'image/jpeg',
+        contentDisposition: 'inline',
+        cacheControl: 'public, max-age=60',
+        etag: 'seed',
       }
+    })
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => {
       if (!uploaded) return new Response(null, { status: 404 })
       return new Response('x', {
         status: 206,
