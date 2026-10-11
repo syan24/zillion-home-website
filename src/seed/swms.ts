@@ -111,11 +111,13 @@ async function findOrCreateProject(
   return payload.create({
     collection: 'projects',
     overrideAccess: true,
+    draft: false,
     data: {
       ...data,
       type: 'residential',
       projectStatus: 'active',
       showAddressPublicly: false,
+      _status: 'published',
     },
   })
 }

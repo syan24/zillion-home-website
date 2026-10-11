@@ -6,10 +6,16 @@ This file records decisions we may need to make because the client brief is inte
 
 ## A. Product assumptions
 
-### A1. English-first launch
-**[ASSUMPTION]** The product will launch in English.
+### A1. English default, Chinese optional
+**[ASSUMPTION]** The public marketing site defaults to English. A header control switches the whole marketing experience to Simplified Chinese, and back.
 
-**[ASSUMPTION]** Payload localisation will be enabled or the schema will be localisation-ready so Chinese can be added later.
+**[ASSUMPTION]** The choice is stored in a `locale` cookie (`en` or `zh`). Routes stay unprefixed (`/`, `/projects`, `/enquiry`) so existing links keep working. `zh` is Simplified Chinese; the document language is `zh-CN`.
+
+**[ASSUMPTION]** Payload localisation is enabled for public copy: page title, hero and marketing-block text, SEO title and description, header and footer labels, project public text, and style/space names. Addresses, slugs, statuses, and SWMS evidence are not localised.
+
+**[ASSUMPTION]** If a Chinese CMS field is empty, Payload falls back to English for that field. Chrome strings (navigation button, footer headings, enquiry form, project library) are complete in both languages and do not mix.
+
+**[ASSUMPTION]** The SWMS worker flow stays English. It does not use the marketing header or the locale cookie.
 
 ### A2. Public site visual direction
 **[ASSUMPTION]** Public-facing UI should feel premium, architectural and photography-led rather than like a generic SaaS dashboard.
@@ -88,7 +94,22 @@ Before final SWMS implementation, obtain either:
 **[ASSUMPTION]** Admin may store full address privately while publishing a suburb/general location if needed later.
 
 ### C3. Sharing
-**[ASSUMPTION]** "Copy share link" initially means copying a public project/image URL, not generating time-limited private links.
+**[ASSUMPTION]** "Copy share link" initially means copying a public project/image URL, not generating time-limited private links. An image link is `/projects/[slug]?image=[id]`.
+
+### C4. One project record, publication controls the website
+**[ASSUMPTION]** Portfolio fields extend the existing `projects` collection. Payload drafts control whether a project appears on the public website. SWMS can still reference a draft or published project. The public gallery only lists published images whose project is published.
+
+### C5. Suburb is the public location
+**[ASSUMPTION]** `suburb` is the public location text. The full `address` is shown on the website only when `showAddressPublicly` is on. Anonymous REST reads follow the same rule. The SWMS worker flow still receives the address through the server Local API.
+
+### C6. Image download
+**[ASSUMPTION]** Each project image has `allowDownload`. When it is off, the public page hides the download action and the download route returns 404. The image can still be viewed.
+
+### C7. Style and space filters match the image or its project
+**[ASSUMPTION]** A style or space filter matches an image that has that tag, or whose project has that tag. Project type and a specific project narrow the same result set. The filters are combined with AND and stored in the query string.
+
+### C8. By Room entries
+**[ASSUMPTION]** The eight room cards follow the design feedback: Kitchen, Bathroom, Living, Bedroom, Wardrobe & Joinery, Laundry, Home Office, Outdoor. An Office space exists for commercial images and appears in the filter drawer, not as a ninth card.
 
 ## D. Enquiry assumptions
 
@@ -134,20 +155,20 @@ This is a convenience feature and not client-specified.
 ### G1. Pages blocks instead of a Services collection
 **[ASSUMPTION]** Home, About and Services are documents in the existing Pages collection, using marketing layout blocks. A separate Services collection is not added. `docs/06-payload-collections.md` already allows page blocks when services are simple.
 
-### G2. Bilingual lines are fields, not locales
-**[ASSUMPTION]** Chinese lines on service cards are editable subtitle fields. Payload localisation is not turned on in this stage (see A1).
+### G2. Locales replace bilingual subtitle lines
+**[ASSUMPTION]** Service-card subtitles are an optional second line in the current locale. They are not a second language under an English title. See A1.
 
 ### G3. Demo seed is skip-if-exists, including production
-**[ASSUMPTION]** The project owner has asked for demo data on Preview and Production after each deploy. `pnpm seed:demo` creates missing website pages, placeholder media and the existing SWMS demo. It does not overwrite an existing page, media file or SWMS record. Empty header and footer fields are filled. The deploy runs this only when `SEED_DEMO=true`, using the deployment’s existing `DATABASE_URL`.
+**[ASSUMPTION]** The project owner has asked for demo data on Preview and Production after each deploy. `pnpm seed:demo` creates missing website pages, placeholder media, portfolio projects and the existing SWMS demo. It does not overwrite an existing page, media file, project or SWMS record. Empty header and footer fields are filled. Chinese locale fields are filled only when that locale is still empty. The one exception is the homepage hero file `hero-house.jpg`: if that media item is still in the library, a changed file is replaced so the darker hero reaches pages that already use it. The deploy runs this only when `SEED_DEMO=true`, using the deployment’s existing `DATABASE_URL`.
 
 ### G4. Icons stay in code
 **[ASSUMPTION]** Process-step icons and the category-bar icons are chosen by item order. Admins edit the labels. Adding a sixth item reuses the last icon.
 
-### G5. Enquiry and Projects stay stubs
-**[ASSUMPTION]** The Enquiry form shell and the Projects listing shell stay hardcoded until Stages 4 and 3. `/contact` keeps redirecting to `/enquiry`.
+### G5. Enquiry stays a shell
+**[ASSUMPTION]** The Enquiry form shell stays hardcoded until Stage 4. It does follow the locale cookie. `/contact` keeps redirecting to `/enquiry`. The project library is Stage 3.
 
 ### G6. Header chrome that is not navigation
-**[ASSUMPTION]** The header enquiry button always uses the beige enquiry style and links to `/enquiry`. The EN / 中文 control does not change locale.
+**[ASSUMPTION]** The header enquiry button always uses the beige enquiry style and links to `/enquiry`. Its label follows the active locale. The EN / 中文 control sets the `locale` cookie and reloads marketing copy. See A1.
 
 ### G7. About hero photo
 **[ASSUMPTION]** The Unsplash id previously labelled “Construction team at work” (`photo-1581094794329`) is an office photograph. The seed and the no-CMS fallback use a construction-site photo (`photo-1541888946425`) for that placement.

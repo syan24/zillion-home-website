@@ -41,18 +41,18 @@ These are intentionally not CMS pages in this stage:
 | --- | --- |
 | Enquiry form (`/enquiry`) | Stage 4. The page is still the beige marketing shell. The submit button stays charcoal. The form does not save an Enquiry yet. |
 | `/contact` | Redirects to `/enquiry` |
-| Projects listing (`/projects`) | Stage 3 shell. Filters, detail, styles and spaces are not in this change |
+| Projects listing (`/projects`) | Stage 3 library. See `docs/13-stage-3-projects-and-locales.md` |
 | Header enquiry button | Always the beige enquiry style, always `/enquiry` |
-| EN / 中文 toggle | Visual only. It does not switch a locale |
+| EN / 中文 toggle | Sets a `locale` cookie and switches marketing copy between English and Simplified Chinese. See `docs/03-assumptions.md` A1 |
 | Process and category icons | Chosen by item order. Labels are editable; the SVG set is not |
 | Privacy and Terms links | Placeholder routes. No CMS pages yet |
 | SWMS worker flow | Stages 5–6. Demo records come from the same seed |
 
-Chinese lines on service cards are ordinary subtitle fields, not Payload localisation.
+Page title, hero, marketing blocks, SEO text, and header/footer labels are Payload-localised (`en` and `zh`). `pnpm seed:demo` fills Chinese when that locale is still empty, and clears the four old bilingual subtitle lines on English pages. It does not overwrite Chinese copy an admin has already saved.
 
 The About hero photo is a construction site. An earlier hotlink labelled “Construction team at work” pointed at an office photograph, so the seed does not use that file.
 
-On a phone, the homepage hero keeps a stronger light wash over the photo so the headline and paragraph stay readable. Desktop keeps the original left-to-right fade.
+The homepage hero uses a dusk architectural photograph with a dark left-to-right overlay so the white headline and paragraph stay readable on the photo.
 
 ## Demo seed
 
@@ -105,7 +105,7 @@ Remove `SEED_DEMO` or set it to anything other than `true`, then redeploy. Exist
 - `/enquiry` (form shell, not saved)
 - `/contact` redirects to `/enquiry`
 - `/swms` project list, after the SWMS portion of the seed
-- `/projects` listing shell (Stage 3)
+- `/projects` project library (Stage 3)
 
 ## Assumptions
 

@@ -14,6 +14,8 @@ import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { draftMode } from 'next/headers'
 
 import './globals.css'
+import { htmlLang } from '@/i18n/config'
+import { getLocale } from '@/i18n/getLocale'
 import { getServerSideURL } from '@/utilities/getURL'
 
 const dmSans = DM_Sans({
@@ -31,11 +33,12 @@ const cormorant = Cormorant_Garamond({
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { isEnabled } = await draftMode()
+  const locale = await getLocale()
 
   return (
     <html
       className={cn(dmSans.variable, cormorant.variable, GeistMono.variable)}
-      lang="en"
+      lang={htmlLang(locale)}
       suppressHydrationWarning
     >
       <head>

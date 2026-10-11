@@ -1,8 +1,8 @@
 export const marketingImages = {
   heroHouse: {
     file: 'hero-house.jpg',
-    alt: 'Modern residential architecture',
-    src: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80',
+    alt: 'Modern house at dusk',
+    src: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1920&q=75',
   },
   serviceResidential: {
     file: 'service-residential.jpg',
@@ -72,7 +72,7 @@ export const homeContent = {
     headline: 'Built from the\nground up.',
     description:
       'Residential construction, renovation, commercial fit-out and custom joinery — built with quality, precision and care.',
-    image: image('heroHouse', 'Modern residential architecture'),
+    image: image('heroHouse', 'Modern house at dusk'),
     badgePrimary: 'Quality',
     badgeSecondary: 'Construction',
     badgeMuted: 'Lasting Value',
@@ -89,7 +89,7 @@ export const homeContent = {
           'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
         ),
         title: 'Residential Construction & Renovation',
-        subtitle: '住宅施工与翻新',
+        subtitle: '',
         description: 'New builds, extensions, renovations and alterations for residential properties.',
         href: '/services#residential',
       },
@@ -100,7 +100,7 @@ export const homeContent = {
           'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',
         ),
         title: 'Commercial Fit-out',
-        subtitle: '商业空间装修',
+        subtitle: '',
         description: 'Office, retail, hospitality and commercial space fit-outs.',
         href: '/services#commercial',
       },
@@ -111,7 +111,7 @@ export const homeContent = {
           'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
         ),
         title: 'Custom Joinery & Cabinetry',
-        subtitle: '定制橱柜与木作',
+        subtitle: '',
         description: 'Kitchens, wardrobes, vanities, entertainment units and bespoke furniture.',
         href: '/services#joinery',
       },
@@ -122,7 +122,7 @@ export const homeContent = {
           'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&q=80',
         ),
         title: 'Interior Fit-out & Project Delivery',
-        subtitle: '室内装修与项目交付',
+        subtitle: '',
         description: 'Complete interior delivery from design coordination to final handover.',
         href: '/services#interior',
       },
@@ -328,7 +328,7 @@ export const servicesContent = {
       {
         anchor: 'residential',
         title: 'Residential Construction & Renovation',
-        subtitle: '住宅施工与翻新',
+        subtitle: '',
         description:
           'From new builds to complete renovations, we deliver residential projects with attention to detail and quality craftsmanship.',
         features: [
@@ -349,7 +349,7 @@ export const servicesContent = {
       {
         anchor: 'commercial',
         title: 'Commercial Fit-out',
-        subtitle: '商业空间装修',
+        subtitle: '',
         description:
           'Professional commercial spaces designed for your business needs. From offices to retail, we create functional and impressive environments.',
         features: [
@@ -370,7 +370,7 @@ export const servicesContent = {
       {
         anchor: 'joinery',
         title: 'Custom Joinery & Cabinetry',
-        subtitle: '定制橱柜与木作',
+        subtitle: '',
         description:
           'Bespoke joinery crafted in our workshop. Whether standalone or as part of a larger project, we deliver precision-made cabinetry tailored to your space.',
         features: [
@@ -391,7 +391,7 @@ export const servicesContent = {
       {
         anchor: 'interior',
         title: 'Interior Fit-out & Project Delivery',
-        subtitle: '室内装修与项目交付',
+        subtitle: '',
         description:
           'Complete interior delivery from design coordination to final handover. We manage the entire process so you can focus on your vision.',
         features: [

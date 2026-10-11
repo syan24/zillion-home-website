@@ -1,267 +1,227 @@
 import type { Metadata } from 'next'
-import React from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { PlaceholderImage } from '@/components/PlaceholderImage'
+import React, { Fragment } from 'react'
 
-export const metadata: Metadata = {
-  title: 'Projects | Zillion Home',
-  description:
-    'Browse our portfolio of residential construction, commercial fit-outs, and custom joinery projects across Melbourne.',
+import { DesktopProjectFilter, FilterDrawer } from '@/components/Projects/FilterDrawer'
+import { Lightbox } from '@/components/Projects/Lightbox'
+import { PlaceholderImage } from '@/components/PlaceholderImage'
+import { getLocale } from '@/i18n/getLocale'
+import { getMessages } from '@/i18n/messages'
+import {
+  hasProjectFilters,
+  parseProjectFilters,
+  projectFilterHref,
+  roomSlugs,
+  type ProjectFilters,
+} from '@/lib/projects/filters'
+import { coverFor, loadPortfolio, type GalleryImage } from '@/lib/projects/loadPortfolio'
+
+type Args = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
-const projectTypes = [
-  {
-    title: 'Residential Projects',
-    titleZh: '住宅项目',
-    description: 'Home renovations, extensions and new builds across Melbourne',
-    href: '/projects/residential',
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1000&q=80',
-  },
-  {
-    title: 'Commercial Projects',
-    titleZh: '商业项目',
-    description: 'Office fit-outs, retail and hospitality spaces',
-    href: '/projects/commercial',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&q=80',
-  },
-]
+function lines(text: string) {
+  return text.split('\n').map((line, index) => (
+    <Fragment key={`${line}-${index}`}>
+      {index > 0 && <br />}
+      {line}
+    </Fragment>
+  ))
+}
 
-const roomTypes = [
-  {
-    title: 'Kitchen',
-    titleZh: '厨房',
-    image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
-    href: '/projects/room/kitchen',
-  },
-  {
-    title: 'Bathroom',
-    titleZh: '卫生间',
-    image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=600&q=80',
-    href: '/projects/room/bathroom',
-  },
-  {
-    title: 'Living',
-    titleZh: '客厅',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&q=80',
-    href: '/projects/room/living',
-  },
-  {
-    title: 'Bedroom',
-    titleZh: '卧室',
-    image: 'https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=600&q=80',
-    href: '/projects/room/bedroom',
-  },
-  {
-    title: 'Wardrobe & Joinery',
-    titleZh: '衣柜与定制柜',
-    image: 'https://images.unsplash.com/photo-1558997519-83ea9252edf8?w=600&q=80',
-    href: '/projects/room/wardrobe',
-  },
-  {
-    title: 'Laundry',
-    titleZh: '洗衣房',
-    image: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=600&q=80',
-    href: '/projects/room/laundry',
-  },
-  {
-    title: 'Home Office',
-    titleZh: '家庭办公',
-    image: 'https://images.unsplash.com/photo-1593062096033-9a26b09da705?w=600&q=80',
-    href: '/projects/room/home-office',
-  },
-  {
-    title: 'Outdoor',
-    titleZh: '户外空间',
-    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=600&q=80',
-    href: '/projects/room/outdoor',
-  },
-]
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = getMessages(await getLocale()).projects
+  return { title: copy.metaTitle, description: copy.metaDescription }
+}
 
-const styleFilters = ['All Styles', 'Modern', 'Minimalist', 'Contemporary', 'Classic']
+export default async function ProjectsPage({ searchParams }: Args) {
+  const locale = await getLocale()
+  const copy = getMessages(locale).projects
+  const filters = parseProjectFilters(await searchParams)
+  const portfolio = await loadPortfolio(locale, filters)
+  const filtered = hasProjectFilters(filters)
+  const roomLabels = copy.rooms
 
-export default function ProjectsPage() {
+  const withFilters = (next: ProjectFilters) => projectFilterHref({ ...filters, ...next }, 'gallery')
+
   return (
     <main className="min-h-screen scroll-smooth">
-      {/* Hero Section */}
-      <section className="relative bg-background-warm py-16 lg:py-24">
+      <section className="bg-background-warm py-16 lg:py-24">
         <div className="container">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
             <div>
-              <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4">
-                Projects
-              </p>
-              <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl leading-tight mb-4">
-                真实项目，
-                <br />
-                启发更好的生活方式。
-              </h1>
-              <p className="text-lg text-foreground-soft max-w-lg">
-                Explore our portfolio of residential and commercial projects, or browse by room to
-                find inspiration for your space.
-              </p>
+              <p className="mb-4 text-xs uppercase tracking-[0.2em] text-muted-foreground">{copy.eyebrow}</p>
+              <h1 className="mb-4 font-serif text-4xl leading-tight md:text-5xl lg:text-6xl">{lines(copy.heading)}</h1>
+              <p className="max-w-lg text-lg text-foreground-soft">{copy.intro}</p>
             </div>
-            <div className="relative">
-              <PlaceholderImage
-                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1000&q=80"
-                alt="Project showcase"
-                aspectRatio="4/3"
-                className="rounded"
-              />
-            </div>
+            <PlaceholderImage
+              src={portfolio.covers[0]?.src}
+              alt={portfolio.covers[0]?.alt || copy.heroAlt}
+              aspectRatio="4/3"
+              className="rounded"
+            />
           </div>
 
-          {/* Anchor Tab Navigation */}
-          <nav className="flex justify-center gap-4 mt-12 pt-8 border-t border-border">
-            <a
-              href="#by-project"
-              className="flex items-center gap-3 px-6 py-3 rounded-full bg-background border border-border hover:border-accent hover:bg-background-section transition-all group"
-            >
-              <span className="w-10 h-10 rounded-full bg-background-section group-hover:bg-accent/10 flex items-center justify-center transition-colors">
-                <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+          <nav className="mt-12 flex flex-col justify-center gap-4 border-t border-border pt-8 sm:flex-row">
+            <a href="#by-project" className="flex items-center gap-3 rounded-full border border-border bg-background px-6 py-3 hover:border-accent">
+              <span>
+                <span className="block text-sm font-medium">{copy.byProject}</span>
+                <span className="block text-xs text-muted-foreground">{copy.byProjectHint}</span>
               </span>
-              <div className="text-left">
-                <p className="font-medium text-sm">By Project</p>
-                <p className="text-xs text-muted-foreground">按项目类型浏览</p>
-              </div>
             </a>
-            <a
-              href="#by-room"
-              className="flex items-center gap-3 px-6 py-3 rounded-full bg-background border border-border hover:border-accent hover:bg-background-section transition-all group"
-            >
-              <span className="w-10 h-10 rounded-full bg-background-section group-hover:bg-accent/10 flex items-center justify-center transition-colors">
-                <svg className="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
+            <a href="#by-room" className="flex items-center gap-3 rounded-full border border-border bg-background px-6 py-3 hover:border-accent">
+              <span>
+                <span className="block text-sm font-medium">{copy.byRoom}</span>
+                <span className="block text-xs text-muted-foreground">{copy.byRoomHint}</span>
               </span>
-              <div className="text-left">
-                <p className="font-medium text-sm">By Room</p>
-                <p className="text-xs text-muted-foreground">按空间浏览</p>
-              </div>
             </a>
           </nav>
         </div>
       </section>
 
-      {/* By Project Section */}
-      <section id="by-project" className="bg-background py-16 lg:py-24 scroll-mt-24">
-        <div className="container">
-          <div className="mb-10">
-            <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2">
-              By Project
-            </p>
-            <p className="text-sm text-muted-foreground">按项目类型浏览，查看完整案例</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {projectTypes.map((project) => (
-              <Link
-                key={project.title}
-                href={project.href}
-                className="group block relative overflow-hidden rounded"
+      <section className="border-b border-border bg-background py-8">
+        <div className="container space-y-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterDrawer
+              copy={copy}
+              filters={filters}
+              styles={portfolio.styles}
+              spaces={portfolio.spaces}
+              projects={portfolio.projects}
+            />
+            <StyleChip href={projectFilterHref({ ...filters, style: undefined }, filtered ? 'gallery' : undefined)} active={!filters.style}>
+              {copy.allStyles}
+            </StyleChip>
+            {portfolio.styles.map((style) => (
+              <StyleChip
+                key={style.slug}
+                href={withFilters({ style: style.slug })}
+                active={filters.style === style.slug}
               >
-                <PlaceholderImage
-                  src={project.image}
-                  alt={project.title}
-                  aspectRatio="16/9"
-                  className="group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <h3 className="font-serif text-2xl md:text-3xl mb-1">{project.title}</h3>
-                  <p className="text-sm text-white/80 mb-2">{project.titleZh}</p>
-                  <p className="text-sm text-white/70">{project.description}</p>
-                  <span className="inline-flex items-center justify-center w-10 h-10 mt-4 rounded-full border border-white/30 text-white group-hover:bg-accent group-hover:border-accent transition-all">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
+                {style.name}
+              </StyleChip>
             ))}
+          </div>
+          <DesktopProjectFilter
+            copy={copy}
+            filters={filters}
+            styles={portfolio.styles}
+            spaces={portfolio.spaces}
+            projects={portfolio.projects}
+          />
+        </div>
+      </section>
+
+      {filtered && (
+        <section id="gallery" className="scroll-mt-24 bg-background py-12 lg:py-16">
+          <div className="container">
+            <div className="mb-8 flex items-end justify-between gap-4">
+              <h2 className="font-serif text-3xl">{copy.results}</h2>
+              <Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">
+                {copy.clear}
+              </Link>
+            </div>
+            {portfolio.images.length ? (
+              <Lightbox images={portfolio.images} copy={copy} />
+            ) : (
+              <p className="text-foreground-soft">{copy.empty}</p>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section id="by-project" className="scroll-mt-24 bg-background py-16 lg:py-24">
+        <div className="container">
+          <div className="mb-8">
+            <h2 className="font-serif text-3xl md:text-4xl">{copy.byProject}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{copy.byProjectBody}</p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <EntryCard
+              href={withFilters({ type: 'residential', space: undefined, project: undefined })}
+              title={copy.residentialTitle}
+              body={copy.residentialBody}
+              image={coverFor(portfolio.covers, (image) => image.projectType === 'residential')}
+              active={filters.type === 'residential'}
+            />
+            <EntryCard
+              href={withFilters({ type: 'commercial', space: undefined, project: undefined })}
+              title={copy.commercialTitle}
+              body={copy.commercialBody}
+              image={coverFor(portfolio.covers, (image) => image.projectType === 'commercial')}
+              active={filters.type === 'commercial'}
+            />
           </div>
         </div>
       </section>
 
-      {/* By Room Section */}
-      <section id="by-room" className="bg-background-warm py-16 lg:py-24 scroll-mt-24">
+      <section id="by-room" className="scroll-mt-24 bg-background-warm py-16 lg:py-24">
         <div className="container">
-          <div className="mb-10">
-            <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-2">
-              By Room
-            </p>
-            <p className="text-sm text-muted-foreground">按空间浏览，从不同生活场景中寻找灵感</p>
+          <div className="mb-8">
+            <h2 className="font-serif text-3xl md:text-4xl">{copy.byRoom}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{copy.byRoomBody}</p>
           </div>
-
-          {/* Style Filter Tabs */}
-          <div className="flex flex-wrap gap-2 mb-8" role="tablist" aria-label="Style filters">
-            {styleFilters.map((style, index) => (
-              <button
-                key={style}
-                type="button"
-                role="tab"
-                aria-selected={index === 0}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium border transition-all ${
-                  index === 0
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-background text-foreground border-border hover:border-foreground/30 hover:bg-background-section'
-                }`}
-              >
-                {style}
-              </button>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6">
-            {roomTypes.map((room) => (
-              <Link
-                key={room.title}
-                href={room.href}
-                className="group block relative overflow-hidden rounded aspect-square"
-              >
-                <PlaceholderImage
-                  src={room.image}
-                  alt={room.title}
-                  aspectRatio="square"
-                  className="group-hover:scale-105 transition-transform duration-500"
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {roomSlugs.map((slug) => {
+              const space = portfolio.spaces.find((item) => item.slug === slug)
+              return (
+                <EntryCard
+                  key={slug}
+                  href={withFilters({ space: slug, type: undefined, project: undefined })}
+                  title={space?.name || roomLabels[slug]}
+                  image={coverFor(portfolio.covers, (image) => image.spaceSlugs.includes(slug))}
+                  active={filters.space === slug}
+                  compact
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="font-medium text-white">{room.title}</h3>
-                  <p className="text-xs text-white/70">{room.titleZh}</p>
-                </div>
-                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/90 text-foreground">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-dark text-dark-foreground py-16 lg:py-24">
-        <div className="container">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="font-serif text-3xl md:text-4xl mb-6">
-              Have a project in mind?
-            </h2>
-            <p className="text-dark-foreground/70 mb-8">
-              We&apos;d love to hear about your project. Get in touch and let&apos;s discuss how we
-              can help bring your vision to life.
-            </p>
-            <Button asChild variant="enquiry" size="lg">
-              <Link href="/enquiry">Start an Enquiry →</Link>
-            </Button>
+              )
+            })}
           </div>
         </div>
       </section>
     </main>
+  )
+}
+
+function StyleChip({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={
+        active
+          ? 'rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground'
+          : 'rounded-full border border-border px-4 py-2 text-sm hover:border-accent'
+      }
+    >
+      {children}
+    </Link>
+  )
+}
+
+function EntryCard({
+  href,
+  title,
+  body,
+  image,
+  active,
+  compact = false,
+}: {
+  href: string
+  title: string
+  body?: string
+  image: GalleryImage | null
+  active: boolean
+  compact?: boolean
+}) {
+  return (
+    <Link
+      href={href}
+      className={`group block overflow-hidden rounded bg-background ${active ? 'ring-2 ring-accent' : ''}`}
+    >
+      <PlaceholderImage src={image?.src} alt={image?.alt || title} aspectRatio={compact ? '4/3' : '16/9'} />
+      <div className={compact ? 'p-3' : 'p-5'}>
+        <h3 className="font-serif text-xl group-hover:text-accent">{title}</h3>
+        {body && <p className="mt-1 text-sm text-muted-foreground">{body}</p>}
+      </div>
+    </Link>
   )
 }

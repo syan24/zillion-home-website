@@ -71,6 +71,9 @@ export interface Config {
     media: Media;
     users: User;
     projects: Project;
+    styles: Style;
+    spaces: Space;
+    'project-images': ProjectImage;
     'swms-templates': SwmsTemplate;
     'project-swms': ProjectSwm;
     'swms-versions': SwmsVersion;
@@ -86,6 +89,9 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    projects: {
+      gallery: 'project-images';
+    };
     'payload-folders': {
       documentsAndFolders: 'payload-folders' | 'media';
     };
@@ -95,6 +101,9 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    styles: StylesSelect<false> | StylesSelect<true>;
+    spaces: SpacesSelect<false> | SpacesSelect<true>;
+    'project-images': ProjectImagesSelect<false> | ProjectImagesSelect<true>;
     'swms-templates': SwmsTemplatesSelect<false> | SwmsTemplatesSelect<true>;
     'project-swms': ProjectSwmsSelect<false> | ProjectSwmsSelect<true>;
     'swms-versions': SwmsVersionsSelect<false> | SwmsVersionsSelect<true>;
@@ -112,7 +121,7 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'zh') | ('en' | 'zh')[];
   globals: {
     header: Header;
     footer: Footer;
@@ -121,7 +130,7 @@ export interface Config {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
   };
-  locale: null;
+  locale: 'en' | 'zh';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -690,7 +699,7 @@ export interface ServiceCardsBlock {
         imageAlt?: string | null;
         title: string;
         /**
-         * Optional second line, such as a Chinese label.
+         * Optional second line for this locale.
          */
         subtitle?: string | null;
         description?: string | null;
@@ -925,7 +934,7 @@ export interface User {
   collection: 'users';
 }
 /**
- * Minimal project records used to bind SWMS. The portfolio slice should extend this collection.
+ * One project record for the public portfolio and for SWMS. Publish it to show the case on the website. SWMS can use the project either way.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "projects".
@@ -934,17 +943,110 @@ export interface Project {
   id: number;
   title: string;
   /**
-   * Full site address. Workers see this on the SWMS flow. It is not a public marketing field.
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug?: string | null;
+  type: 'residential' | 'commercial';
+  shortDescription?: string | null;
+  description?: string | null;
+  /**
+   * Full site address. Workers see this on the SWMS flow. The public website shows it only when the checkbox below is on.
    */
   address: string;
-  suburb?: string | null;
-  type: 'residential' | 'commercial';
-  projectStatus: 'active' | 'completed' | 'on-hold';
   /**
-   * Reserved for the public portfolio. The SWMS worker flow always shows the address for the bound project.
+   * Suburb or general location. Shown on the website when the full address is hidden.
+   */
+  suburb?: string | null;
+  /**
+   * The SWMS worker flow always shows the address for the bound project.
    */
   showAddressPublicly?: boolean | null;
+  featuredImage?: (number | null) | Media;
+  styles?: (number | Style)[] | null;
+  spaces?: (number | Space)[] | null;
+  featured?: boolean | null;
+  /**
+   * Lower numbers appear first.
+   */
+  displayOrder?: number | null;
+  /**
+   * Operational status. Publishing the document is what shows it on the website.
+   */
+  projectStatus: 'active' | 'completed' | 'on-hold';
+  /**
+   * Not shown on the public website.
+   */
   summary?: string | null;
+  /**
+   * Images live in Project Images. Change display order there to reorder the gallery.
+   */
+  gallery?: {
+    docs?: (number | ProjectImage)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "styles".
+ */
+export interface Style {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  active?: boolean | null;
+  displayOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "spaces".
+ */
+export interface Space {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  active?: boolean | null;
+  displayOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Lower display order appears first. Unpublish an image to hide it without deleting the file.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-images".
+ */
+export interface ProjectImage {
+  id: number;
+  project: number | Project;
+  image: number | Media;
+  title: string;
+  caption?: string | null;
+  styles?: (number | Style)[] | null;
+  spaces?: (number | Space)[] | null;
+  /**
+   * Lower numbers appear first within the project.
+   */
+  displayOrder?: number | null;
+  published?: boolean | null;
+  /**
+   * Shows a download action on the public project page.
+   */
+  allowDownload?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1296,6 +1398,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'projects';
         value: number | Project;
+      } | null)
+    | ({
+        relationTo: 'styles';
+        value: number | Style;
+      } | null)
+    | ({
+        relationTo: 'spaces';
+        value: number | Space;
+      } | null)
+    | ({
+        relationTo: 'project-images';
+        value: number | ProjectImage;
       } | null)
     | ({
         relationTo: 'swms-templates';
@@ -1817,12 +1931,66 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface ProjectsSelect<T extends boolean = true> {
   title?: T;
+  generateSlug?: T;
+  slug?: T;
+  type?: T;
+  shortDescription?: T;
+  description?: T;
   address?: T;
   suburb?: T;
-  type?: T;
-  projectStatus?: T;
   showAddressPublicly?: T;
+  featuredImage?: T;
+  styles?: T;
+  spaces?: T;
+  featured?: T;
+  displayOrder?: T;
+  projectStatus?: T;
   summary?: T;
+  gallery?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "styles_select".
+ */
+export interface StylesSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  active?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "spaces_select".
+ */
+export interface SpacesSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  active?: T;
+  displayOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-images_select".
+ */
+export interface ProjectImagesSelect<T extends boolean = true> {
+  project?: T;
+  image?: T;
+  title?: T;
+  caption?: T;
+  styles?: T;
+  spaces?: T;
+  displayOrder?: T;
+  published?: T;
+  allowDownload?: T;
   updatedAt?: T;
   createdAt?: T;
 }

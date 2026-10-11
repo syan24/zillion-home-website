@@ -1,7 +1,8 @@
 import React from 'react'
 
-import { aboutContent, homeContent, servicesContent } from '@/content/marketing'
+import { getMarketing } from '@/content/getMarketing'
 import type { ImageRef } from '@/content/marketing'
+import { getLocale } from '@/i18n/getLocale'
 import {
   CapabilityList,
   CategoryBar,
@@ -20,8 +21,8 @@ function stock(image?: ImageRef | null) {
   return { src: image.src, alt: image.alt }
 }
 
-export function FallbackHome() {
-  const content = homeContent
+export async function FallbackHome() {
+  const content = getMarketing(await getLocale()).home
   return (
     <main>
       <HomeHero {...content.hero} image={stock(content.hero.image)} />
@@ -44,8 +45,8 @@ export function FallbackHome() {
   )
 }
 
-export function FallbackAbout() {
-  const content = aboutContent
+export async function FallbackAbout() {
+  const content = getMarketing(await getLocale()).about
   return (
     <main className="min-h-screen">
       <PageIntro {...content.intro} image={stock(content.intro.image)} />
@@ -61,8 +62,8 @@ export function FallbackAbout() {
   )
 }
 
-export function FallbackServices() {
-  const content = servicesContent
+export async function FallbackServices() {
+  const content = getMarketing(await getLocale()).services
   return (
     <main className="min-h-screen">
       <PageIntro {...content.intro} />

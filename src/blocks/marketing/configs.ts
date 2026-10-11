@@ -1,5 +1,7 @@
 import type { Block, Field } from 'payload'
 
+import { localizeCopyFields } from '@/fields/localizeCopy'
+
 const imageField = (name = 'image'): Field => ({
   name,
   type: 'upload',
@@ -86,7 +88,7 @@ export const ServiceCards: Block = {
         imageField(),
         imageAltField,
         { name: 'title', type: 'text', required: true },
-        { name: 'subtitle', type: 'text', admin: { description: 'Optional second line, such as a Chinese label.' } },
+        { name: 'subtitle', type: 'text', admin: { description: 'Optional second line for this locale.' } },
         { name: 'description', type: 'textarea' },
         { name: 'href', type: 'text' },
       ],
@@ -292,4 +294,4 @@ export const marketingBlocks: Block[] = [
   ProseSection,
   CapabilityList,
   ServiceDetails,
-]
+].map((block) => ({ ...block, fields: localizeCopyFields(block.fields) }))
