@@ -5,6 +5,7 @@ import * as migration_20261008_141215 from './20261008_141215';
 import * as migration_20261011_054751_stage3_locales_portfolio from './20261011_054751_stage3_locales_portfolio';
 import * as migration_20261012_024510_stage4_enquiries from './20261012_024510_stage4_enquiries';
 import * as migration_20261012_040649_enquiry_form_answers from './20261012_040649_enquiry_form_answers';
+import * as migration_20261012_045448_enquiry_option_icons from './20261012_045448_enquiry_option_icons';
 
 export const migrations = [
   {
@@ -40,6 +41,11 @@ export const migrations = [
   {
     up: migration_20261012_040649_enquiry_form_answers.up,
     down: migration_20261012_040649_enquiry_form_answers.down,
-    name: '20261012_040649_enquiry_form_answers'
+    name: '20261012_040649_enquiry_form_answers',
+  },
+  {
+    up: migration_20261012_045448_enquiry_option_icons.up,
+    down: migration_20261012_045448_enquiry_option_icons.down,
+    name: '20261012_045448_enquiry_option_icons'
   },
 ];

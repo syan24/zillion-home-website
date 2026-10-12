@@ -29,7 +29,7 @@ export type PublicEnquiryField = {
   required?: boolean
   placeholder?: string
   width?: number
-  options?: { label: string; value: string }[]
+  options?: { label: string; value: string; icon?: string; iconUrl?: string }[]
   multiple?: boolean
   maxFileSize?: number | null
   mimeTypes?: string[]

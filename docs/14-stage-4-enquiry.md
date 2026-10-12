@@ -4,6 +4,8 @@ Status: the `/enquiry` form saves a Payload enquiry. The questions come from the
 
 The page stays the single form from the approved enquiry layout. Marketing buttons stay beige. The submit button stays charcoal. `/contact` redirects to `/enquiry`. English is the default. 中文 mode uses the Chinese labels stored on the form.
 
+Project-type cards show the icon stored on that option. Staff set a line icon (House, Building, Layout) or a Media image on the option in the form. The seeded form uses House, Building, and Layout.
+
 ## What is stored
 
 Admin → Enquiries:
@@ -43,4 +45,4 @@ pnpm seed:demo
 
 ## Assumptions
 
-See `docs/03-assumptions.md` D2–D11. The recipient mailbox, the final file policy, and whether phone is required are still client decisions. The behaviour above is the working assumption. The mapping from form field names to enquiry columns is D11.
+See `docs/03-assumptions.md` D2–D12. The recipient mailbox, the final file policy, and whether phone is required are still client decisions. The behaviour above is the working assumption. The mapping from form field names to enquiry columns is D11. Icons are D12.

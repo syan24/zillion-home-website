@@ -19,6 +19,7 @@ import {
   type EnquiryIssue,
   type PublicEnquiryField,
 } from '@/lib/enquiry/validate'
+import { OptionIcon } from './OptionIcon'
 
 type EnquiryCopy = Messages['enquiry']
 
@@ -424,6 +425,7 @@ function FieldControl({
                     onValue(checked ? selected.filter((item) => item !== option.value) : [...selected, option.value])
                   }
                 />
+                <OptionIcon icon={option.icon} iconUrl={option.iconUrl} inline />
                 <span className="text-sm">{option.label}</span>
               </label>
             )
@@ -457,6 +459,7 @@ function FieldControl({
                     : 'border-input hover:border-foreground/30',
                 )}
               >
+                <OptionIcon icon={option.icon} iconUrl={option.iconUrl} />
                 <span className="font-medium text-sm block">{option.label}</span>
               </button>
             ))}

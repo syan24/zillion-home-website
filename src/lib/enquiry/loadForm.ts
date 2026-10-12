@@ -1,5 +1,6 @@
 import type { Payload, TypedLocale } from 'payload'
 
+import { isEnquiryIcon } from '@/lib/enquiry/icons'
 import type { PublicEnquiryField } from '@/lib/enquiry/validate'
 
 export type PublicEnquiryForm = {
@@ -13,7 +14,7 @@ export async function loadEnquiryForm(
 ): Promise<PublicEnquiryForm | null> {
   const found = await payload.find({
     collection: 'forms',
-    depth: 0,
+    depth: 1,
     limit: 1,
     locale,
     overrideAccess: true,
@@ -30,6 +31,12 @@ export async function loadEnquiryForm(
   }
 }
 
+function mediaUrl(value: unknown): string | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const url = (value as { url?: unknown }).url
+  return typeof url === 'string' && url ? url : undefined
+}
+
 function toPublicField(field: unknown): PublicEnquiryField[] {
   if (!field || typeof field !== 'object') return []
   const block = field as Record<string, unknown>
@@ -42,7 +49,16 @@ function toPublicField(field: unknown): PublicEnquiryField[] {
         const record = option as Record<string, unknown>
         const value = typeof record.value === 'string' ? record.value : ''
         if (!value) return []
-        return [{ label: typeof record.label === 'string' ? record.label : value, value }]
+        const icon = isEnquiryIcon(record.icon) ? record.icon : undefined
+        const iconUrl = mediaUrl(record.iconImage)
+        return [
+          {
+            label: typeof record.label === 'string' ? record.label : value,
+            value,
+            ...(icon ? { icon } : {}),
+            ...(iconUrl ? { iconUrl } : {}),
+          },
+        ]
       })
     : undefined
 

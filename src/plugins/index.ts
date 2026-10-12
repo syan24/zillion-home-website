@@ -9,6 +9,7 @@ import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 
 import { enquiryCheckboxGroup } from './enquiryCheckboxGroup'
+import { withEnquiryOptionIcons } from './enquiryOptionIcons'
 
 import { Page } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -64,7 +65,7 @@ export const plugins: Plugin[] = [
           'The public enquiry page uses the earliest form with “Enquiry form” checked. Edit fields here; leads are stored under Enquiries.',
       },
       fields: ({ defaultFields }) => {
-        return [
+        return withEnquiryOptionIcons([
           {
             name: 'enquiryForm',
             type: 'checkbox',
@@ -92,7 +93,7 @@ export const plugins: Plugin[] = [
             }
             return field
           }),
-        ]
+        ])
       },
     },
     formSubmissionOverrides: {

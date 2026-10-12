@@ -583,6 +583,14 @@ export interface Form {
               | {
                   label: string;
                   value: string;
+                  /**
+                   * Line icon on the public card. Leave empty for no icon. A custom image replaces it.
+                   */
+                  icon?: ('house' | 'building' | 'layout') | null;
+                  /**
+                   * Optional. Shown instead of the line icon on the public card.
+                   */
+                  iconImage?: (number | null) | Media;
                   id?: string | null;
                 }[]
               | null;
@@ -647,6 +655,14 @@ export interface Form {
               | {
                   label: string;
                   value: string;
+                  /**
+                   * Line icon on the public card. Leave empty for no icon. A custom image replaces it.
+                   */
+                  icon?: ('house' | 'building' | 'layout') | null;
+                  /**
+                   * Optional. Shown instead of the line icon on the public card.
+                   */
+                  iconImage?: (number | null) | Media;
                   id?: string | null;
                 }[]
               | null;
@@ -664,6 +680,14 @@ export interface Form {
               | {
                   label: string;
                   value: string;
+                  /**
+                   * Line icon on the public card. Leave empty for no icon. A custom image replaces it.
+                   */
+                  icon?: ('house' | 'building' | 'layout') | null;
+                  /**
+                   * Optional. Shown instead of the line icon on the public card.
+                   */
+                  iconImage?: (number | null) | Media;
                   id?: string | null;
                 }[]
               | null;
@@ -2440,6 +2464,8 @@ export interface FormsSelect<T extends boolean = true> {
                 | {
                     label?: T;
                     value?: T;
+                    icon?: T;
+                    iconImage?: T;
                     id?: T;
                   };
               required?: T;
@@ -2509,6 +2535,8 @@ export interface FormsSelect<T extends boolean = true> {
                 | {
                     label?: T;
                     value?: T;
+                    icon?: T;
+                    iconImage?: T;
                     id?: T;
                   };
               required?: T;
@@ -2527,6 +2555,8 @@ export interface FormsSelect<T extends boolean = true> {
                 | {
                     label?: T;
                     value?: T;
+                    icon?: T;
+                    iconImage?: T;
                     id?: T;
                   };
               id?: T;

@@ -1,9 +1,10 @@
+import type { EnquiryIcon } from '@/lib/enquiry/icons'
 import { MAX_ENQUIRY_FILE_BYTES } from '@/lib/enquiry/options'
 import type { PublicEnquiryField } from '@/lib/enquiry/validate'
 
 type LocaleCopy = { en: string; zh: string }
 
-type OptionCopy = { value: string; label: LocaleCopy }
+type OptionCopy = { value: string; label: LocaleCopy; icon?: EnquiryIcon }
 
 type FieldCopy = {
   blockType: string
@@ -57,9 +58,9 @@ export const defaultEnquiryFormFields: FieldCopy[] = [
     label: { en: 'Project type', zh: '项目类型' },
     required: true,
     options: [
-      { value: 'residential', label: { en: 'Residential', zh: '住宅' } },
-      { value: 'commercial', label: { en: 'Commercial', zh: '商业' } },
-      { value: 'joinery', label: { en: 'Custom Joinery', zh: '定制木作' } },
+      { value: 'residential', label: { en: 'Residential', zh: '住宅' }, icon: 'house' },
+      { value: 'commercial', label: { en: 'Commercial', zh: '商业' }, icon: 'building' },
+      { value: 'joinery', label: { en: 'Custom Joinery', zh: '定制木作' }, icon: 'layout' },
     ],
   },
   {
@@ -140,6 +141,7 @@ export function publicEnquiryFields(locale: 'en' | 'zh'): PublicEnquiryField[] {
     options: field.options?.map((option) => ({
       value: option.value,
       label: option.label[locale],
+      ...(option.icon ? { icon: option.icon } : {}),
     })),
   }))
 }
@@ -152,7 +154,13 @@ export function payloadEnquiryFields(locale: 'en' | 'zh') {
       ...(label ? { label: label[locale] } : {}),
       ...(placeholder ? { placeholder: placeholder[locale] } : {}),
       ...(options
-        ? { options: options.map((option) => ({ value: option.value, label: option.label[locale] })) }
+        ? {
+            options: options.map((option) => ({
+              value: option.value,
+              label: option.label[locale],
+              ...(option.icon ? { icon: option.icon } : {}),
+            })),
+          }
         : {}),
       ...(mimeTypes ? { mimeTypes: mimeTypes.map((mimeType) => ({ mimeType })) } : {}),
     }

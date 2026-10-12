@@ -131,7 +131,7 @@ This is a convenience feature and not client-specified.
 **[ASSUMPTION]** Until the client confirms a different limit, enquiry attachments accept PDF, PNG, JPG/JPEG, and DWG. Up to 10 files, 10MB each. This matches the file note on the approved enquiry page. Files are stored on the `enquiry-files` upload collection, not in the public Media library. Payload read access is admin-only. The stored filename is random. The Vercel Blob adapter currently only supports public blob access, so someone who already has the file URL can open it. The website API does not list those URLs.
 
 ### D4. Single-page form
-**[ASSUMPTION]** Stage 4 keeps the approved Fig 02 page: one form, not a new multi-step wizard. Progress, back navigation, and a review step are not added. The questions on that page are the seeded Form Builder form, so staff can change labels, options, required flags, and questions in Admin without a deploy.
+**[ASSUMPTION]** Stage 4 keeps the approved Fig 02 page: one form, not a new multi-step wizard. Progress, back navigation, and a review step are not added. The questions on that page are the seeded Form Builder form, so staff can change labels, options, icons, required flags, and questions in Admin without a deploy.
 
 ### D5. Project type, scope, and spaces
 **[ASSUMPTION]** The seeded enquiry form offers Residential, Commercial, and Custom Joinery. Interior Fit-out is not in that seed. Staff can add or rename options on the form; the submitted option value is stored on the enquiry. `projectTypeDetail` is an optional staff field. Scope checkboxes are stored as submitted. Kitchen, wardrobe, and bathroom vanity are also copied to `spaces` when those exact values are selected. Other scope values stay on scope only. Style is free text inside the project description, not a Styles relationship.
@@ -160,6 +160,9 @@ Any other named question is stored in **Additional answers**, including the file
 The enquiry page is the only public create path for that form. Posting it to form submissions is rejected. Other forms can still use form submissions.
 
 The confirmation message on the Form document is kept so the form is valid. `/enquiry` shows its own thank-you and reference instead, because the reference is created with the enquiry.
+
+### D12. Project type icons
+**[ASSUMPTION]** Each radio, select, and checkbox option can store a line icon (House, Building, or Layout) and an optional Media image. Public cards show the image when one is set, otherwise the line icon. The seeded project types use House, Building, and Layout, matching the approved enquiry page. An existing enquiry form receives those icons only when the option value is still `residential`, `commercial`, or `joinery` and no icon or image has been chosen. Later icon edits are kept. Scope checkboxes have no icon unless staff add one.
 
 ### D6. Phone and consent
 **[ASSUMPTION]** Email is required. Phone is optional. The asterisk on the contact group is met by the email. The existing consent sentence stays. A separate checkbox is not added.

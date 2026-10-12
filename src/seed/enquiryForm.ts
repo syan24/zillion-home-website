@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 
+import { defaultProjectTypeIcons } from '@/lib/enquiry/icons'
 import {
   enquiryConfirmationText,
   enquirySubmitLabel,
@@ -40,7 +41,33 @@ function lexical(text: string) {
   }
 }
 
-/** Creates the public enquiry form once. Later Admin edits are left in place. */
+function fillMissingProjectTypeIcons(fields: Form['fields']): { fields: Form['fields']; changed: boolean } {
+  if (!fields) return { fields, changed: false }
+  let changed = false
+  const next = fields.map((field) => {
+    if (
+      !field ||
+      (field.blockType !== 'radio' && field.blockType !== 'select') ||
+      field.name !== 'projectType' ||
+      !field.options
+    ) {
+      return field
+    }
+    const options = field.options.map((option) => {
+      const icon = defaultProjectTypeIcons[option.value]
+      if (!icon || option.icon || option.iconImage) return option
+      changed = true
+      return { ...option, icon }
+    })
+    return { ...field, options }
+  })
+  return { fields: next, changed }
+}
+
+/**
+ * Creates the public enquiry form once.
+ * An existing form keeps staff edits. Missing project-type icons are filled for the original three values.
+ */
 export async function seedEnquiryForm(payload: Payload) {
   const existing = await payload.find({
     collection: 'forms',
@@ -51,7 +78,7 @@ export async function seedEnquiryForm(payload: Payload) {
   })
 
   if (existing.docs[0]) {
-    console.log('Enquiry form already exists.')
+    await backfillProjectTypeIcons(payload, existing.docs[0].id)
     return
   }
 
@@ -81,4 +108,44 @@ export async function seedEnquiryForm(payload: Payload) {
     },
   })
   console.log('Enquiry form created.')
+}
+
+async function backfillProjectTypeIcons(payload: Payload, id: number) {
+  const en = await payload.findByID({
+    collection: 'forms',
+    id,
+    locale: 'en',
+    depth: 0,
+    overrideAccess: true,
+  })
+  const filled = fillMissingProjectTypeIcons(en.fields)
+  if (!filled.changed || !filled.fields) {
+    console.log('Enquiry form already exists.')
+    return
+  }
+
+  const zh = await payload.findByID({
+    collection: 'forms',
+    id,
+    locale: 'zh',
+    depth: 0,
+    overrideAccess: true,
+  })
+  const updated = await payload.update({
+    collection: 'forms',
+    id,
+    locale: 'en',
+    overrideAccess: true,
+    data: { fields: filled.fields },
+  })
+  await payload.update({
+    collection: 'forms',
+    id,
+    locale: 'zh',
+    overrideAccess: true,
+    data: {
+      fields: mergeLocale(updated.fields, zh.fields) as NonNullable<Form['fields']>,
+    },
+  })
+  console.log('Enquiry form project-type icons set.')
 }
