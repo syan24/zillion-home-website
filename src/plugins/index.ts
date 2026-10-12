@@ -1,10 +1,15 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
+import type { FieldsConfig } from '@payloadcms/plugin-form-builder/types'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { Plugin } from 'payload'
 import { revalidateRedirects } from '@/hooks/revalidateRedirects'
+import { rejectEnquiryFormSubmission } from '@/lib/enquiry/rejectFormSubmission'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
+
+import { enquiryCheckboxGroup } from './enquiryCheckboxGroup'
+import { withEnquiryOptionIcons } from './enquiryOptionIcons'
 
 import { Page } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -49,26 +54,51 @@ export const plugins: Plugin[] = [
   formBuilderPlugin({
     fields: {
       payment: false,
-    },
+      radio: true,
+      upload: true,
+      checkboxGroup: enquiryCheckboxGroup,
+    } as FieldsConfig,
+    uploadCollections: ['enquiry-files'],
     formOverrides: {
+      admin: {
+        description:
+          'The public enquiry page uses the earliest form with “Enquiry form” checked. Edit fields here; leads are stored under Enquiries.',
+      },
       fields: ({ defaultFields }) => {
-        return defaultFields.map((field) => {
-          if ('name' in field && field.name === 'confirmationMessage') {
-            return {
-              ...field,
-              editor: lexicalEditor({
-                features: ({ rootFeatures }) => {
-                  return [
-                    ...rootFeatures,
-                    FixedToolbarFeature(),
-                    HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4'] }),
-                  ]
-                },
-              }),
+        return withEnquiryOptionIcons([
+          {
+            name: 'enquiryForm',
+            type: 'checkbox',
+            label: 'Enquiry form',
+            admin: {
+              position: 'sidebar',
+              description:
+                'The public /enquiry page renders this form. Submissions are saved as Enquiries, not as form submissions.',
+            },
+          },
+          ...defaultFields.map((field) => {
+            if ('name' in field && field.name === 'confirmationMessage') {
+              return {
+                ...field,
+                editor: lexicalEditor({
+                  features: ({ rootFeatures }) => {
+                    return [
+                      ...rootFeatures,
+                      FixedToolbarFeature(),
+                      HeadingFeature({ enabledHeadingSizes: ['h1', 'h2', 'h3', 'h4'] }),
+                    ]
+                  },
+                }),
+              }
             }
-          }
-          return field
-        })
+            return field
+          }),
+        ])
+      },
+    },
+    formSubmissionOverrides: {
+      hooks: {
+        beforeValidate: [rejectEnquiryFormSubmission],
       },
     },
   }),

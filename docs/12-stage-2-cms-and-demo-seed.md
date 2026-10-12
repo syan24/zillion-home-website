@@ -39,7 +39,7 @@ These are intentionally not CMS pages in this stage:
 
 | Surface | Why it stays in code |
 | --- | --- |
-| Enquiry form (`/enquiry`) | Stage 4. The page is still the beige marketing shell. The submit button stays charcoal. The form does not save an Enquiry yet. |
+| Enquiry form (`/enquiry`) | Stays in code, not a CMS page. Submissions are saved. See `docs/14-stage-4-enquiry.md` |
 | `/contact` | Redirects to `/enquiry` |
 | Projects listing (`/projects`) | Stage 3 library. See `docs/13-stage-3-projects-and-locales.md` |
 | Header enquiry button | Always the beige enquiry style, always `/enquiry` |
@@ -120,7 +120,7 @@ Remove `SEED_DEMO` or set it to anything other than `true`, then redeploy. Exist
 - `/` Home
 - `/about`
 - `/services`
-- `/enquiry` (form shell, not saved)
+- `/enquiry` saves an enquiry. See `docs/14-stage-4-enquiry.md`
 - `/contact` redirects to `/enquiry`
 - `/swms` project list, after the SWMS portion of the seed
 - `/projects` project library (Stage 3)

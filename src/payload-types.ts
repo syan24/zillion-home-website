@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     pages: Page;
     media: Media;
+    'enquiry-files': EnquiryFile;
+    enquiries: Enquiry;
     users: User;
     projects: Project;
     styles: Style;
@@ -99,6 +101,8 @@ export interface Config {
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'enquiry-files': EnquiryFilesSelect<false> | EnquiryFilesSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     styles: StylesSelect<false> | StylesSelect<true>;
@@ -497,11 +501,17 @@ export interface FormBlock {
   blockType: 'formBlock';
 }
 /**
+ * The public enquiry page uses the earliest form with “Enquiry form” checked. Edit fields here; leads are stored under Enquiries.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
   id: number;
+  /**
+   * The public /enquiry page renders this form. Submissions are saved as Enquiries, not as form submissions.
+   */
+  enquiryForm?: boolean | null;
   title: string;
   fields?:
     | (
@@ -573,6 +583,14 @@ export interface Form {
               | {
                   label: string;
                   value: string;
+                  /**
+                   * Line icon on the public card. Leave empty for no icon. A custom image replaces it.
+                   */
+                  icon?: ('house' | 'building' | 'layout') | null;
+                  /**
+                   * Optional. Shown instead of the line icon on the public card.
+                   */
+                  iconImage?: (number | null) | Media;
                   id?: string | null;
                 }[]
               | null;
@@ -609,6 +627,73 @@ export interface Form {
             id?: string | null;
             blockName?: string | null;
             blockType: 'textarea';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            uploadCollection: 'enquiry-files';
+            mimeTypes?:
+              | {
+                  mimeType: string;
+                  id?: string | null;
+                }[]
+              | null;
+            width?: number | null;
+            maxFileSize?: number | null;
+            required?: boolean | null;
+            multiple?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'upload';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            defaultValue?: string | null;
+            options?:
+              | {
+                  label: string;
+                  value: string;
+                  /**
+                   * Line icon on the public card. Leave empty for no icon. A custom image replaces it.
+                   */
+                  icon?: ('house' | 'building' | 'layout') | null;
+                  /**
+                   * Optional. Shown instead of the line icon on the public card.
+                   */
+                  iconImage?: (number | null) | Media;
+                  id?: string | null;
+                }[]
+              | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'radio';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            required?: boolean | null;
+            options?:
+              | {
+                  label: string;
+                  value: string;
+                  /**
+                   * Line icon on the public card. Leave empty for no icon. A custom image replaces it.
+                   */
+                  icon?: ('house' | 'building' | 'layout') | null;
+                  /**
+                   * Optional. Shown instead of the line icon on the public card.
+                   */
+                  iconImage?: (number | null) | Media;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'checkboxGroup';
           }
       )[]
     | null;
@@ -905,6 +990,115 @@ export interface ServiceDetailsBlock {
   id?: string | null;
   blockName?: string | null;
   blockType: 'serviceDetails';
+}
+/**
+ * Files attached to an enquiry. Visitors upload them with the form. They are not part of the public media library.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-files".
+ */
+export interface EnquiryFile {
+  id: number;
+  /**
+   * The name of the file the visitor selected. The stored filename is random.
+   */
+  originalName: string;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Website enquiries. The visitor’s answers stay as submitted. Status, internal notes, and project type detail can be updated. Field labels and options are edited on the Enquiry form.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  submissionReference: string;
+  /**
+   * Repeated submits with this key return the original enquiry.
+   */
+  clientSubmissionId: string;
+  submittedAt: string;
+  status: 'new' | 'contacted' | 'qualified' | 'closed';
+  locale: 'en' | 'zh';
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  /**
+   * The option value submitted from the enquiry form.
+   */
+  projectType?: string | null;
+  /**
+   * Optional staff note. Public choices are edited on the Enquiry form.
+   */
+  projectTypeDetail?: string | null;
+  /**
+   * Option values selected on the enquiry form.
+   */
+  scope?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Copied from kitchen, wardrobe, and bathroom vanity when the visitor selects those scopes.
+   */
+  spaces?: ('kitchen' | 'wardrobe' | 'bathroom-vanity')[] | null;
+  /**
+   * Project description from the form, including style and requirements.
+   */
+  notes?: string | null;
+  /**
+   * The option value submitted from the enquiry form.
+   */
+  budgetRange?: string | null;
+  /**
+   * The option value submitted from the enquiry form.
+   */
+  expectedStart?: string | null;
+  attachments?: (number | EnquiryFile)[] | null;
+  /**
+   * Answers to form questions that do not map onto the fields above, including files named on an extra upload question.
+   */
+  additionalAnswers?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Staff notes. Visitors do not see this.
+   */
+  internalNotes?: string | null;
+  notificationStatus: 'pending' | 'sent' | 'skipped' | 'failed';
+  notificationDetail?: string | null;
+  /**
+   * Used for the hourly submission limit and spam review.
+   */
+  submitterIp?: string | null;
+  userAgent?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1264,6 +1458,16 @@ export interface FormSubmission {
         id?: string | null;
       }[]
     | null;
+  submissionUploads?:
+    | {
+        field: string;
+        value: {
+          relationTo: 'enquiry-files';
+          value: number | EnquiryFile;
+        }[];
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1390,6 +1594,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'enquiry-files';
+        value: number | EnquiryFile;
+      } | null)
+    | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
       } | null)
     | ({
         relationTo: 'users';
@@ -1903,6 +2115,57 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-files_select".
+ */
+export interface EnquiryFilesSelect<T extends boolean = true> {
+  originalName?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  submissionReference?: T;
+  clientSubmissionId?: T;
+  submittedAt?: T;
+  status?: T;
+  locale?: T;
+  name?: T;
+  phone?: T;
+  email?: T;
+  address?: T;
+  projectType?: T;
+  projectTypeDetail?: T;
+  scope?: T;
+  spaces?: T;
+  notes?: T;
+  budgetRange?: T;
+  expectedStart?: T;
+  attachments?: T;
+  additionalAnswers?: T;
+  internalNotes?: T;
+  notificationStatus?: T;
+  notificationDetail?: T;
+  submitterIp?: T;
+  userAgent?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -2134,6 +2397,7 @@ export interface RedirectsSelect<T extends boolean = true> {
  * via the `definition` "forms_select".
  */
 export interface FormsSelect<T extends boolean = true> {
+  enquiryForm?: T;
   title?: T;
   fields?:
     | T
@@ -2200,6 +2464,8 @@ export interface FormsSelect<T extends boolean = true> {
                 | {
                     label?: T;
                     value?: T;
+                    icon?: T;
+                    iconImage?: T;
                     id?: T;
                   };
               required?: T;
@@ -2238,6 +2504,64 @@ export interface FormsSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        upload?:
+          | T
+          | {
+              name?: T;
+              label?: T;
+              uploadCollection?: T;
+              mimeTypes?:
+                | T
+                | {
+                    mimeType?: T;
+                    id?: T;
+                  };
+              width?: T;
+              maxFileSize?: T;
+              required?: T;
+              multiple?: T;
+              id?: T;
+              blockName?: T;
+            };
+        radio?:
+          | T
+          | {
+              name?: T;
+              label?: T;
+              width?: T;
+              defaultValue?: T;
+              options?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    icon?: T;
+                    iconImage?: T;
+                    id?: T;
+                  };
+              required?: T;
+              id?: T;
+              blockName?: T;
+            };
+        checkboxGroup?:
+          | T
+          | {
+              name?: T;
+              label?: T;
+              width?: T;
+              required?: T;
+              options?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    icon?: T;
+                    iconImage?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
       };
   submitButtonLabel?: T;
   confirmationType?: T;
@@ -2269,6 +2593,13 @@ export interface FormsSelect<T extends boolean = true> {
 export interface FormSubmissionsSelect<T extends boolean = true> {
   form?: T;
   submissionData?:
+    | T
+    | {
+        field?: T;
+        value?: T;
+        id?: T;
+      };
+  submissionUploads?:
     | T
     | {
         field?: T;

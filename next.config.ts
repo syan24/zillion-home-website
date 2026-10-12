@@ -44,6 +44,12 @@ const nextConfig: NextConfig = {
 
     return webpackConfig
   },
+  experimental: {
+    proxyClientMaxBodySize: '120mb',
+    serverActions: {
+      bodySizeLimit: '120mb',
+    },
+  },
   reactStrictMode: true,
   redirects,
   turbopack: {

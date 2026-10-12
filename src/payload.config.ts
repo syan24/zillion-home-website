@@ -5,6 +5,8 @@ import path from 'path'
 import { buildConfig, PayloadRequest } from 'payload'
 import { fileURLToPath } from 'url'
 
+import { Enquiries } from './collections/Enquiries'
+import { EnquiryFiles } from './collections/EnquiryFiles'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
 import { ProjectImages } from './collections/ProjectImages'
@@ -80,6 +82,8 @@ export default buildConfig({
   collections: [
     Pages,
     Media,
+    EnquiryFiles,
+    Enquiries,
     Users,
     Projects,
     Styles,
@@ -101,6 +105,9 @@ export default buildConfig({
       alwaysInsertFields: true,
       collections: {
         media: true,
+        'enquiry-files': {
+          prefix: 'enquiry-files/',
+        },
       },
       token: process.env.BLOB_READ_WRITE_TOKEN,
       clientUploads: true,

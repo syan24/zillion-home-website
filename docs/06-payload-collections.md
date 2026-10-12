@@ -140,6 +140,8 @@ Fields:
 ### Enquiries
 **Purpose:** store customer Quiz submissions.
 
+The public questions are the Form Builder form with **Enquiry form** checked. Submissions are mapped into this collection. See `docs/03-assumptions.md` D11.
+
 Recommended fields:
 - submission reference
 - submitted at
