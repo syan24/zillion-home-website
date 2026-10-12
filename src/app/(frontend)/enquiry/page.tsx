@@ -7,6 +7,8 @@ import { getMessages } from '@/i18n/messages'
 
 import { EnquiryForm } from './EnquiryForm'
 
+export const maxDuration = 60
+
 export async function generateMetadata(): Promise<Metadata> {
   const copy = getMessages(await getLocale()).enquiry
   return {
@@ -62,7 +64,7 @@ export default async function EnquiryPage() {
                 <h2 className="font-serif text-2xl md:text-3xl mb-2">{copy.formHeading}</h2>
                 <p className="mt-4 text-foreground-soft">{copy.formIntro}</p>
               </div>
-              <EnquiryForm copy={copy} />
+              <EnquiryForm copy={copy} directUpload={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
             </div>
           </div>
         </div>

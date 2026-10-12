@@ -1,9 +1,21 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useSyncExternalStore } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
 import type { Messages } from '@/i18n/messages'
+import { submitEnquiry } from './actions'
+import {
+  enquiryDraftStorageKey,
+  enquiryResultStorageKey,
+  MAX_ENQUIRY_FILES,
+} from '@/lib/enquiry/options'
+import {
+  enquiryFileIssue,
+  incomingEnquiryPath,
+  isEnquirySubmissionId,
+} from '@/lib/enquiry/files'
+import { validateEnquiryFields, type EnquiryField } from '@/lib/enquiry/validate'
 
 type ProjectType = 'residential' | 'commercial' | 'joinery' | null
 type EnquiryCopy = Messages['enquiry']
@@ -46,11 +58,85 @@ const scopeIds = ['full-joinery', 'kitchen', 'wardrobe', 'bathroom-vanity', 'tv-
 const fieldClass =
   'w-full px-4 py-3 bg-background border border-input rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
 
-export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
+function formatBytes(size: number) {
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function readStorage(key: string) {
+  try {
+    return sessionStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function writeStorage(key: string, value: string) {
+  try {
+    sessionStorage.setItem(key, value)
+  } catch {
+    return undefined
+  }
+}
+
+function clearStorage(key: string) {
+  try {
+    sessionStorage.removeItem(key)
+  } catch {
+    return undefined
+  }
+}
+
+const resultListeners = new Set<() => void>()
+
+function subscribeToEnquiryResult(listener: () => void) {
+  resultListeners.add(listener)
+  return () => {
+    resultListeners.delete(listener)
+  }
+}
+
+function readStoredReference() {
+  const saved = readStorage(enquiryResultStorageKey)
+  if (!saved) return ''
+  try {
+    const parsed = JSON.parse(saved) as { reference?: string }
+    return parsed.reference || ''
+  } catch {
+    return ''
+  }
+}
+
+function storeEnquiryResult(reference: string) {
+  writeStorage(enquiryResultStorageKey, JSON.stringify({ reference }))
+  clearStorage(enquiryDraftStorageKey)
+  resultListeners.forEach((listener) => listener())
+}
+
+function clearEnquiryResult() {
+  clearStorage(enquiryResultStorageKey)
+  clearStorage(enquiryDraftStorageKey)
+  resultListeners.forEach((listener) => listener())
+}
+
+function ensureSubmissionId() {
+  const existing = readStorage(enquiryDraftStorageKey)
+  if (existing && isEnquirySubmissionId(existing)) return existing
+  const id = crypto.randomUUID()
+  writeStorage(enquiryDraftStorageKey, id)
+  return id
+}
+
+export function EnquiryForm({ copy, directUpload }: { copy: EnquiryCopy; directUpload: boolean }) {
   const [projectType, setProjectType] = useState<ProjectType>(null)
   const [selectedScope, setSelectedScope] = useState<string[]>([])
+  const [files, setFiles] = useState<File[]>([])
+  const [fileMessage, setFileMessage] = useState<string | null>(null)
+  const [dragOver, setDragOver] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [progress, setProgress] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<EnquiryField[]>([])
+  const storedReference = useSyncExternalStore(subscribeToEnquiryResult, readStoredReference, () => '')
 
   const projectTypes = [
     { id: 'residential' as const, label: copy.residential },
@@ -64,15 +150,136 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
     )
   }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setIsSubmitting(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+  const addFiles = (list: FileList | File[]) => {
+    const next = [...files]
+    let message: string | null = null
+    for (const file of list) {
+      if (next.length >= MAX_ENQUIRY_FILES) {
+        message = copy.fileCount
+        break
+      }
+      const issue = enquiryFileIssue(file.name, file.type, file.size)
+      if (issue === 'size') {
+        message = copy.fileSize
+        continue
+      }
+      if (issue) {
+        message = copy.fileType
+        continue
+      }
+      next.push(file)
+    }
+    setFiles(next)
+    setFileMessage(message)
   }
 
-  if (isSubmitted) {
+  const showErrors = (fields: EnquiryField[]) => {
+    setFieldErrors(fields)
+    if (fields.includes('files')) setFileMessage(copy.errors.files)
+  }
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (isSubmitting) return
+    const submissionId = ensureSubmissionId()
+
+    const formData = new FormData(event.currentTarget)
+    formData.set('clientSubmissionId', submissionId)
+    formData.set('projectType', projectType ?? '')
+    formData.delete('scope')
+    for (const scopeId of selectedScope) formData.append('scope', scopeId)
+    formData.delete('files')
+    formData.delete('blobs')
+
+    const validated = validateEnquiryFields({
+      clientSubmissionId: submissionId,
+      name: formData.get('name'),
+      phone: formData.get('phone'),
+      email: formData.get('email'),
+      address: formData.get('address'),
+      projectType: formData.get('projectType'),
+      scope: formData.getAll('scope'),
+      notes: formData.get('notes'),
+      budget: formData.get('budget'),
+      timeline: formData.get('timeline'),
+    })
+    if (!validated.ok) {
+      showErrors(validated.fields)
+      return
+    }
+
+    const fileIssue = files.find((file) => enquiryFileIssue(file.name, file.type, file.size))
+    if (files.length > MAX_ENQUIRY_FILES || fileIssue) {
+      showErrors(['files'])
+      return
+    }
+
+    setIsSubmitting(true)
+    setFieldErrors([])
+    setFileMessage(null)
+    setProgress(null)
+
+    try {
+      if (directUpload && files.length > 0) {
+        const { upload } = await import('@vercel/blob/client')
+        const blobs = []
+        for (let index = 0; index < files.length; index += 1) {
+          const file = files[index]
+          if (!file) continue
+          setProgress(
+            copy.uploading
+              .replace('{current}', String(index + 1))
+              .replace('{total}', String(files.length)),
+          )
+          const pathname = incomingEnquiryPath(file.name)
+          if (!pathname) {
+            showErrors(['files'])
+            return
+          }
+          const blob = await upload(pathname, file, {
+            access: 'public',
+            contentType: file.type || 'application/octet-stream',
+            handleUploadUrl: '/enquiry/upload',
+            multipart: file.size > 4 * 1024 * 1024,
+          })
+          blobs.push({
+            url: blob.url,
+            pathname: blob.pathname,
+            originalName: file.name,
+            contentType: blob.contentType || file.type || 'application/octet-stream',
+            size: file.size,
+          })
+        }
+        formData.set('blobs', JSON.stringify(blobs))
+      } else {
+        for (const file of files) formData.append('files', file)
+      }
+
+      const result = await submitEnquiry(formData)
+      if (!result.ok) {
+        showErrors(result.fields)
+        return
+      }
+
+      storeEnquiryResult(result.submissionReference)
+    } catch {
+      showErrors(['generic'])
+    } finally {
+      setIsSubmitting(false)
+      setProgress(null)
+    }
+  }
+
+  const startAnother = () => {
+    clearEnquiryResult()
+    setProjectType(null)
+    setSelectedScope([])
+    setFiles([])
+    setFileMessage(null)
+    setFieldErrors([])
+  }
+
+  if (storedReference) {
     return (
       <div className="text-center py-12">
         <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-accent/20 flex items-center justify-center">
@@ -83,12 +290,31 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
         <h3 className="font-serif text-2xl mb-4">{copy.thanksTitle}</h3>
         <p className="text-foreground-soft mb-2">{copy.thanksBody}</p>
         <p className="text-sm text-muted-foreground">{copy.thanksTiming}</p>
+        {storedReference ? (
+          <p className="mt-6 text-sm">
+            {copy.referenceLabel}{' '}
+            <span className="font-medium tracking-wide">{storedReference}</span>
+          </p>
+        ) : null}
+        <Button type="button" variant="outline" className="mt-8" onClick={startAnother}>
+          {copy.submitAnother}
+        </Button>
       </div>
     )
   }
 
+  const topErrors = fieldErrors.filter((code) => code === 'rate' || code === 'generic')
+
   return (
     <form className="space-y-8" onSubmit={handleSubmit}>
+      {topErrors.length > 0 ? (
+        <div role="alert" className="text-sm text-destructive space-y-1">
+          {topErrors.map((code) => (
+            <p key={code}>{copy.errors[code]}</p>
+          ))}
+        </div>
+      ) : null}
+
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1">
           {copy.nameLabel} <span className="text-destructive">*</span>
@@ -97,32 +323,47 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
           type="text"
           id="name"
           name="name"
+          autoComplete="name"
           placeholder={copy.namePlaceholder}
+          aria-invalid={fieldErrors.includes('name')}
           className={fieldClass}
-          required
         />
+        {fieldErrors.includes('name') ? <p className="text-sm text-destructive mt-2">{copy.errors.name}</p> : null}
       </div>
 
       <div>
         <p className="text-sm font-medium mb-3">{copy.contactLegend} *</p>
         <div className="grid sm:grid-cols-2 gap-4">
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            placeholder={copy.phonePlaceholder}
-            aria-label={copy.phonePlaceholder}
-            className={fieldClass}
-          />
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder={copy.emailPlaceholder}
-            aria-label={copy.emailPlaceholder}
-            className={fieldClass}
-            required
-          />
+          <div>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              autoComplete="tel"
+              placeholder={copy.phonePlaceholder}
+              aria-label={copy.phonePlaceholder}
+              aria-invalid={fieldErrors.includes('phone')}
+              className={fieldClass}
+            />
+            {fieldErrors.includes('phone') ? (
+              <p className="text-sm text-destructive mt-2">{copy.errors.phone}</p>
+            ) : null}
+          </div>
+          <div>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              autoComplete="email"
+              placeholder={copy.emailPlaceholder}
+              aria-label={copy.emailPlaceholder}
+              aria-invalid={fieldErrors.includes('email')}
+              className={fieldClass}
+            />
+            {fieldErrors.includes('email') ? (
+              <p className="text-sm text-destructive mt-2">{copy.errors.email}</p>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -134,21 +375,27 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
           type="text"
           id="address"
           name="address"
+          autoComplete="street-address"
           placeholder={copy.addressPlaceholder}
+          aria-invalid={fieldErrors.includes('address')}
           className={fieldClass}
-          required
         />
+        {fieldErrors.includes('address') ? (
+          <p className="text-sm text-destructive mt-2">{copy.errors.address}</p>
+        ) : null}
       </div>
 
       <div>
         <p className="text-sm font-medium mb-3">
           {copy.typeLabel} <span className="text-destructive">*</span>
         </p>
+        <input type="hidden" name="projectType" value={projectType ?? ''} />
         <div className="grid grid-cols-3 gap-3">
           {projectTypes.map((type) => (
             <button
               key={type.id}
               type="button"
+              aria-pressed={projectType === type.id}
               onClick={() => setProjectType(type.id)}
               className={cn(
                 'p-4 border rounded text-center transition-all',
@@ -162,6 +409,9 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
             </button>
           ))}
         </div>
+        {fieldErrors.includes('projectType') ? (
+          <p className="text-sm text-destructive mt-2">{copy.errors.projectType}</p>
+        ) : null}
       </div>
 
       <div>
@@ -179,6 +429,8 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
             >
               <input
                 type="checkbox"
+                name="scope"
+                value={scopeId}
                 checked={selectedScope.includes(scopeId)}
                 onChange={() => toggleScope(scopeId)}
                 className="sr-only"
@@ -203,6 +455,7 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
             </label>
           ))}
         </div>
+        {fieldErrors.includes('scope') ? <p className="text-sm text-destructive mt-2">{copy.errors.scope}</p> : null}
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
@@ -210,53 +463,120 @@ export function EnquiryForm({ copy }: { copy: EnquiryCopy }) {
           <label htmlFor="budget" className="block text-sm font-medium mb-1">
             {copy.budgetLabel}
           </label>
-          <select id="budget" name="budget" className={fieldClass}>
+          <select
+            id="budget"
+            name="budget"
+            aria-invalid={fieldErrors.includes('budget')}
+            className={fieldClass}
+          >
             {copy.budgetOptions.map((range) => (
               <option key={range.value || 'empty'} value={range.value}>
                 {range.label}
               </option>
             ))}
           </select>
+          {fieldErrors.includes('budget') ? (
+            <p className="text-sm text-destructive mt-2">{copy.errors.budget}</p>
+          ) : null}
         </div>
         <div>
           <label htmlFor="timeline" className="block text-sm font-medium mb-1">
             {copy.timelineLabel}
           </label>
-          <select id="timeline" name="timeline" className={fieldClass}>
+          <select
+            id="timeline"
+            name="timeline"
+            aria-invalid={fieldErrors.includes('timeline')}
+            className={fieldClass}
+          >
             {copy.timelineOptions.map((option) => (
               <option key={option.value || 'empty'} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
+          {fieldErrors.includes('timeline') ? (
+            <p className="text-sm text-destructive mt-2">{copy.errors.timeline}</p>
+          ) : null}
         </div>
       </div>
 
       <div>
-        <label htmlFor="description" className="block text-sm font-medium mb-1">
+        <label htmlFor="notes" className="block text-sm font-medium mb-1">
           {copy.descriptionLabel}
         </label>
         <textarea
-          id="description"
-          name="description"
+          id="notes"
+          name="notes"
           rows={4}
           placeholder={copy.descriptionPlaceholder}
+          aria-invalid={fieldErrors.includes('notes')}
           className={`${fieldClass} resize-none`}
         />
+        {fieldErrors.includes('notes') ? <p className="text-sm text-destructive mt-2">{copy.errors.notes}</p> : null}
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">{copy.uploadLabel}</label>
-        <div className="border-2 border-dashed border-input rounded-lg p-8 text-center">
-          <p className="text-sm text-muted-foreground">{copy.uploadHint}</p>
-          <p className="text-xs text-muted-foreground mt-1">{copy.uploadTypes}</p>
-          <p className="text-xs text-accent mt-3">{copy.uploadSoon}</p>
+        <p className="block text-sm font-medium mb-1">{copy.uploadLabel}</p>
+        <div
+          onDragOver={(event) => {
+            event.preventDefault()
+            setDragOver(true)
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(event) => {
+            event.preventDefault()
+            setDragOver(false)
+            addFiles(event.dataTransfer.files)
+          }}
+          className={cn(
+            'border-2 border-dashed border-input rounded-lg p-8 text-center',
+            dragOver && 'border-primary bg-primary/5',
+          )}
+        >
+          <label className="block cursor-pointer">
+            <input
+              type="file"
+              className="sr-only"
+              multiple
+              accept=".pdf,.png,.jpg,.jpeg,.dwg,application/pdf,image/png,image/jpeg"
+              onChange={(event) => {
+                if (event.target.files) addFiles(event.target.files)
+                event.target.value = ''
+              }}
+            />
+            <p className="text-sm text-muted-foreground">{copy.uploadHint}</p>
+            <p className="text-xs text-muted-foreground mt-1">{copy.uploadTypes}</p>
+          </label>
         </div>
+        {files.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {files.map((file, index) => (
+              <li
+                key={`${file.name}-${file.size}-${index}`}
+                className="flex items-center justify-between gap-3 text-sm border border-input rounded px-3 py-2"
+              >
+                <span className="min-w-0 truncate">
+                  {file.name} <span className="text-muted-foreground">({formatBytes(file.size)})</span>
+                </span>
+                <button
+                  type="button"
+                  className="text-sm text-foreground-soft underline-offset-2 hover:underline"
+                  onClick={() => setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                >
+                  {copy.removeFile}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {fileMessage ? <p className="text-sm text-destructive mt-2">{fileMessage}</p> : null}
+        {progress ? <p className="text-sm text-muted-foreground mt-2">{progress}</p> : null}
       </div>
 
       <div className="pt-4">
-        <Button type="submit" size="lg" className="w-full" disabled={isSubmitting || !projectType}>
-          {isSubmitting ? copy.submitting : copy.submit}
+        <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? progress || copy.submitting : copy.submit}
         </Button>
         <p className="text-xs text-muted-foreground mt-4 text-center">{copy.consent}</p>
       </div>

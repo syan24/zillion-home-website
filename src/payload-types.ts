@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     pages: Page;
     media: Media;
+    'enquiry-files': EnquiryFile;
+    enquiries: Enquiry;
     users: User;
     projects: Project;
     styles: Style;
@@ -99,6 +101,8 @@ export interface Config {
   collectionsSelect: {
     pages: PagesSelect<false> | PagesSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    'enquiry-files': EnquiryFilesSelect<false> | EnquiryFilesSelect<true>;
+    enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     styles: StylesSelect<false> | StylesSelect<true>;
@@ -907,6 +911,83 @@ export interface ServiceDetailsBlock {
   blockType: 'serviceDetails';
 }
 /**
+ * Files attached to an enquiry. Visitors upload them with the form. They are not part of the public media library.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-files".
+ */
+export interface EnquiryFile {
+  id: number;
+  /**
+   * The name of the file the visitor selected. The stored filename is random.
+   */
+  originalName: string;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Website enquiries. The visitor’s answers stay as submitted. Status, internal notes, and project type detail can be updated.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries".
+ */
+export interface Enquiry {
+  id: number;
+  submissionReference: string;
+  /**
+   * Repeated submits with this key return the original enquiry.
+   */
+  clientSubmissionId: string;
+  submittedAt: string;
+  status: 'new' | 'contacted' | 'qualified' | 'closed';
+  locale: 'en' | 'zh';
+  name: string;
+  phone?: string | null;
+  email: string;
+  address: string;
+  projectType: 'residential' | 'commercial' | 'joinery';
+  /**
+   * Optional staff note. The public form only asks for Residential, Commercial, or Custom Joinery.
+   */
+  projectTypeDetail?: string | null;
+  scope?: ('full-joinery' | 'kitchen' | 'wardrobe' | 'bathroom-vanity' | 'tv-unit' | 'other')[] | null;
+  /**
+   * Copied from kitchen, wardrobe, and bathroom vanity when the visitor selects those scopes.
+   */
+  spaces?: ('kitchen' | 'wardrobe' | 'bathroom-vanity')[] | null;
+  /**
+   * Project description from the form, including style and requirements.
+   */
+  notes?: string | null;
+  budgetRange?: ('under-50k' | '50k-100k' | '100k-250k' | '250k-500k' | 'over-500k') | null;
+  expectedStart?: ('asap' | '1-3-months' | '3-6-months' | '6-12-months' | 'planning') | null;
+  attachments?: (number | EnquiryFile)[] | null;
+  /**
+   * Staff notes. Visitors do not see this.
+   */
+  internalNotes?: string | null;
+  notificationStatus: 'pending' | 'sent' | 'skipped' | 'failed';
+  notificationDetail?: string | null;
+  /**
+   * Used for the hourly submission limit and spam review.
+   */
+  submitterIp?: string | null;
+  userAgent?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -1390,6 +1471,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'enquiry-files';
+        value: number | EnquiryFile;
+      } | null)
+    | ({
+        relationTo: 'enquiries';
+        value: number | Enquiry;
       } | null)
     | ({
         relationTo: 'users';
@@ -1900,6 +1989,56 @@ export interface MediaSelect<T extends boolean = true> {
               filename?: T;
             };
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-files_select".
+ */
+export interface EnquiryFilesSelect<T extends boolean = true> {
+  originalName?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiries_select".
+ */
+export interface EnquiriesSelect<T extends boolean = true> {
+  submissionReference?: T;
+  clientSubmissionId?: T;
+  submittedAt?: T;
+  status?: T;
+  locale?: T;
+  name?: T;
+  phone?: T;
+  email?: T;
+  address?: T;
+  projectType?: T;
+  projectTypeDetail?: T;
+  scope?: T;
+  spaces?: T;
+  notes?: T;
+  budgetRange?: T;
+  expectedStart?: T;
+  attachments?: T;
+  internalNotes?: T;
+  notificationStatus?: T;
+  notificationDetail?: T;
+  submitterIp?: T;
+  userAgent?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

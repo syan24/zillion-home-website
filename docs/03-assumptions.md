@@ -125,10 +125,31 @@ This is a convenience feature and not client-specified.
 ### D2. Email behaviour
 **[CLIENT]** Submission details are sent to the company and retained in admin.
 
-**[ASSUMPTION]** Existing client email infrastructure will be integrated later; email provider/cost is outside this project planning document.
+**[ASSUMPTION]** The enquiry is saved first. Email never blocks the submission. A company notification is sent only when `ENQUIRY_NOTIFY_TO` and `ENQUIRY_NOTIFY_FROM` are set and a provider is configured. `RESEND_API_KEY` sends through the Resend HTTPS API. Otherwise `SMTP_HOST` (optional `SMTP_PORT`, default 587, `SMTP_USER`, `SMTP_PASS`, `SMTP_SECURE`) sends through SMTP. If both providers are set, Resend is used. When the mailbox or provider is missing, the enquiry is still stored and the admin record is marked skipped, with the reason in the email detail. A send failure is marked failed and logged. The message is English, uses the visitor’s email as Reply-To, and links to the admin enquiry. It does not include the visitor’s IP. The client still needs to choose the real mailbox and provider.
 
 ### D3. File limits
-**[ASSUMPTION]** Accepted enquiry file types and size limits will be defined before implementation based on Vercel Blob policy and practical UX.
+**[ASSUMPTION]** Until the client confirms a different limit, enquiry attachments accept PDF, PNG, JPG/JPEG, and DWG. Up to 10 files, 10MB each. This matches the file note on the approved enquiry page. Files are stored on the `enquiry-files` upload collection, not in the public Media library. Payload read access is admin-only. The stored filename is random. The Vercel Blob adapter currently only supports public blob access, so someone who already has the file URL can open it. The website API does not list those URLs.
+
+### D4. Single-page form
+**[ASSUMPTION]** Stage 4 keeps the approved Fig 02 page: one form, not a new multi-step wizard. That page already asks for contact details, address, the three project types, scope, budget, timeline, description, and files. Progress, back navigation, and a review step are not added.
+
+### D5. Project type, scope, and spaces
+**[ASSUMPTION]** The public project type is only Residential, Commercial, or Custom Joinery. Interior Fit-out is not an enquiry type. There is no second public taxonomy. `projectTypeDetail` is an optional staff field. Scope checkboxes are stored as submitted. Kitchen, wardrobe, and bathroom vanity are also copied to `spaces` so admin can filter those rooms. Full joinery, TV unit, and other stay on scope only. Style is free text inside the project description, not a Styles relationship.
+
+### D6. Phone and consent
+**[ASSUMPTION]** Email is required. Phone is optional. The asterisk on the contact group is met by the email. The existing consent sentence stays. A separate checkbox is not added.
+
+### D7. What staff can change
+**[ASSUMPTION]** After submit, the visitor’s answers, files, reference, and time stay as submitted. Staff can change status (New, Contacted, Qualified, Closed), internal notes, and project type detail. Authenticated users can delete an enquiry, including its files, so spam can be removed.
+
+### D8. Duplicate submits
+**[ASSUMPTION]** The browser keeps one idempotency key for the tab until the enquiry succeeds. A repeated click or a retry of that same attempt returns the original reference. After success, reloading `/enquiry` shows the confirmation for that tab. “Submit another enquiry” starts a new key. A second visitor is not blocked by someone else’s success.
+
+### D9. Submission limit
+**[ASSUMPTION]** The same IP address can create 20 enquiries per hour. Retries of an existing idempotency key do not count again. The IP and user agent are stored on the enquiry for that limit and for spam review.
+
+### D10. Attachments and Blob
+**[ASSUMPTION]** With `BLOB_READ_WRITE_TOKEN`, the browser uploads each file straight to Vercel Blob, then the server copies it into `enquiry-files` and deletes the temporary object. That avoids the platform request-body limit. Without the token, the file is posted with the form and stored on local disk under `enquiry-uploads/`, which is not a public folder. Anonymous REST create on Enquiries and Enquiry files is closed. The public form is the only create path, so validation and the idempotency key cannot be skipped. Abandoned temporary Blob uploads are not swept in this stage. A successful or rejected submit deletes the temporary objects it knows about.
 
 ## E. Technical assumptions
 
@@ -159,7 +180,7 @@ This is a convenience feature and not client-specified.
 **[ASSUMPTION]** Service-card subtitles are an optional second line in the current locale. They are not a second language under an English title. See A1.
 
 ### G3. Demo seed is skip-if-exists, including production
-**[ASSUMPTION]** The project owner has asked for demo data on Preview and Production after each deploy. `pnpm seed:demo` creates missing website pages, placeholder media, portfolio projects and the existing SWMS demo. It does not overwrite an existing page, project, project-image row, or SWMS record. Empty header and footer fields are filled. Chinese locale fields are filled only when that locale is still empty. The deploy runs this only when `SEED_DEMO=true`, using the deployment’s existing `DATABASE_URL`.
+**[ASSUMPTION]** The project owner has asked for demo data on Preview and Production after each deploy. `pnpm seed:demo` creates missing website pages, placeholder media, portfolio projects, the existing SWMS demo, and one sample enquiry (`ENQ-DEMO-KEW`) when that reference is missing. It does not overwrite an existing page, project, project-image row, SWMS record, or that sample enquiry. The sample enquiry has no attachment. Empty header and footer fields are filled. Chinese locale fields are filled only when that locale is still empty. The deploy runs this only when `SEED_DEMO=true`, using the deployment’s existing `DATABASE_URL`.
 
 ### G8. Orphan seed media is re-uploaded in place
 **[ASSUMPTION]** A Media document whose filename is already taken is not proof that the file can be served. Rows created before `BLOB_READ_WRITE_TOKEN` was available can point at `/api/media/file/<filename>` while the bytes never landed in Vercel Blob. `pnpm seed:demo` and `pnpm seed:demo:deploy` re-upload that seed file onto the same Media id when the URL is missing or local-only, the filesize is missing or 0, Blob does not have the object, or the public file URL returns 404. Marketing images and portfolio images both follow this rule. A healthy file is left alone: same filesize as the seed asset and a working URL is sufficient, and a reachable file with a different size is kept so an admin replacement that actually serves is not reset. The exception remains `hero-house.jpg`: a different stored size is replaced so the darker hero stays on pages that still use that media item. A 404 re-uploads the seed asset even if an admin had previously replaced that filename, because the replacement is not being served. `seed:demo:deploy` fails when `SEED_DEMO=true` and the Blob token is missing, so a deploy cannot create more orphan rows. Durability is confirmed with the Blob API `head` call (the same call `/api/media/file/<filename>` makes), using the Blob URL stored on the Media document when there is one, otherwise the object path from `prefix`, `_objectKey`, and filename. An anonymous GET of the public Blob CDN is not treated as proof, because that CDN can keep a cached 404 after a successful upload. Local `pnpm seed:demo` still runs without the token and stores files on disk. The public check uses `NEXT_PUBLIC_SERVER_URL`, or the Vercel production host when that is unset. This code does not change Production until a deploy with `SEED_DEMO=true` and the Blob token runs.
@@ -167,8 +188,8 @@ This is a convenience feature and not client-specified.
 ### G4. Icons stay in code
 **[ASSUMPTION]** Process-step icons and the category-bar icons are chosen by item order. Admins edit the labels. Adding a sixth item reuses the last icon.
 
-### G5. Enquiry stays a shell
-**[ASSUMPTION]** The Enquiry form shell stays hardcoded until Stage 4. It does follow the locale cookie. `/contact` keeps redirecting to `/enquiry`. The project library is Stage 3.
+### G5. Enquiry form stays in code
+**[ASSUMPTION]** The enquiry form stays in code rather than a CMS form, and it follows the locale cookie. Stage 4 saves each submission. `/contact` keeps redirecting to `/enquiry`. See `docs/14-stage-4-enquiry.md`.
 
 ### G6. Header chrome that is not navigation
 **[ASSUMPTION]** The header enquiry button always uses the beige enquiry style and links to `/enquiry`. Its label follows the active locale. The EN / 中文 control sets the `locale` cookie and reloads marketing copy. See A1.
@@ -186,5 +207,5 @@ This is a convenience feature and not client-specified.
 6. Is a formal SWMS reviewer/approver required?
 7. Should a new SWMS version force re-signing?
 8. What export output does the client expect: CSV, PDF, or both?
-9. What file types/max size should enquiry attachments support?
-10. Who receives enquiry notification emails?
+9. What file types/max size should enquiry attachments support? Working assumption: D3.
+10. Who receives enquiry notification emails? Working assumption: D2. The recipient is `ENQUIRY_NOTIFY_TO` until the client names the mailbox.
