@@ -43,6 +43,7 @@ export const enquiryUploadMimeTypes = [
 export type EnquiryFileIssue = 'type' | 'size' | 'count'
 
 export type IncomingBlob = {
+  field?: string
   url: string
   pathname: string
   originalName: string
@@ -128,6 +129,9 @@ export function parseEnquiryBlobs(raw: unknown): { ok: true; value: IncomingBlob
   for (const item of parsed) {
     if (!item || typeof item !== 'object') return { ok: false }
     const record = item as Record<string, unknown>
+    const field = typeof record.field === 'string' && /^[A-Za-z][A-Za-z0-9_-]{0,60}$/.test(record.field)
+      ? record.field
+      : undefined
     const url = typeof record.url === 'string' ? record.url : ''
     const pathname = typeof record.pathname === 'string' ? record.pathname : ''
     const originalName = typeof record.originalName === 'string' ? safeOriginalName(record.originalName) : ''
@@ -135,7 +139,7 @@ export function parseEnquiryBlobs(raw: unknown): { ok: true; value: IncomingBlob
     const size = typeof record.size === 'number' ? record.size : Number.NaN
     if (!isPublicBlobUrl(url) || !isIncomingEnquiryPath(pathname)) return { ok: false }
     if (!originalName || enquiryFileIssue(originalName, contentType, size)) return { ok: false }
-    value.push({ url, pathname, originalName, contentType, size })
+    value.push({ field, url, pathname, originalName, contentType, size })
   }
 
   return { ok: true, value }

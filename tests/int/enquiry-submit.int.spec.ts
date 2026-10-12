@@ -28,6 +28,7 @@ function enquiry(id: string): ValidEnquiry {
     notes: 'Warm oak kitchen.',
     budgetRange: '100k-250k',
     expectedStart: '3-6-months',
+    additionalAnswers: { siteAccess: 'After 7am' },
   }
 }
 
@@ -89,6 +90,7 @@ describe('enquiry submission', () => {
     expect(doc?.status).toBe('new')
     expect(doc?.notificationStatus).toBe('skipped')
     expect(doc?.attachments).toHaveLength(1)
+    expect(doc?.additionalAnswers).toEqual({ siteAccess: 'After 7am' })
 
     if (!doc) return
     const updated = await payload.update({
@@ -119,7 +121,7 @@ describe('enquiry submission', () => {
         },
       ],
     })
-    expect(result).toEqual({ ok: false, fields: ['files'] })
+    expect(result).toEqual({ ok: false, issues: [{ field: 'files', code: 'files' }] })
     const found = await payload.count({
       collection: 'enquiries',
       overrideAccess: true,

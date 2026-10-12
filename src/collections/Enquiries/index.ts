@@ -2,14 +2,10 @@ import type { CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
 import {
-  budgetOptions,
   enquiryLocaleOptions,
   enquiryStatusOptions,
   notificationStatusOptions,
-  projectTypeOptions,
-  scopeOptions,
   spaceOptions,
-  timelineOptions,
 } from '@/lib/enquiry/options'
 
 import { deleteEnquiryFiles } from './hooks/deleteEnquiryFiles'
@@ -26,7 +22,7 @@ export const Enquiries: CollectionConfig = {
     listSearchableFields: ['submissionReference', 'name', 'email', 'phone', 'address', 'notes'],
     group: 'Enquiries',
     description:
-      'Website enquiries. The visitor’s answers stay as submitted. Status, internal notes, and project type detail can be updated.',
+      'Website enquiries. The visitor’s answers stay as submitted. Status, internal notes, and project type detail can be updated. Field labels and options are edited on the Enquiry form.',
   },
   access: {
     create: () => false,
@@ -94,7 +90,6 @@ export const Enquiries: CollectionConfig = {
         {
           name: 'name',
           type: 'text',
-          required: true,
           maxLength: 120,
           admin: { ...locked, width: '50%' },
         },
@@ -109,14 +104,12 @@ export const Enquiries: CollectionConfig = {
     {
       name: 'email',
       type: 'email',
-      required: true,
       index: true,
       admin: locked,
     },
     {
       name: 'address',
       type: 'text',
-      required: true,
       maxLength: 300,
       label: 'Project address / suburb',
       admin: locked,
@@ -126,12 +119,14 @@ export const Enquiries: CollectionConfig = {
       fields: [
         {
           name: 'projectType',
-          type: 'select',
-          required: true,
+          type: 'text',
           index: true,
-          options: [...projectTypeOptions],
           label: 'Project type',
-          admin: { ...locked, width: '50%' },
+          admin: {
+            ...locked,
+            width: '50%',
+            description: 'The option value submitted from the enquiry form.',
+          },
         },
         {
           name: 'projectTypeDetail',
@@ -140,19 +135,19 @@ export const Enquiries: CollectionConfig = {
           label: 'Project type detail',
           admin: {
             width: '50%',
-            description:
-              'Optional staff note. The public form only asks for Residential, Commercial, or Custom Joinery.',
+            description: 'Optional staff note. Public choices are edited on the Enquiry form.',
           },
         },
       ],
     },
     {
       name: 'scope',
-      type: 'select',
-      hasMany: true,
-      options: [...scopeOptions],
+      type: 'json',
       label: 'Scope of work',
-      admin: locked,
+      admin: {
+        ...locked,
+        description: 'Option values selected on the enquiry form.',
+      },
     },
     {
       name: 'spaces',
@@ -180,17 +175,23 @@ export const Enquiries: CollectionConfig = {
       fields: [
         {
           name: 'budgetRange',
-          type: 'select',
-          options: [...budgetOptions],
+          type: 'text',
           label: 'Approximate budget',
-          admin: { ...locked, width: '50%' },
+          admin: {
+            ...locked,
+            width: '50%',
+            description: 'The option value submitted from the enquiry form.',
+          },
         },
         {
           name: 'expectedStart',
-          type: 'select',
-          options: [...timelineOptions],
+          type: 'text',
           label: 'Expected start',
-          admin: { ...locked, width: '50%' },
+          admin: {
+            ...locked,
+            width: '50%',
+            description: 'The option value submitted from the enquiry form.',
+          },
         },
       ],
     },
@@ -201,6 +202,16 @@ export const Enquiries: CollectionConfig = {
       hasMany: true,
       label: 'Attachments',
       admin: locked,
+    },
+    {
+      name: 'additionalAnswers',
+      type: 'json',
+      label: 'Additional answers',
+      admin: {
+        ...locked,
+        description:
+          'Answers to form questions that do not map onto the fields above, including files named on an extra upload question.',
+      },
     },
     {
       name: 'internalNotes',

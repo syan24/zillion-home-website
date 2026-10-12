@@ -1,13 +1,17 @@
 import type { Metadata } from 'next'
+import configPromise from '@payload-config'
 import React, { Fragment } from 'react'
+import { getPayload } from 'payload'
 
 import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { getLocale } from '@/i18n/getLocale'
 import { getMessages } from '@/i18n/messages'
+import { loadEnquiryForm } from '@/lib/enquiry/loadForm'
 
 import { EnquiryForm } from './EnquiryForm'
 
 export const maxDuration = 60
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata(): Promise<Metadata> {
   const copy = getMessages(await getLocale()).enquiry
@@ -27,7 +31,10 @@ function lines(text: string) {
 }
 
 export default async function EnquiryPage() {
-  const copy = getMessages(await getLocale()).enquiry
+  const locale = await getLocale()
+  const copy = getMessages(locale).enquiry
+  const payload = await getPayload({ config: configPromise })
+  const form = await loadEnquiryForm(payload, locale)
 
   return (
     <main className="min-h-screen">
@@ -64,7 +71,11 @@ export default async function EnquiryPage() {
                 <h2 className="font-serif text-2xl md:text-3xl mb-2">{copy.formHeading}</h2>
                 <p className="mt-4 text-foreground-soft">{copy.formIntro}</p>
               </div>
-              <EnquiryForm copy={copy} directUpload={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
+              <EnquiryForm
+                copy={copy}
+                form={form}
+                directUpload={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
+              />
             </div>
           </div>
         </div>

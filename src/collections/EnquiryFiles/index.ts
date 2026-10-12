@@ -1,6 +1,6 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
-import type { CollectionConfig } from 'payload'
+import { ValidationError, type CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
 import { enquiryUploadMimeTypes } from '@/lib/enquiry/files'
@@ -26,6 +26,23 @@ export const EnquiryFiles: CollectionConfig = {
   upload: {
     staticDir: path.resolve(dirname, '../../../enquiry-uploads'),
     mimeTypes: enquiryUploadMimeTypes,
+  },
+  hooks: {
+    beforeValidate: [
+      ({ operation, req }) => {
+        if (operation === 'create' && !req.context?.enquiryFileCreate) {
+          throw new ValidationError({
+            collection: 'enquiry-files',
+            errors: [
+              {
+                message: 'Enquiry files are created when an enquiry is submitted.',
+                path: 'originalName',
+              },
+            ],
+          })
+        }
+      },
+    ],
   },
   fields: [
     {

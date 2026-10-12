@@ -173,6 +173,7 @@ function enquiryText(input: {
     enquiry.notes || 'No project description.',
     '',
     `Attachments: ${input.attachmentNames.length ? input.attachmentNames.join(', ') : 'None'}`,
+    ...additionalLines(input.enquiry),
     `Admin: ${input.adminURL}`,
   ]
   return lines.join('\n')
@@ -205,8 +206,31 @@ function enquiryHtml(input: {
     '</table>',
     `<p>${escapeHtml(enquiry.notes || 'No project description.').replace(/\n/g, '<br>')}</p>`,
     `<p>Attachments: ${escapeHtml(input.attachmentNames.length ? input.attachmentNames.join(', ') : 'None')}</p>`,
+    additionalHtml(input.enquiry),
     `<p><a href="${escapeHtml(input.adminURL)}">Open in admin</a></p>`,
   ].join('')
+}
+
+function additionalLines(enquiry: ValidEnquiry): string[] {
+  const answers = enquiry.additionalAnswers
+  if (!answers) return []
+  const lines = Object.entries(answers).map(([key, value]) => `${key}: ${formatAnswer(value)}`)
+  return lines.length ? ['', 'Additional answers:', ...lines] : []
+}
+
+function additionalHtml(enquiry: ValidEnquiry): string {
+  const answers = enquiry.additionalAnswers
+  if (!answers) return ''
+  const rows = Object.entries(answers)
+    .map(([key, value]) => `<li>${escapeHtml(key)}: ${escapeHtml(formatAnswer(value))}</li>`)
+    .join('')
+  return rows ? `<p>Additional answers:</p><ul>${rows}</ul>` : ''
+}
+
+function formatAnswer(value: string | boolean | string[]): string {
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (Array.isArray(value)) return value.join(', ')
+  return value
 }
 
 function splitEmails(value: string | undefined): string[] {

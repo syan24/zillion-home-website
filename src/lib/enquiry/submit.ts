@@ -17,7 +17,7 @@ import {
   MAX_ENQUIRY_FILE_BYTES,
   MAX_ENQUIRY_FILES,
 } from '@/lib/enquiry/options'
-import type { EnquiryField, ValidEnquiry } from '@/lib/enquiry/validate'
+import type { EnquiryIssue, ValidEnquiry } from '@/lib/enquiry/validate'
 import { getServerSideURL } from '@/utilities/getURL'
 
 export type EnquiryUpload = {
@@ -29,7 +29,7 @@ export type EnquiryUpload = {
 
 export type EnquirySubmitResult =
   | { ok: true; submissionReference: string }
-  | { ok: false; fields: EnquiryField[] }
+  | { ok: false; issues: EnquiryIssue[] }
 
 export async function submitEnquiryRecord(
   payload: Payload,
@@ -43,11 +43,11 @@ export async function submitEnquiryRecord(
   },
 ): Promise<EnquirySubmitResult> {
   const fileError = validateAttachmentList(input.files, input.blobs)
-  if (fileError) return { ok: false, fields: [fileError] }
+  if (fileError) return { ok: false, issues: [fileError] }
 
   const token = process.env.BLOB_READ_WRITE_TOKEN
   if (input.blobs.length > 0 && !token) {
-    return { ok: false, fields: ['files'] }
+    return { ok: false, issues: [{ field: 'files', code: 'files' }] }
   }
 
   const existing = await findBySubmissionId(payload, input.fields.clientSubmissionId)
@@ -58,7 +58,7 @@ export async function submitEnquiryRecord(
 
   if (!(await enquiryRateLimitOpen(payload, input.ip))) {
     await discardIncomingBlobs(input.blobs, token)
-    return { ok: false, fields: ['rate'] }
+    return { ok: false, issues: [{ field: 'form', code: 'rate' }] }
   }
 
   const stored: Array<{ id: number; name: string }> = []
@@ -73,7 +73,7 @@ export async function submitEnquiryRecord(
     payload.logger.error(error)
     await deleteEnquiryFiles(payload, stored.map((file) => file.id))
     await discardIncomingBlobs(input.blobs, token)
-    return { ok: false, fields: ['files'] }
+    return { ok: false, issues: [{ field: 'files', code: 'files' }] }
   }
 
   try {
@@ -86,7 +86,7 @@ export async function submitEnquiryRecord(
         submittedAt: new Date().toISOString(),
         name: input.fields.name,
         phone: input.fields.phone,
-        email: input.fields.email,
+        ...(input.fields.email ? { email: input.fields.email } : {}),
         address: input.fields.address,
         projectType: input.fields.projectType,
         scope: input.fields.scope,
@@ -94,6 +94,7 @@ export async function submitEnquiryRecord(
         notes: input.fields.notes,
         ...(input.fields.budgetRange ? { budgetRange: input.fields.budgetRange } : {}),
         ...(input.fields.expectedStart ? { expectedStart: input.fields.expectedStart } : {}),
+        ...(input.fields.additionalAnswers ? { additionalAnswers: input.fields.additionalAnswers } : {}),
         attachments: stored.map((file) => file.id),
         status: 'new',
         locale: input.locale,
@@ -106,7 +107,7 @@ export async function submitEnquiryRecord(
     const submissionReference = created.submissionReference || ''
     if (!submissionReference) {
       await deleteEnquiryFiles(payload, stored.map((file) => file.id))
-      return { ok: false, fields: ['generic'] }
+      return { ok: false, issues: [{ field: 'form', code: 'generic' }] }
     }
 
     await recordNotification(payload, created.id, {
@@ -125,7 +126,7 @@ export async function submitEnquiryRecord(
       return { ok: true, submissionReference: raced.submissionReference }
     }
     payload.logger.error(error)
-    return { ok: false, fields: ['generic'] }
+    return { ok: false, issues: [{ field: 'form', code: 'generic' }] }
   }
 }
 
@@ -141,11 +142,11 @@ export async function enquiryRateLimitOpen(payload: Payload, ip: string): Promis
   return recent.totalDocs < ENQUIRY_RATE_LIMIT
 }
 
-function validateAttachmentList(files: EnquiryUpload[], blobs: IncomingBlob[]): EnquiryField | null {
-  if (files.length > 0 && blobs.length > 0) return 'files'
-  if (files.length + blobs.length > MAX_ENQUIRY_FILES) return 'files'
+function validateAttachmentList(files: EnquiryUpload[], blobs: IncomingBlob[]): EnquiryIssue | null {
+  if (files.length > 0 && blobs.length > 0) return { field: 'files', code: 'files' }
+  if (files.length + blobs.length > MAX_ENQUIRY_FILES) return { field: 'files', code: 'files' }
   for (const file of files) {
-    if (enquiryFileIssue(file.name, file.type, file.size)) return 'files'
+    if (enquiryFileIssue(file.name, file.type, file.size)) return { field: 'files', code: 'files' }
   }
   return null
 }
@@ -172,6 +173,7 @@ async function copyIncomingBlob(payload: Payload, blob: IncomingBlob, token: str
     const created = await payload.create({
       collection: 'enquiry-files',
       overrideAccess: true,
+      context: { enquiryFileCreate: true },
       data: { originalName: blob.originalName },
       file: {
         data,
@@ -198,6 +200,7 @@ async function storeUploadedFile(payload: Payload, file: EnquiryUpload) {
   const created = await payload.create({
     collection: 'enquiry-files',
     overrideAccess: true,
+    context: { enquiryFileCreate: true },
     data: { originalName },
     file: {
       data,

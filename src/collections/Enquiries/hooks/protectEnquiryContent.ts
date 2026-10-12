@@ -17,6 +17,7 @@ const lockedFields = [
   'budgetRange',
   'expectedStart',
   'attachments',
+  'additionalAnswers',
   'locale',
   'submitterIp',
   'userAgent',

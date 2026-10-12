@@ -1,8 +1,8 @@
 # Stage 4 enquiry
 
-Status: the `/enquiry` form saves a Payload enquiry.
+Status: the `/enquiry` form saves a Payload enquiry. The questions come from the Form Builder form marked **Enquiry form**.
 
-The page stays the single form from the approved enquiry layout. Marketing buttons stay beige. The submit button stays charcoal. `/contact` redirects to `/enquiry`. English is the default. 中文 mode uses the Chinese form strings only.
+The page stays the single form from the approved enquiry layout. Marketing buttons stay beige. The submit button stays charcoal. `/contact` redirects to `/enquiry`. English is the default. 中文 mode uses the Chinese labels stored on the form.
 
 ## What is stored
 
@@ -10,12 +10,12 @@ Admin → Enquiries:
 
 - reference, submitted time, idempotency key
 - name, phone, email, address
-- project type: Residential, Commercial, or Custom Joinery
+- project type, scope, budget, and expected start, using the option values from the form
 - optional project type detail for staff
-- scope, and spaces when the scope is kitchen, wardrobe, or bathroom vanity
+- spaces when the scope value is kitchen, wardrobe, or bathroom vanity
 - style and notes (the project description)
-- budget and expected start
 - attachments
+- additional answers for any question that is not one of the mapped names
 - status and internal notes
 - visitor language, email result, IP, and user agent
 
@@ -37,9 +37,10 @@ pnpm seed:demo
 
 1. Open `/enquiry`, submit the form, and include a PDF or image if you want a file.
 2. The confirmation shows the reference. Reload the tab and the confirmation stays. Submit again only from “Submit another enquiry”.
-3. In admin, open Enquiries. Search by name or reference, and filter by status or project type.
-4. Switch the header to 中文 and confirm the form is Chinese only.
+3. In admin, open Enquiries. Search by name or reference, and filter by status.
+4. Open Forms, edit the Enquiry form labels or options, reload `/enquiry`, and confirm the public form changed without a deploy.
+5. Switch the header to 中文 and confirm the form questions are Chinese only.
 
 ## Assumptions
 
-See `docs/03-assumptions.md` D2–D10. The recipient mailbox, the final file policy, and whether phone is required are still client decisions. The behaviour above is the working assumption.
+See `docs/03-assumptions.md` D2–D11. The recipient mailbox, the final file policy, and whether phone is required are still client decisions. The behaviour above is the working assumption. The mapping from form field names to enquiry columns is D11.

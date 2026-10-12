@@ -501,11 +501,17 @@ export interface FormBlock {
   blockType: 'formBlock';
 }
 /**
+ * The public enquiry page uses the earliest form with “Enquiry form” checked. Edit fields here; leads are stored under Enquiries.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "forms".
  */
 export interface Form {
   id: number;
+  /**
+   * The public /enquiry page renders this form. Submissions are saved as Enquiries, not as form submissions.
+   */
+  enquiryForm?: boolean | null;
   title: string;
   fields?:
     | (
@@ -613,6 +619,57 @@ export interface Form {
             id?: string | null;
             blockName?: string | null;
             blockType: 'textarea';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            uploadCollection: 'enquiry-files';
+            mimeTypes?:
+              | {
+                  mimeType: string;
+                  id?: string | null;
+                }[]
+              | null;
+            width?: number | null;
+            maxFileSize?: number | null;
+            required?: boolean | null;
+            multiple?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'upload';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            defaultValue?: string | null;
+            options?:
+              | {
+                  label: string;
+                  value: string;
+                  id?: string | null;
+                }[]
+              | null;
+            required?: boolean | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'radio';
+          }
+        | {
+            name: string;
+            label?: string | null;
+            width?: number | null;
+            required?: boolean | null;
+            options?:
+              | {
+                  label: string;
+                  value: string;
+                  id?: string | null;
+                }[]
+              | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'checkboxGroup';
           }
       )[]
     | null;
@@ -937,7 +994,7 @@ export interface EnquiryFile {
   focalY?: number | null;
 }
 /**
- * Website enquiries. The visitor’s answers stay as submitted. Status, internal notes, and project type detail can be updated.
+ * Website enquiries. The visitor’s answers stay as submitted. Status, internal notes, and project type detail can be updated. Field labels and options are edited on the Enquiry form.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "enquiries".
@@ -952,16 +1009,30 @@ export interface Enquiry {
   submittedAt: string;
   status: 'new' | 'contacted' | 'qualified' | 'closed';
   locale: 'en' | 'zh';
-  name: string;
+  name?: string | null;
   phone?: string | null;
-  email: string;
-  address: string;
-  projectType: 'residential' | 'commercial' | 'joinery';
+  email?: string | null;
+  address?: string | null;
   /**
-   * Optional staff note. The public form only asks for Residential, Commercial, or Custom Joinery.
+   * The option value submitted from the enquiry form.
+   */
+  projectType?: string | null;
+  /**
+   * Optional staff note. Public choices are edited on the Enquiry form.
    */
   projectTypeDetail?: string | null;
-  scope?: ('full-joinery' | 'kitchen' | 'wardrobe' | 'bathroom-vanity' | 'tv-unit' | 'other')[] | null;
+  /**
+   * Option values selected on the enquiry form.
+   */
+  scope?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Copied from kitchen, wardrobe, and bathroom vanity when the visitor selects those scopes.
    */
@@ -970,9 +1041,27 @@ export interface Enquiry {
    * Project description from the form, including style and requirements.
    */
   notes?: string | null;
-  budgetRange?: ('under-50k' | '50k-100k' | '100k-250k' | '250k-500k' | 'over-500k') | null;
-  expectedStart?: ('asap' | '1-3-months' | '3-6-months' | '6-12-months' | 'planning') | null;
+  /**
+   * The option value submitted from the enquiry form.
+   */
+  budgetRange?: string | null;
+  /**
+   * The option value submitted from the enquiry form.
+   */
+  expectedStart?: string | null;
   attachments?: (number | EnquiryFile)[] | null;
+  /**
+   * Answers to form questions that do not map onto the fields above, including files named on an extra upload question.
+   */
+  additionalAnswers?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Staff notes. Visitors do not see this.
    */
@@ -1342,6 +1431,16 @@ export interface FormSubmission {
     | {
         field: string;
         value: string;
+        id?: string | null;
+      }[]
+    | null;
+  submissionUploads?:
+    | {
+        field: string;
+        value: {
+          relationTo: 'enquiry-files';
+          value: number | EnquiryFile;
+        }[];
         id?: string | null;
       }[]
     | null;
@@ -2032,6 +2131,7 @@ export interface EnquiriesSelect<T extends boolean = true> {
   budgetRange?: T;
   expectedStart?: T;
   attachments?: T;
+  additionalAnswers?: T;
   internalNotes?: T;
   notificationStatus?: T;
   notificationDetail?: T;
@@ -2273,6 +2373,7 @@ export interface RedirectsSelect<T extends boolean = true> {
  * via the `definition` "forms_select".
  */
 export interface FormsSelect<T extends boolean = true> {
+  enquiryForm?: T;
   title?: T;
   fields?:
     | T
@@ -2377,6 +2478,60 @@ export interface FormsSelect<T extends boolean = true> {
               id?: T;
               blockName?: T;
             };
+        upload?:
+          | T
+          | {
+              name?: T;
+              label?: T;
+              uploadCollection?: T;
+              mimeTypes?:
+                | T
+                | {
+                    mimeType?: T;
+                    id?: T;
+                  };
+              width?: T;
+              maxFileSize?: T;
+              required?: T;
+              multiple?: T;
+              id?: T;
+              blockName?: T;
+            };
+        radio?:
+          | T
+          | {
+              name?: T;
+              label?: T;
+              width?: T;
+              defaultValue?: T;
+              options?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    id?: T;
+                  };
+              required?: T;
+              id?: T;
+              blockName?: T;
+            };
+        checkboxGroup?:
+          | T
+          | {
+              name?: T;
+              label?: T;
+              width?: T;
+              required?: T;
+              options?:
+                | T
+                | {
+                    label?: T;
+                    value?: T;
+                    id?: T;
+                  };
+              id?: T;
+              blockName?: T;
+            };
       };
   submitButtonLabel?: T;
   confirmationType?: T;
@@ -2408,6 +2563,13 @@ export interface FormsSelect<T extends boolean = true> {
 export interface FormSubmissionsSelect<T extends boolean = true> {
   form?: T;
   submissionData?:
+    | T
+    | {
+        field?: T;
+        value?: T;
+        id?: T;
+      };
+  submissionUploads?:
     | T
     | {
         field?: T;

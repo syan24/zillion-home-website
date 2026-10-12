@@ -131,10 +131,35 @@ This is a convenience feature and not client-specified.
 **[ASSUMPTION]** Until the client confirms a different limit, enquiry attachments accept PDF, PNG, JPG/JPEG, and DWG. Up to 10 files, 10MB each. This matches the file note on the approved enquiry page. Files are stored on the `enquiry-files` upload collection, not in the public Media library. Payload read access is admin-only. The stored filename is random. The Vercel Blob adapter currently only supports public blob access, so someone who already has the file URL can open it. The website API does not list those URLs.
 
 ### D4. Single-page form
-**[ASSUMPTION]** Stage 4 keeps the approved Fig 02 page: one form, not a new multi-step wizard. That page already asks for contact details, address, the three project types, scope, budget, timeline, description, and files. Progress, back navigation, and a review step are not added.
+**[ASSUMPTION]** Stage 4 keeps the approved Fig 02 page: one form, not a new multi-step wizard. Progress, back navigation, and a review step are not added. The questions on that page are the seeded Form Builder form, so staff can change labels, options, required flags, and questions in Admin without a deploy.
 
 ### D5. Project type, scope, and spaces
-**[ASSUMPTION]** The public project type is only Residential, Commercial, or Custom Joinery. Interior Fit-out is not an enquiry type. There is no second public taxonomy. `projectTypeDetail` is an optional staff field. Scope checkboxes are stored as submitted. Kitchen, wardrobe, and bathroom vanity are also copied to `spaces` so admin can filter those rooms. Full joinery, TV unit, and other stay on scope only. Style is free text inside the project description, not a Styles relationship.
+**[ASSUMPTION]** The seeded enquiry form offers Residential, Commercial, and Custom Joinery. Interior Fit-out is not in that seed. Staff can add or rename options on the form; the submitted option value is stored on the enquiry. `projectTypeDetail` is an optional staff field. Scope checkboxes are stored as submitted. Kitchen, wardrobe, and bathroom vanity are also copied to `spaces` when those exact values are selected. Other scope values stay on scope only. Style is free text inside the project description, not a Styles relationship.
+
+### D11. Form Builder is the public form
+**[ASSUMPTION]** Payload Form Builder is the source for the public `/enquiry` questions. The page uses the earliest form with **Enquiry form** checked. Seed creates that form once and does not overwrite later edits. English and 中文 labels are stored on the form. The page heading, image, consent sentence, and thank-you text stay in the site locale messages so the reference can be shown after save.
+
+Field `name` values map onto Enquiries like this:
+
+| Form field name | Enquiry field |
+| --- | --- |
+| `name` | Name |
+| `phone` | Phone |
+| `email` | Email |
+| `address` | Project address / suburb |
+| `projectType` | Project type (the option value) |
+| `scope` | Scope of work. A checkbox group stores every selected value. |
+| `budget` | Approximate budget |
+| `timeline` | Expected start |
+| `notes` | Style and notes |
+| `description` | Style and notes, when the form has no `notes` field |
+| `attachments` or `files` | Attachments |
+
+Any other named question is stored in **Additional answers**, including the filenames for an upload question that uses a different name. The files themselves are still saved on the enquiry. A value is accepted when it is one of that question’s options. The original three project types are the seed, not a hard reject list.
+
+The enquiry page is the only public create path for that form. Posting it to form submissions is rejected. Other forms can still use form submissions.
+
+The confirmation message on the Form document is kept so the form is valid. `/enquiry` shows its own thank-you and reference instead, because the reference is created with the enquiry.
 
 ### D6. Phone and consent
 **[ASSUMPTION]** Email is required. Phone is optional. The asterisk on the contact group is met by the email. The existing consent sentence stays. A separate checkbox is not added.
