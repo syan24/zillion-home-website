@@ -9,9 +9,15 @@ export const demoAcknowledgementClientId = '00000000-0000-4000-8000-0000000000a7
 const demoProjectTitle = 'Rosebery Residence'
 const demoSwmsTitle = 'Construction Works SWMS'
 
-const demoSignature = `data:image/png;base64,${readFileSync(
-  path.resolve(process.cwd(), 'src/seed/demo-signature.png'),
-).toString('base64')}`
+function demoSignatureDataUrl(): string {
+  const file = path.resolve(process.cwd(), 'src/seed/demo-signature.png')
+  try {
+    return `data:image/png;base64,${readFileSync(file).toString('base64')}`
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : 'unknown error'
+    throw new Error(`Demo SWMS acknowledgement could not read ${file}. ${detail}`)
+  }
+}
 
 export async function seedSwmsAcknowledgement(payload: Payload) {
   const existing = await payload.find({
@@ -98,7 +104,7 @@ export async function seedSwmsAcknowledgement(payload: Payload) {
         '2.0': 'accepted',
         '2.1': 'accepted',
       },
-      signature: demoSignature,
+      signature: demoSignatureDataUrl(),
       signedAt: '2026-04-15T01:30:00.000Z',
       submissionRef: demoAcknowledgementRef,
       swmsVersion: versionID,
