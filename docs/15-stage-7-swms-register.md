@@ -57,6 +57,7 @@ The date is the UTC date of the download. The request must be logged in. A logge
 | Project SWMS | Construction Works SWMS |
 | Worker | Demo Worker, Demo Electrical, 0400 111 222, Electrician |
 | Signed at | 15 Apr 2026, 01:30 UTC |
+| Signature | Placeholder stroke stored with the row. Not a legal signature. |
 
 `SEED_DEMO=true` on Preview or Production runs the same seed after migrate.
 

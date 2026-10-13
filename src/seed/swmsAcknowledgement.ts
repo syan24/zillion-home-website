@@ -1,3 +1,5 @@
+import { readFileSync } from 'fs'
+import path from 'path'
 import type { Payload } from 'payload'
 
 import { relationID } from '@/lib/swms/relationID'
@@ -7,8 +9,9 @@ export const demoAcknowledgementClientId = '00000000-0000-4000-8000-0000000000a7
 const demoProjectTitle = 'Rosebery Residence'
 const demoSwmsTitle = 'Construction Works SWMS'
 
-const demoSignature =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
+const demoSignature = `data:image/png;base64,${readFileSync(
+  path.resolve(process.cwd(), 'src/seed/demo-signature.png'),
+).toString('base64')}`
 
 export async function seedSwmsAcknowledgement(payload: Payload) {
   const existing = await payload.find({
