@@ -1382,7 +1382,7 @@ export interface SwmsVersion {
   createdAt: string;
 }
 /**
- * Worker signatures. Records are append-only and point at the exact SWMS version signed.
+ * Signed worker records. Filter by project, Project SWMS, version, worker name, or signed date, then export the current list as CSV. Records are append-only and stay on the SWMS version that was signed.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "swms-acknowledgements".
@@ -1397,7 +1397,7 @@ export interface SwmsAcknowledgement {
   project: number | Project;
   projectSwms: number | ProjectSwm;
   /**
-   * Exact version the worker signed.
+   * Exact version the worker signed. The list shows that version’s label.
    */
   swmsVersion: number | SwmsVersion;
   workerName: string;

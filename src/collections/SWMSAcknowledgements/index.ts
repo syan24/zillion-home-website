@@ -2,6 +2,8 @@ import crypto from 'crypto'
 import type { CollectionConfig, FieldHook } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
+import { exportSWMSRegister } from './exportRegister'
+import { rejectAcknowledgementDelete, rejectAcknowledgementUpdate } from './hooks/appendOnly'
 
 const generateSubmissionRef: FieldHook = ({ operation, value }) => {
   if (operation === 'create' && (typeof value !== 'string' || value.trim() === '')) {
@@ -14,6 +16,10 @@ const generateSubmissionRef: FieldHook = ({ operation, value }) => {
 
 export const SWMSAcknowledgements: CollectionConfig = {
   slug: 'swms-acknowledgements',
+  labels: {
+    singular: 'SWMS acknowledgement',
+    plural: 'SWMS register',
+  },
   admin: {
     useAsTitle: 'submissionRef',
     defaultColumns: ['submissionRef', 'workerName', 'project', 'swmsVersion', 'signedAt'],
@@ -26,13 +32,28 @@ export const SWMSAcknowledgements: CollectionConfig = {
     ],
     group: 'SWMS',
     description:
-      'Worker signatures. Records are append-only and point at the exact SWMS version signed.',
+      'Signed worker records. Filter by project, Project SWMS, version, worker name, or signed date, then export the current list as CSV. Records are append-only and stay on the SWMS version that was signed.',
+    components: {
+      beforeListTable: ['@/components/SWMS/ExportRegisterButton'],
+    },
   },
   access: {
-    create: authenticated,
+    create: () => false,
     delete: () => false,
     read: authenticated,
     update: () => false,
+  },
+  defaultSort: '-signedAt',
+  endpoints: [
+    {
+      path: '/export',
+      method: 'get',
+      handler: exportSWMSRegister,
+    },
+  ],
+  hooks: {
+    beforeChange: [rejectAcknowledgementUpdate],
+    beforeDelete: [rejectAcknowledgementDelete],
   },
   fields: [
     {
@@ -40,6 +61,7 @@ export const SWMSAcknowledgements: CollectionConfig = {
       type: 'text',
       unique: true,
       index: true,
+      label: 'Submission ref',
       hooks: {
         beforeValidate: [generateSubmissionRef],
       },
@@ -69,6 +91,7 @@ export const SWMSAcknowledgements: CollectionConfig = {
           required: true,
           hasMany: false,
           index: true,
+          label: 'Project',
           admin: { width: '50%' },
         },
         {
@@ -78,6 +101,7 @@ export const SWMSAcknowledgements: CollectionConfig = {
           required: true,
           hasMany: false,
           index: true,
+          label: 'Project SWMS',
           admin: { width: '50%' },
         },
       ],
@@ -89,8 +113,9 @@ export const SWMSAcknowledgements: CollectionConfig = {
       required: true,
       hasMany: false,
       index: true,
+      label: 'Version label',
       admin: {
-        description: 'Exact version the worker signed.',
+        description: 'Exact version the worker signed. The list shows that version’s label.',
       },
     },
     {
@@ -100,7 +125,7 @@ export const SWMSAcknowledgements: CollectionConfig = {
           name: 'workerName',
           type: 'text',
           required: true,
-          label: 'Worker full name',
+          label: 'Worker name',
           admin: { width: '50%' },
         },
         {
@@ -133,6 +158,9 @@ export const SWMSAcknowledgements: CollectionConfig = {
       type: 'json',
       required: true,
       label: 'Question responses',
+      admin: {
+        disableListColumn: true,
+      },
     },
     {
       name: 'acknowledgementAccepted',
@@ -145,6 +173,7 @@ export const SWMSAcknowledgements: CollectionConfig = {
       type: 'textarea',
       required: true,
       admin: {
+        disableListColumn: true,
         components: {
           Field: '@/components/SWMS/SignaturePreviewField',
         },
@@ -154,6 +183,7 @@ export const SWMSAcknowledgements: CollectionConfig = {
       name: 'signedAt',
       type: 'date',
       required: true,
+      label: 'Signed at',
       admin: {
         date: {
           pickerAppearance: 'dayAndTime',

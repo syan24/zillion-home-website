@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { seedSwmsAcknowledgement } from '@/seed/swmsAcknowledgement'
+
 const placeholderSections = [
   {
     title: 'Site safety',
@@ -82,9 +84,13 @@ export async function seedSwms(payload: Payload) {
     links.push(`${project.title}: ${baseUrl}/swms/${swms.publicToken}`)
   }
 
+  await seedSwmsAcknowledgement(payload)
+
+  const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
   console.log('SWMS seed ready.')
   console.log(links.join('\n'))
-  console.log(`Project list: ${process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'}/swms`)
+  console.log(`Project list: ${baseUrl}/swms`)
+  console.log(`SWMS register: ${baseUrl}/admin/collections/swms-acknowledgements`)
 }
 
 function question(text: string, type: 'yes-no' | 'yes-no-na' | 'acknowledgement') {
