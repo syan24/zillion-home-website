@@ -33,6 +33,27 @@ Hero and section images are Media uploads. Alt text can be set on the media item
 
 Service anchors (`residential`, `commercial`, `joinery`, `interior`) keep `/services#…` links working. Edit the anchor if you change those hashes, and update the header/footer links to match.
 
+## Live preview
+
+Pages is the only collection with live preview. The eye icon (and the separate Preview link) opens the public page inside the admin, including unpublished drafts.
+
+| Page slug | Preview opens |
+| --- | --- |
+| `home` | `/` |
+| `about` | `/about` |
+| `services` | `/services` |
+| any other slug | `/that-slug` |
+
+The admin locale (English or 中文) is sent with the preview. That sets the same `locale` cookie the public site uses, so the preview matches the locale you are editing. It also switches the public site in that browser until you change the language again.
+
+`PREVIEW_SECRET` must be set. Preview requests without a matching secret are rejected. You must be logged into the admin.
+
+Projects, SWMS, and the Header and Footer globals do not have live preview. Edit those, then preview a page that shows them.
+
+## Admin on a phone
+
+`/admin` is usable at a phone width (about 375px). Open the menu from the header to reach collections. On a page document, the form and the live preview stack vertically instead of sitting side by side. Publish and the preview toggle stay on the document controls. Wider screens keep the side-by-side preview.
+
 ## Still owned by code
 
 These are intentionally not CMS pages in this stage:
