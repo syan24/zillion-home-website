@@ -1,0 +1,77 @@
+// Phone and narrow-tablet admin layout.
+// Payload's live-preview window becomes width: 100% below 1024px but stays in a
+// horizontal flex row with flex-shrink: 0, which squeezes the document form.
+// Stack the form and preview so both stay reachable. Desktop (above 1024px) is unchanged.
+
+@media (max-width: 1024px) {
+  .collection-edit__main-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+  }
+
+  .collection-edit__main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .live-preview-window {
+    position: relative;
+    top: auto;
+    width: 100%;
+    height: 70vh;
+    min-height: 24rem;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .live-preview-toolbar--static {
+    justify-content: flex-start;
+    overflow-x: auto;
+    height: auto;
+    min-height: calc(var(--base) * 1.75);
+  }
+
+  .live-preview-toolbar-controls {
+    flex-shrink: 0;
+    padding-inline: 0.5rem;
+  }
+
+  .doc-controls__controls-wrapper {
+    height: auto;
+    min-height: var(--doc-controls-height);
+    flex-wrap: wrap;
+    row-gap: 0.35rem;
+    padding-block: 0.35rem;
+  }
+
+  .doc-controls__controls {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .doc-controls__controls::after {
+    display: none;
+  }
+
+  .collection-list .table {
+    width: 100%;
+    max-width: 100%;
+    left: 0;
+  }
+
+  .list-header__content {
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .app-header__wrapper {
+    min-width: 0;
+  }
+
+  .app-header__controls-wrapper {
+    min-width: 0;
+    overflow: hidden;
+  }
+}

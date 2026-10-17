@@ -1,9 +1,6 @@
-import { PayloadRequest, CollectionSlug } from 'payload'
+import type { CollectionSlug, PayloadRequest } from 'payload'
 
-type PreviewSearchParams = {
-  path: string
-  previewSecret: string
-}
+import { isSiteLocale } from '@/i18n/config'
 
 const collectionPrefixMap: Partial<Record<CollectionSlug, string>> = {
   pages: '',
@@ -11,24 +8,40 @@ const collectionPrefixMap: Partial<Record<CollectionSlug, string>> = {
 
 type Props = {
   collection: keyof typeof collectionPrefixMap
-  slug: string
+  slug: string | null | undefined
+  locale?: string | null
   req: PayloadRequest
 }
 
-export const generatePreviewPath = ({ collection, slug }: Props) => {
+/**
+ * Public path for a Pages document.
+ * The home document is stored as slug `home` and served at `/`.
+ */
+export const pagePreviewPath = (slug: string): string => {
+  const normalized = slug.trim()
+  if (normalized === 'home') return '/'
+  const prefix = collectionPrefixMap.pages ?? ''
+  return `${prefix}/${encodeURIComponent(normalized)}`
+}
+
+export const generatePreviewPath = ({ collection, slug, locale }: Props) => {
   if (slug === undefined || slug === null) {
     return null
   }
 
-  // Encode to support slugs with special characters
-  const encodedSlug = encodeURIComponent(slug)
+  const path =
+    collection === 'pages'
+      ? pagePreviewPath(slug)
+      : `${collectionPrefixMap[collection] ?? ''}/${encodeURIComponent(slug.trim())}`
 
-  const encodedParams = new URLSearchParams({
-    path: `${collectionPrefixMap[collection]}/${encodedSlug}`,
+  const params = new URLSearchParams({
+    path,
     previewSecret: process.env.PREVIEW_SECRET || '',
-  } satisfies PreviewSearchParams)
+  })
 
-  const url = `/next/preview?${encodedParams.toString()}`
+  if (locale && isSiteLocale(locale)) {
+    params.set('locale', locale)
+  }
 
-  return url
+  return `/next/preview?${params.toString()}`
 }
