@@ -160,6 +160,11 @@ export const SWMSAcknowledgements: CollectionConfig = {
       label: 'Question responses',
       admin: {
         disableListColumn: true,
+        description:
+          'Questions from the signed SWMS version and the answers the worker gave.',
+        components: {
+          Field: '@/components/SWMS/AcknowledgementResponsesField',
+        },
       },
     },
     {

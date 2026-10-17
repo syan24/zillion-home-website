@@ -8,15 +8,18 @@ import {
 import { relationID } from '@/lib/swms/relationID'
 import {
   displayText,
+  filenameSource,
   registerFilename,
   toRegisterCsv,
   type RegisterCsvRow,
 } from '@/lib/swms/registerCsv'
 import {
+  projectFilenameHint,
+  rawRegisterWhere,
   registerSearchFields,
   registerSortFromQuery,
   registerWhereFromQuery,
-  singleProjectId,
+  type ProjectFilenameHint,
 } from '@/lib/swms/registerQuery'
 
 const PAGE_SIZE = 200
@@ -40,10 +43,11 @@ export const exportSWMSRegister: PayloadHandler = async (req) => {
     const searchable = registerSearchFields(
       req.payload.collections['swms-acknowledgements']?.config.admin?.listSearchableFields,
     )
+    const hint = projectFilenameHint(rawRegisterWhere(req.query))
     const where = registerWhereFromQuery(req.query, searchable)
     const sort = registerSortFromQuery(req.query)
     const rows = await loadRows(req, where, sort)
-    const filename = await filenameFor(req, where)
+    const filename = await filenameFor(req, hint)
     const csv = toRegisterCsv(rows)
 
     return new Response(csv, {
@@ -156,24 +160,29 @@ async function labels(
   return map
 }
 
-async function filenameFor(req: PayloadRequest, where: Where): Promise<string> {
-  const projectId = singleProjectId(where)
-  if (projectId == null) return registerFilename(null)
+async function filenameFor(req: PayloadRequest, hint: ProjectFilenameHint): Promise<string> {
+  if (hint.id == null && !hint.label) return registerFilename(null)
 
-  try {
-    const project = await req.payload.findByID({
-      collection: 'projects',
-      id: projectId,
-      depth: 0,
-      overrideAccess: false,
-      req,
-      select: { title: true },
-      user: req.user,
-    })
-    return registerFilename(displayText(project.title))
-  } catch {
-    return registerFilename(null)
+  if (hint.id != null) {
+    try {
+      const project = await req.payload.findByID({
+        collection: 'projects',
+        id: hint.id,
+        depth: 0,
+        fallbackLocale: 'en',
+        locale: 'en',
+        overrideAccess: false,
+        req,
+        user: req.user,
+      })
+      const source = filenameSource(project.title, project.slug)
+      if (source) return registerFilename(source)
+    } catch {
+      // The filter still names the project when the record cannot be loaded.
+    }
   }
+
+  return registerFilename(hint.label)
 }
 
 function uniqueIds(ids: Array<number | null>): number[] {

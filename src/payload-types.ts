@@ -1404,6 +1404,9 @@ export interface SwmsAcknowledgement {
   workerCompany?: string | null;
   workerPhone?: string | null;
   workerTrade?: string | null;
+  /**
+   * Questions from the signed SWMS version and the answers the worker gave.
+   */
   responses:
     | {
         [k: string]: unknown;

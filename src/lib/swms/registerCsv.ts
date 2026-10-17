@@ -42,14 +42,25 @@ export function filenameSegment(title: string): string {
 }
 
 export function displayText(value: unknown): string {
-  if (typeof value === 'string') return value
+  if (typeof value === 'string') return value.trim()
   if (typeof value === 'number' && Number.isFinite(value)) return String(value)
   if (!value || typeof value !== 'object') return ''
 
   const record = value as Record<string, unknown>
-  if (typeof record.en === 'string') return record.en
-  const first = Object.values(record).find((item) => typeof item === 'string')
-  return typeof first === 'string' ? first : ''
+  const ordered = [record.en, ...Object.values(record).filter((item) => item !== record.en)]
+  for (const item of ordered) {
+    if (typeof item === 'string' && item.trim()) return item.trim()
+  }
+  return ''
+}
+
+/** English title when it slugifies; otherwise the project slug. */
+export function filenameSource(title: unknown, slug?: unknown): string | null {
+  const titleText = displayText(title)
+  if (titleText && filenameSegment(titleText)) return titleText
+  const slugText = displayText(slug)
+  if (slugText && filenameSegment(slugText)) return slugText
+  return null
 }
 
 export function toRegisterCsv(rows: RegisterCsvRow[]): string {

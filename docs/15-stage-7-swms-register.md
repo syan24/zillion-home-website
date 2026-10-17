@@ -66,7 +66,7 @@ The date is the UTC date of the download. The request must be logged in. A logge
 1. Log in to admin and open SWMS → SWMS register. Confirm `ACK-DEMO-ROSEBERY` / Demo Worker / Rosebery Residence / a version label / 15 Apr 2026.
 2. Filter Project equals Rosebery Residence. Export CSV. The filename is `swms-register-rosebery-residence-{today}.csv`. The file includes Demo Worker and does not include acknowledgements from other projects.
 3. Clear filters. Filter Worker name contains `Demo Worker`, and Signed at from 15 Apr 2026 through 16 Apr 2026. Export again. The filename is `swms-register-filtered-{today}.csv` and the row is still Demo Worker.
-4. Open `ACK-DEMO-ROSEBERY`. The signature image is visible. There is no way to save a change or delete the row.
+4. Open `ACK-DEMO-ROSEBERY`. Question responses lists each question from the signed version and the worker’s answer (Yes, No, Not applicable, or Accepted). It is not a JSON blob. The signature image is visible. There is no way to save a change or delete the row.
 5. Open `/swms`, choose Rosebery Residence, and confirm the worker form still shows the project, the SWMS questions, and the signature step.
 6. In a private window, open `/api/swms-acknowledgements/export`. The response is 401 and not a CSV file.
 

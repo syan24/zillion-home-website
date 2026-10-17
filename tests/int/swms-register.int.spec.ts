@@ -1,13 +1,20 @@
-import { getPayload, type Payload, type PayloadRequest } from 'payload'
+import { getPayload, type Payload, type PayloadRequest, type Where } from 'payload'
 import config from '@/payload.config'
 import { exportSWMSRegister } from '@/collections/SWMSAcknowledgements/exportRegister'
 import {
   displayText,
   filenameSegment,
+  filenameSource,
   registerFilename,
   toRegisterCsv,
 } from '@/lib/swms/registerCsv'
-import { mergeRegisterSearch, singleProjectId } from '@/lib/swms/registerQuery'
+import { answerLabel, responseRows } from '@/lib/swms/responseDisplay'
+import {
+  coerceRegisterWhere,
+  mergeRegisterSearch,
+  projectFilenameHint,
+  singleProjectId,
+} from '@/lib/swms/registerQuery'
 import {
   demoAcknowledgementClientId,
   demoAcknowledgementRef,
@@ -53,6 +60,8 @@ describe('SWMS register CSV helpers', () => {
     expect(registerFilename(null, date)).toBe('swms-register-filtered-2026-10-13.csv')
     expect(filenameSegment('  Harbour & House  ')).toBe('harbour-house')
     expect(displayText({ en: 'Rosebery', zh: '其他' })).toBe('Rosebery')
+    expect(displayText({ en: '', zh: 'Rosebery Residence' })).toBe('Rosebery Residence')
+    expect(filenameSource({ zh: '玫瑰居' }, 'rosebery-residence')).toBe('rosebery-residence')
   })
 
   it('reads one project id from the list filters', () => {
@@ -62,13 +71,106 @@ describe('SWMS register CSV helpers', () => {
         and: [{ project: { equals: 4 } }, { workerName: { contains: 'Ann' } }],
       }),
     ).toBe(4)
+    expect(
+      singleProjectId({
+        or: [{ and: [{ project: { equals: '3' } }] }],
+      }),
+    ).toBe(3)
+    expect(
+      singleProjectId({
+        or: [
+          {
+            and: [
+              {
+                project: {
+                  equals: { id: 3, title: 'Rosebery Residence', slug: 'rosebery-residence' },
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    ).toBe(3)
+    expect(singleProjectId({ project: { '[equals]': '9' } } as Where)).toBe(9)
+    expect(singleProjectId({ 'project.id': { equals: '8' } })).toBe(8)
+    expect(singleProjectId({ project: { id: { equals: 7 } } } as Where)).toBe(7)
+    expect(singleProjectId({ project: { equals: { value: '6' } } })).toBe(6)
+    expect(projectFilenameHint({ 'project.title': { equals: 'Rosebery Residence' } })).toEqual({
+      id: null,
+      label: 'Rosebery Residence',
+    })
     expect(singleProjectId({ project: { in: ['4', '5'] } })).toBeNull()
     expect(singleProjectId({ workerName: { contains: 'Ann' } })).toBeNull()
+    expect(singleProjectId({ project: { not_equals: 4 } })).toBeNull()
+    expect(
+      coerceRegisterWhere({
+        or: [{ and: [{ project: { equals: { id: '3', title: 'Rosebery Residence' } } }] }],
+      }),
+    ).toEqual({
+      or: [{ and: [{ project: { equals: 3 } }] }],
+    })
     expect(
       mergeRegisterSearch(['workerName'], 'Ann', { project: { equals: 4 } }),
     ).toEqual({
       and: [{ project: { equals: 4 } }, { or: [{ workerName: { like: 'Ann' } }] }],
     })
+  })
+
+  it('labels signed question responses for a reader', () => {
+    const rows = responseRows(
+      {
+        '0.0': 'yes',
+        '0.1': 'no',
+        '1.0': 'na',
+        '2.0': 'accepted',
+        '9.9': 'yes',
+      },
+      [
+        {
+          title: 'Site safety',
+          content: '',
+          questions: [
+            { question: 'Have you completed the site induction?', type: 'yes-no', required: true, correctAnswer: 'yes' },
+            { question: 'Are you wearing the required PPE?', type: 'yes-no', required: true, correctAnswer: 'yes' },
+          ],
+        },
+        {
+          title: 'Hazards and controls',
+          content: '',
+          questions: [
+            {
+              question: 'Do the height controls apply today?',
+              type: 'yes-no-na',
+              required: true,
+              correctAnswer: 'any',
+            },
+          ],
+        },
+        {
+          title: 'Acknowledgement',
+          content: '',
+          questions: [
+            {
+              question: 'I will follow the controls in this SWMS.',
+              type: 'acknowledgement',
+              required: true,
+              correctAnswer: 'yes',
+            },
+          ],
+        },
+      ],
+    )
+
+    expect(rows.map((row) => [row.sectionTitle, row.question, row.answerLabel])).toEqual([
+      ['Site safety', 'Have you completed the site induction?', 'Yes'],
+      ['Site safety', 'Are you wearing the required PPE?', 'No'],
+      ['Hazards and controls', 'Do the height controls apply today?', 'Not applicable'],
+      ['Acknowledgement', 'I will follow the controls in this SWMS.', 'Accepted'],
+      [null, null, 'Yes'],
+    ])
+    expect(rows[4]?.key).toBe('9.9')
+    expect(answerLabel('')).toBe('No answer')
+    expect(JSON.stringify(rows)).not.toContain('{"0.0"')
   })
 })
 
@@ -165,6 +267,69 @@ describe('SWMS register export', () => {
     expect(csv).not.toContain(`Beta Signer ${stamp}`)
     expect(csv).not.toContain(`Old Signer ${stamp}`)
     expect(csv).not.toContain('v2.0')
+  })
+
+  it('names the file from a populated project filter and a bracket equals key', async () => {
+    const stamp = Date.now()
+    const project = await makeProject(payload, `Rosebery Residence ${stamp}`)
+    const swms = await makeSwms(payload, project.id, `Rosebery SWMS ${stamp}`)
+    const version = await makeVersion(payload, project.id, swms.id, 'v1.0')
+    const ack = await makeAck(payload, {
+      projectId: project.id,
+      projectSwmsId: swms.id,
+      signedAt: '2026-04-15T01:30:00.000Z',
+      versionId: version.id,
+      workerName: `Rosebery Signer ${stamp}`,
+    })
+
+    const populated = await exportSWMSRegister({
+      payload,
+      query: {
+        where: {
+          or: [
+            {
+              and: [
+                {
+                  project: {
+                    equals: {
+                      id: project.id,
+                      title: `Rosebery Residence ${stamp}`,
+                      slug: `rosebery-residence-${stamp}`,
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+      user: { id: 1 },
+    } as unknown as PayloadRequest)
+
+    expect(populated.status).toBe(200)
+    const populatedName = populated.headers.get('content-disposition')
+    expect(populatedName).toContain(
+      `filename="swms-register-${filenameSegment(`Rosebery Residence ${stamp}`)}-`,
+    )
+    expect(populatedName).not.toContain('swms-register-filtered-')
+    const populatedCsv = await populated.text()
+    expect(populatedCsv).toContain(ack.submissionRef)
+    expect(populatedCsv).not.toContain('Beta Signer')
+
+    const bracketed = await exportSWMSRegister({
+      payload,
+      query: {
+        where: {
+          or: [{ and: [{ project: { '[equals]': String(project.id) } }] }],
+        },
+      },
+      user: { id: 1 },
+    } as unknown as PayloadRequest)
+
+    expect(bracketed.headers.get('content-disposition')).toContain(
+      `filename="swms-register-${filenameSegment(`Rosebery Residence ${stamp}`)}-`,
+    )
+    expect(await bracketed.text()).toContain(ack.submissionRef)
   })
 
   it('keeps acknowledgements append-only and seeds one demo row', async () => {
