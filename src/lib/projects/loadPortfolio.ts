@@ -5,7 +5,7 @@ import type { Media, Project, ProjectImage, Space, Style } from '@/payload-types
 import type { SiteLocale } from '@/i18n/config'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 
-import { hasProjectFilters, type ProjectFilters } from './filters'
+import { hasProjectFilters, imageMatchesTerm, type ProjectFilters } from './filters'
 import { publicProjectLocation } from './location'
 
 type Relation<T> = number | T | null | undefined
@@ -176,15 +176,12 @@ export async function loadPortfolio(locale: SiteLocale, filters: ProjectFilters)
   const images = loaded.images.filter((image) => {
     const projectId = projectIdBySlug.get(image.projectSlug)
     if (!projectId) return false
-    if (styleId) {
-      const onImage = loaded.docs.find((doc) => doc.id === image.id)
-      const imageStyleIds = relationIds(onImage?.styles)
-      if (!imageStyleIds.includes(styleId) && !styleIdsByProject.get(projectId)?.includes(styleId)) return false
+    const onImage = loaded.docs.find((doc) => doc.id === image.id)
+    if (styleId && !imageMatchesTerm(relationIds(onImage?.styles), styleIdsByProject.get(projectId), styleId)) {
+      return false
     }
-    if (spaceId) {
-      const onImage = loaded.docs.find((doc) => doc.id === image.id)
-      const imageSpaceIds = relationIds(onImage?.spaces)
-      if (!imageSpaceIds.includes(spaceId) && !spaceIdsByProject.get(projectId)?.includes(spaceId)) return false
+    if (spaceId && !imageMatchesTerm(relationIds(onImage?.spaces), spaceIdsByProject.get(projectId), spaceId)) {
+      return false
     }
     return true
   })

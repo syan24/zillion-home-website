@@ -44,6 +44,16 @@ export function hasProjectFilters(filters: ProjectFilters) {
   return Boolean(filters.type || filters.style || filters.space || filters.project)
 }
 
+/**
+ * Style and space filters use the image's own tags.
+ * Project tags apply only when the image has none of that kind,
+ * so a kitchen filter does not also return that project's living and bedroom images.
+ */
+export function imageMatchesTerm(imageIds: number[], projectIds: number[] | undefined, termId: number) {
+  if (imageIds.length > 0) return imageIds.includes(termId)
+  return Boolean(projectIds?.includes(termId))
+}
+
 export function projectFilterHref(filters: ProjectFilters, hash?: string) {
   const query = new URLSearchParams()
   if (filters.type) query.set('type', filters.type)

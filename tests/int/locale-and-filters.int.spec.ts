@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { isSiteLocale } from '@/i18n/config'
-import { hasProjectFilters, parseProjectFilters, projectFilterHref } from '@/lib/projects/filters'
+import { hasProjectFilters, imageMatchesTerm, parseProjectFilters, projectFilterHref } from '@/lib/projects/filters'
 import { publicProjectLocation } from '@/lib/projects/location'
 import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
 
@@ -38,6 +38,23 @@ describe('project filters', () => {
   it('drops unknown project types', () => {
     expect(parseProjectFilters({ type: 'joinery' }).type).toBeUndefined()
     expect(hasProjectFilters({})).toBe(false)
+  })
+
+  it('keeps a space filter on the image when the image has its own tag', () => {
+    const kitchen = 1
+    const living = 2
+    const bedroom = 3
+    const projectSpaces = [kitchen, living, bedroom]
+
+    expect(imageMatchesTerm([kitchen], projectSpaces, kitchen)).toBe(true)
+    expect(imageMatchesTerm([living], projectSpaces, kitchen)).toBe(false)
+    expect(imageMatchesTerm([bedroom], projectSpaces, kitchen)).toBe(false)
+  })
+
+  it('uses project tags only when the image has none', () => {
+    expect(imageMatchesTerm([], [9], 9)).toBe(true)
+    expect(imageMatchesTerm([], [9], 4)).toBe(false)
+    expect(imageMatchesTerm([4], [9], 9)).toBe(false)
   })
 })
 

@@ -12,7 +12,16 @@ import { generateMeta } from '@/utilities/generateMeta'
 import { pageHasContent } from '@/utilities/pageContent'
 import { queryPageBySlug } from '@/utilities/queryPageBySlug'
 
-const reservedSlugs = new Set(['home', 'about', 'services', 'enquiry', 'contact', 'projects'])
+const reservedSlugs = new Set([
+  'home',
+  'about',
+  'services',
+  'enquiry',
+  'contact',
+  'projects',
+  'privacy',
+  'terms',
+])
 
 export async function generateStaticParams() {
   try {

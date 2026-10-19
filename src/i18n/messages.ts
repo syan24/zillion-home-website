@@ -18,6 +18,26 @@ const en = {
     body: 'This page could not be found.',
     home: 'Go home',
   },
+  legal: {
+    privacy: {
+      metaTitle: 'Privacy Policy',
+      metaDescription: 'Placeholder privacy page for Zillion Home. The full policy will replace this text.',
+      eyebrow: 'Legal',
+      heading: 'Privacy Policy',
+      intro: 'This is a placeholder page. It is not the final privacy policy.',
+      sectionHeading: 'What this page covers for now',
+      body: 'Zillion Home uses this page as a temporary notice. Details you submit through the enquiry form are kept so the team can reply about your project.\n\nA full privacy policy will replace this placeholder. Questions about how your details are handled can be sent through the enquiry form.',
+    },
+    terms: {
+      metaTitle: 'Terms of Service',
+      metaDescription: 'Placeholder terms page for Zillion Home. The full terms will replace this text.',
+      eyebrow: 'Legal',
+      heading: 'Terms of Service',
+      intro: 'This is a placeholder page. It is not the final terms of service.',
+      sectionHeading: 'What this page covers for now',
+      body: 'This website presents Zillion Home company information, projects, and an enquiry form. These placeholder terms do not set out the full conditions of using the site or engaging the company.\n\nThe final terms will replace this page. Project work is agreed separately and is not formed by reading this page.',
+    },
+  },
   enquiry: {
     metaTitle: 'Start an Enquiry | Zillion Home',
     metaDescription:
@@ -138,6 +158,26 @@ const zh: typeof en = {
   notFound: {
     body: '找不到这个页面。',
     home: '返回首页',
+  },
+  legal: {
+    privacy: {
+      metaTitle: '隐私政策',
+      metaDescription: 'Zillion Home 的隐私政策占位页。正式政策发布后将替换这段文字。',
+      eyebrow: '法律信息',
+      heading: '隐私政策',
+      intro: '这是占位页面，不是最终的隐私政策。',
+      sectionHeading: '本页目前说明的内容',
+      body: 'Zillion Home 暂时用本页作为说明。您通过咨询表单提交的资料会被保留，以便团队就您的项目回复。\n\n正式的隐私政策将替换本占位页。如需了解资料如何处理，请通过咨询表单联系我们。',
+    },
+    terms: {
+      metaTitle: '服务条款',
+      metaDescription: 'Zillion Home 的服务条款占位页。正式条款发布后将替换这段文字。',
+      eyebrow: '法律信息',
+      heading: '服务条款',
+      intro: '这是占位页面，不是最终的服务条款。',
+      sectionHeading: '本页目前说明的内容',
+      body: '本网站展示 Zillion Home 的公司信息、项目和咨询表单。这段占位条款并不构成使用网站或委托公司的完整条件。\n\n正式条款将替换本页。项目工作另行约定，阅读本页并不构成合同。',
+    },
   },
   enquiry: {
     metaTitle: '开始咨询 | Zillion Home',
