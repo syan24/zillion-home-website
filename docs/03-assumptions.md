@@ -105,8 +105,8 @@ Before final SWMS implementation, obtain either:
 ### C6. Image download
 **[ASSUMPTION]** Each project image has `allowDownload`. When it is off, the public page hides the download action and the download route returns 404. The image can still be viewed.
 
-### C7. Style and space filters match the image or its project
-**[ASSUMPTION]** A style or space filter matches an image that has that tag, or whose project has that tag. Project type and a specific project narrow the same result set. The filters are combined with AND and stored in the query string.
+### C7. Style and space filters match the image, then the project
+**[ASSUMPTION]** A style or space filter matches an image that has that tag. If the image has no tags of that kind, the project's tags are used instead. An image tagged Living does not appear in a Kitchen filter because the project also includes a kitchen. Project type and a specific project narrow the same result set. The filters are combined with AND and stored in the query string.
 
 ### C8. By Room entries
 **[ASSUMPTION]** The eight room cards follow the design feedback: Kitchen, Bathroom, Living, Bedroom, Wardrobe & Joinery, Laundry, Home Office, Outdoor. An Office space exists for commercial images and appears in the filter drawer, not as a ninth card.

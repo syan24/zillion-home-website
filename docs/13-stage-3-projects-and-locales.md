@@ -30,6 +30,7 @@ Public:
 
 - `/projects` — By Project and By Room, style chips, and a filter form (drawer on small screens)
 - Filters combine and stay in the query string: `type`, `style`, `space`, `project`
+- A space or style filter uses each image's own tags. Project tags are used only when that image has none, so `/projects?space=kitchen` lists kitchen images and not the other rooms in the same project.
 - `/projects/[slug]` — description, tags, gallery, related projects, enquiry
 - Lightbox, copy link, and download when `allowDownload` is on
 - Full address only when `showAddressPublicly` is on. Otherwise the suburb is shown. Anonymous API reads follow the same rule.

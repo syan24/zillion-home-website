@@ -17,6 +17,8 @@ Status: Draft v0.1
 └── /terms                            [ASSUMPTION]
 ```
 
+`/privacy` and `/terms` are placeholder pages until the client supplies legal copy. A published CMS page with the same slug replaces the placeholder.
+
 ### Home
 **Purpose:** introduce company, establish trust, show services and strong project imagery, drive users to projects or enquiry.
 
