@@ -30,6 +30,12 @@ function paragraphs(text?: string | null) {
     .filter(Boolean)
 }
 
+function marketingButtonVariant(link: MarketingLink, tone: 'dark' | 'light') {
+  if (tone === 'dark' && link.variant === 'outline') return 'outlineDark' as const
+  if (link.variant === 'outline' || link.variant === 'default') return link.variant
+  return 'enquiry' as const
+}
+
 export function MarketingLinks({
   links,
   align = 'start',
@@ -51,12 +57,7 @@ export function MarketingLinks({
           key={`${link.href}-${link.label}`}
           asChild
           size={size}
-          variant={link.variant || 'enquiry'}
-          className={
-            tone === 'dark' && link.variant === 'outline'
-              ? 'border-dark-foreground/30 text-dark-foreground hover:bg-dark-foreground/10 hover:text-dark-foreground'
-              : undefined
-          }
+          variant={marketingButtonVariant(link, tone)}
         >
           <Link href={link.href || '/enquiry'}>{link.label}</Link>
         </Button>
@@ -423,7 +424,7 @@ export function SplitFeature({
                   {paragraph}
                 </p>
               ))}
-              <MarketingLinks links={links} />
+              <MarketingLinks links={links} tone="dark" />
             </div>
             <PlaceholderImage
               src={image?.src || undefined}
