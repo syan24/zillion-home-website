@@ -14,6 +14,10 @@ const buttonVariants = cva(
         destructive: 'bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90',
         outline:
           'border border-input bg-background shadow-xs hover:bg-accent hover:text-accent-foreground',
+        // Outline on charcoal bands. The light outline fill (`bg-background`) plus light
+        // section text is white-on-white, so this variant keeps a transparent fill.
+        outlineDark:
+          'border border-dark-foreground/30 bg-transparent text-dark-foreground shadow-none hover:border-dark-foreground/70 hover:bg-dark-foreground/10 hover:text-dark-foreground focus-visible:border-dark-foreground focus-visible:ring-dark-foreground/40',
         secondary: 'bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
