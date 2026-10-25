@@ -4,7 +4,7 @@ import React from 'react'
 
 import { DesktopProjectFilter, FilterDrawer } from '@/components/Projects/FilterDrawer'
 import { Lightbox } from '@/components/Projects/Lightbox'
-import { goldPhrase } from '@/components/Marketing/sections'
+import { goldPhrase, photoHeroFrame, photoHeroMin } from '@/components/Marketing/sections'
 import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { Button } from '@/components/ui/button'
 import { getLocale } from '@/i18n/getLocale'
@@ -67,7 +67,7 @@ export default async function ProjectsPage({ searchParams }: Args) {
 
   return (
     <main className="min-h-screen">
-      <section className="relative flex min-h-[78vh] items-end overflow-hidden text-[#f5f2ec] md:h-[82vh] md:min-h-[620px]">
+      <section className={`${photoHeroFrame} ${photoHeroMin}`}>
         <div className="absolute inset-0">
           <PlaceholderImage
             src={hero?.src}
@@ -77,7 +77,7 @@ export default async function ProjectsPage({ searchParams }: Args) {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,18,15,0.6)] via-[rgba(20,18,15,0.2)] to-[rgba(20,18,15,0.85)]" />
         </div>
-        <div className={`${wrap} relative flex flex-col gap-10 pb-14 pt-32`}>
+        <div className={`${wrap} relative flex flex-col gap-8 pb-14 sm:gap-10`}>
           <p className="flex items-center gap-4 text-[11px] uppercase tracking-[0.4em]">
             <span className="h-px w-12 bg-accent" aria-hidden />
             {copy.eyebrow}

@@ -14,6 +14,16 @@ export type MarketingLink = {
 }
 
 const wrap = 'mx-auto w-full max-w-[1440px] px-[clamp(20px,4vw,56px)]'
+
+/**
+ * Photo heroes sit under the fixed header. Min-height can shrink on small screens.
+ * The section grows with the copy, and top padding tracks the measured header, so
+ * the title never clips into the nav.
+ */
+export const photoHeroFrame =
+  'relative flex flex-col justify-end overflow-hidden pt-[calc(var(--site-header-height,6rem)+1.75rem)] text-[#f5f2ec]'
+export const photoHeroMin = 'min-h-[70svh] md:min-h-[78svh] lg:min-h-[82vh]'
+const homeHeroMin = 'min-h-[70svh] sm:min-h-[100svh]'
 const photoScrim =
   'absolute inset-0 bg-gradient-to-b from-[rgba(20,18,15,0.6)] via-[rgba(20,18,15,0.22)] to-[rgba(20,18,15,0.85)]'
 const display = 'font-serif font-light tracking-[-0.01em]'
@@ -187,7 +197,7 @@ export function HomeHero({
   const extraLinks = (links || []).filter((link) => link.href !== '/enquiry')
 
   return (
-    <section className="relative flex min-h-[100svh] items-end overflow-hidden text-[#f5f2ec]">
+    <section className={cn(photoHeroFrame, homeHeroMin)}>
       <div className="absolute inset-0">
         <PlaceholderImage
           src={image?.src || undefined}
@@ -197,7 +207,7 @@ export function HomeHero({
         />
         <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,18,15,0.55)] via-[rgba(20,18,15,0.12)] to-[rgba(20,18,15,0.82)]" />
       </div>
-      <div className={cn(wrap, 'relative flex flex-col gap-12 pb-14 pt-28')}>
+      <div className={cn(wrap, 'relative flex flex-col gap-8 pb-14 sm:gap-12')}>
         <div className="flex flex-col gap-7">
           <Eyebrow tone="photo" rule>
             {eyebrow}
@@ -308,7 +318,7 @@ export function PageIntro({
   if (image?.src || layout === 'split') {
     const about = measure === 'about'
     return (
-      <section className="relative flex min-h-[78vh] items-end overflow-hidden text-[#f5f2ec] md:h-[82vh] md:min-h-[620px]">
+      <section className={cn(photoHeroFrame, photoHeroMin)}>
         <div className="absolute inset-0">
           <PlaceholderImage
             src={image?.src || undefined}
@@ -318,7 +328,7 @@ export function PageIntro({
           />
           <div className={photoScrim} />
         </div>
-        <div className={cn(wrap, 'relative flex flex-col gap-10 pb-14 pt-32')}>
+        <div className={cn(wrap, 'relative flex flex-col gap-8 pb-14 sm:gap-10')}>
           <Eyebrow tone="photo" rule>
             {eyebrow}
           </Eyebrow>
@@ -347,7 +357,7 @@ export function PageIntro({
   }
 
   return (
-    <section className="bg-background pb-16 pt-32 lg:pb-24">
+    <section className="bg-background pb-16 pt-[calc(var(--site-header-height,6rem)+2rem)] lg:pb-24">
       <div className={cn(wrap, 'max-w-3xl')}>
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1 className={cn(display, 'mt-6 text-[clamp(44px,5vw,72px)] leading-none')}>
