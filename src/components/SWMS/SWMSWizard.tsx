@@ -136,7 +136,7 @@ export function SWMSWizard({ swms }: { swms: WorkerSWMS }) {
             <li key={item.id} className="text-center">
               <span
                 className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm ${
-                  active || complete ? 'bg-accent text-white' : 'bg-white text-muted-foreground'
+                  active || complete ? 'bg-accent text-accent-foreground' : 'bg-white text-muted-foreground'
                 }`}
               >
                 {index + 1}

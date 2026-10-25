@@ -3,6 +3,7 @@ import React from 'react'
 import type { Media } from '@/payload-types'
 
 import { resolveMedia } from '@/components/Marketing/media'
+import { getLocale } from '@/i18n/getLocale'
 import {
   CapabilityList,
   CategoryBar,
@@ -124,13 +125,20 @@ export function CategoryBarBlock(props: {
   return <CategoryBar {...props} />
 }
 
+const canvasCtaPhoto: Record<string, { src: string; alt: string }> = {
+  home: { src: '/api/media/file/service-joinery.jpg', alt: 'Custom joinery' },
+  services: { src: '/api/media/file/hero-house.jpg', alt: 'House at dusk' },
+}
+
 export function CtaBandBlock(props: {
   tone?: 'dark' | 'light' | null
   heading?: string | null
   body?: string | null
   links?: MarketingLink[] | null
+  pageSlug?: string | null
 }) {
-  return <CtaBand {...props} />
+  const { pageSlug, ...band } = props
+  return <CtaBand {...band} image={pageSlug ? canvasCtaPhoto[pageSlug] : undefined} />
 }
 
 export function ProseSectionBlock(props: {
@@ -149,7 +157,7 @@ export function CapabilityListBlock(props: {
   return <CapabilityList {...props} />
 }
 
-export function ServiceDetailsBlock(props: {
+export async function ServiceDetailsBlock(props: {
   services?:
     | {
         anchor?: string | null
@@ -163,8 +171,10 @@ export function ServiceDetailsBlock(props: {
       }[]
     | null
 }) {
+  const locale = await getLocale()
   return (
     <ServiceDetails
+      featuresLabel={locale === 'zh' ? '交付内容' : 'What we deliver'}
       services={(props.services || []).map((service) => ({
         ...service,
         image: placed(service.image, service.imageAlt),

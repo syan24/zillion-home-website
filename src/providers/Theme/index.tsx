@@ -27,26 +27,42 @@ function readTheme(): Theme | undefined {
   return defaultTheme
 }
 
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setThemeState] = useState<Theme | undefined>(readTheme)
+export const ThemeProvider = ({
+  children,
+  forceTheme,
+}: {
+  children: React.ReactNode
+  /** Public marketing pages stay on the cream canvas. OS dark mode must not invert them. */
+  forceTheme?: Theme
+}) => {
+  const [theme, setThemeState] = useState<Theme | undefined>(forceTheme ?? readTheme)
 
-  const setTheme = useCallback((themeToSet: Theme | null) => {
-    if (themeToSet === null) {
-      window.localStorage.removeItem(themeLocalStorageKey)
-      const implicitPreference = getImplicitPreference()
-      document.documentElement.setAttribute('data-theme', implicitPreference || '')
-      if (implicitPreference) setThemeState(implicitPreference)
-    } else {
-      setThemeState(themeToSet)
-      window.localStorage.setItem(themeLocalStorageKey, themeToSet)
-      document.documentElement.setAttribute('data-theme', themeToSet)
-    }
-  }, [])
+  const setTheme = useCallback(
+    (themeToSet: Theme | null) => {
+      if (forceTheme) {
+        document.documentElement.setAttribute('data-theme', forceTheme)
+        setThemeState(forceTheme)
+        return
+      }
+
+      if (themeToSet === null) {
+        window.localStorage.removeItem(themeLocalStorageKey)
+        const implicitPreference = getImplicitPreference()
+        document.documentElement.setAttribute('data-theme', implicitPreference || '')
+        if (implicitPreference) setThemeState(implicitPreference)
+      } else {
+        setThemeState(themeToSet)
+        window.localStorage.setItem(themeLocalStorageKey, themeToSet)
+        document.documentElement.setAttribute('data-theme', themeToSet)
+      }
+    },
+    [forceTheme],
+  )
 
   useEffect(() => {
-    const themeToSet = readTheme() ?? defaultTheme
+    const themeToSet = forceTheme ?? readTheme() ?? defaultTheme
     document.documentElement.setAttribute('data-theme', themeToSet)
-  }, [])
+  }, [forceTheme])
 
   return <ThemeContext value={{ setTheme, theme }}>{children}</ThemeContext>
 }

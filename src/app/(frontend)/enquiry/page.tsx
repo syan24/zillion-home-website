@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import configPromise from '@payload-config'
-import React, { Fragment } from 'react'
+import React from 'react'
 import { getPayload } from 'payload'
 
 import { PlaceholderImage } from '@/components/PlaceholderImage'
@@ -21,15 +21,6 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-function lines(text: string) {
-  return text.split('\n').map((line, index) => (
-    <Fragment key={`${line}-${index}`}>
-      {index > 0 && <br />}
-      {line}
-    </Fragment>
-  ))
-}
-
 export default async function EnquiryPage() {
   const locale = await getLocale()
   const copy = getMessages(locale).enquiry
@@ -37,48 +28,49 @@ export default async function EnquiryPage() {
   const form = await loadEnquiryForm(payload, locale)
 
   return (
-    <main className="min-h-screen">
-      <section className="bg-background-warm py-16 lg:py-24">
-        <div className="container">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
-            <div className="relative min-h-[400px] lg:min-h-[600px] rounded-lg overflow-hidden">
-              <div className="absolute inset-0">
-                <PlaceholderImage
-                  src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200&q=80"
-                  alt={copy.imageAlt}
-                  className="h-full rounded-lg"
-                  aspectRatio="auto"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/50 to-transparent rounded-lg" />
-              </div>
-
-              <div className="relative h-full p-6 lg:p-10 flex flex-col justify-end text-white">
-                <p className="text-sm tracking-widest uppercase text-white/70 mb-4">{copy.overlayEyebrow}</p>
-                <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl leading-tight mb-4">
-                  {lines(copy.overlayTitle)}
-                </h1>
-                <p className="text-white/80 max-w-md">{copy.overlayBody}</p>
-                <div className="hidden lg:block mt-8 pt-8 border-t border-white/20">
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/50">{copy.overlayLine1}</p>
-                  <p className="text-xs uppercase tracking-[0.2em] text-white/50">{copy.overlayLine2}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-background rounded-lg p-6 lg:p-10">
-              <div className="mb-8">
-                <p className="text-sm tracking-widest uppercase text-muted-foreground mb-2">{copy.formEyebrow}</p>
-                <h2 className="font-serif text-2xl md:text-3xl mb-2">{copy.formHeading}</h2>
-                <p className="mt-4 text-foreground-soft">{copy.formIntro}</p>
-              </div>
-              <EnquiryForm
-                copy={copy}
-                form={form}
-                directUpload={Boolean(process.env.BLOB_READ_WRITE_TOKEN)}
-              />
+    <main className="grid min-h-screen lg:grid-cols-2">
+      <aside className="relative bg-[#1c1a17] text-[#f5f2ec]">
+        <div className="relative h-[72vh] min-h-[560px] overflow-hidden lg:sticky lg:top-0 lg:h-screen">
+          <PlaceholderImage
+            src="/api/media/file/kew-kitchen.jpg"
+            alt={copy.imageAlt}
+            className="absolute inset-0 h-full w-full"
+            aspectRatio="auto"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,18,15,0.35)] via-[rgba(20,18,15,0.2)] to-[rgba(20,18,15,0.85)]" />
+          <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end gap-7 px-[clamp(24px,4vw,64px)] pb-14 pt-32">
+            <p className="flex items-center gap-4 text-[11px] uppercase tracking-[0.4em]">
+              <span className="h-px w-12 bg-accent" aria-hidden />
+              {copy.overlayEyebrow}
+            </p>
+            <h1 className="font-serif text-[clamp(52px,6.4vw,104px)] font-light leading-[0.95]">
+              {copy.overlayTitle.split('\n').map((line, index) => (
+                <span key={line}>
+                  {index > 0 && <br />}
+                  {index === copy.overlayTitle.split('\n').length - 1 ? (
+                    <em className="italic text-accent-gold">{line}</em>
+                  ) : (
+                    line
+                  )}
+                </span>
+              ))}
+            </h1>
+            <p className="max-w-md text-base leading-7 text-[#f5f2ec]/90">{copy.overlayBody}</p>
+            <div className="flex flex-wrap gap-10 border-t border-[#f5f2ec]/30 pt-6 text-[11px] uppercase tracking-[0.26em]">
+              <span>{copy.overlayLine1}</span>
+              <span>{copy.overlayLine2}</span>
             </div>
           </div>
         </div>
+      </aside>
+
+      <section className="flex w-full max-w-[820px] flex-col gap-12 px-[clamp(24px,5vw,88px)] pb-[clamp(64px,8vw,120px)] pt-32 lg:pt-40">
+        <div className="flex flex-col gap-5">
+          <p className="text-[11px] uppercase tracking-[0.4em] text-accent-tan">— {copy.formEyebrow}</p>
+          <h2 className="font-serif text-[clamp(36px,3.8vw,56px)] font-light leading-tight">{copy.formHeading}</h2>
+          <p className="max-w-xl text-[15px] leading-8 text-[#5c564d]">{copy.formIntro}</p>
+        </div>
+        <EnquiryForm copy={copy} form={form} directUpload={Boolean(process.env.BLOB_READ_WRITE_TOKEN)} />
       </section>
     </main>
   )

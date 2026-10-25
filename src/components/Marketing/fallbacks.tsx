@@ -26,21 +26,24 @@ export async function FallbackHome() {
   return (
     <main>
       <HomeHero {...content.hero} image={stock(content.hero.image)} />
-      <ServiceCards
-        {...content.serviceCards}
-        cards={content.serviceCards.cards.map((card) => ({ ...card, image: stock(card.image) }))}
-      />
       <SplitFeature
         {...content.briefs}
         image={stock(content.briefs.image)}
         items={content.briefs.items.map((item) => ({ ...item, image: stock(item.image) }))}
+      />
+      <ServiceCards
+        {...content.serviceCards}
+        cards={content.serviceCards.cards.map((card) => ({ ...card, image: stock(card.image) }))}
       />
       <ProcessSection
         {...content.process}
         trustItems={content.process.trustItems.map((item) => ({ ...item, image: stock(item.image) }))}
       />
       <CategoryBar {...content.categories} />
-      <CtaBand {...content.cta} />
+      <CtaBand
+        {...content.cta}
+        image={{ src: '/api/media/file/service-joinery.jpg', alt: 'Custom joinery' }}
+      />
     </main>
   )
 }
@@ -63,11 +66,13 @@ export async function FallbackAbout() {
 }
 
 export async function FallbackServices() {
-  const content = getMarketing(await getLocale()).services
+  const locale = await getLocale()
+  const content = getMarketing(locale).services
   return (
     <main className="min-h-screen">
-      <PageIntro {...content.intro} />
+      <PageIntro {...content.intro} image={stock(content.intro.image)} />
       <ServiceDetails
+        featuresLabel={locale === 'zh' ? '交付内容' : 'What we deliver'}
         services={content.details.services.map((service) => ({
           ...service,
           features: service.features.map((text) => ({ text })),
@@ -76,7 +81,7 @@ export async function FallbackServices() {
       />
       <ProcessSection {...content.process} />
       <SplitFeature {...content.joinery} image={stock(content.joinery.image)} />
-      <CtaBand {...content.cta} />
+      <CtaBand {...content.cta} image={{ src: '/api/media/file/hero-house.jpg', alt: 'House at dusk' }} />
     </main>
   )
 }

@@ -1,5 +1,6 @@
 import type { Payload, TypedLocale } from 'payload'
 
+import { publicEnquiryFields } from '@/lib/enquiry/defaultForm'
 import { isEnquiryIcon } from '@/lib/enquiry/icons'
 import type { PublicEnquiryField } from '@/lib/enquiry/validate'
 
@@ -24,7 +25,9 @@ export async function loadEnquiryForm(
   const form = found.docs[0]
   if (!form) return null
 
-  const fields = Array.isArray(form.fields) ? form.fields.flatMap(toPublicField) : []
+  const fields = Array.isArray(form.fields)
+    ? form.fields.flatMap((field) => toPublicField(field, locale === 'zh' ? 'zh' : 'en'))
+    : []
   return {
     submitButtonLabel: typeof form.submitButtonLabel === 'string' ? form.submitButtonLabel : '',
     fields,
@@ -37,7 +40,20 @@ function mediaUrl(value: unknown): string | undefined {
   return typeof url === 'string' && url ? url : undefined
 }
 
-function toPublicField(field: unknown): PublicEnquiryField[] {
+/**
+ * Form placeholders are not localized. Seeding Chinese after English stores the
+ * Chinese string for both locales. When that happens, show the copy for the
+ * page locale. A custom placeholder is left as written.
+ */
+function placeholderForLocale(name: string | undefined, placeholder: string | undefined, locale: 'en' | 'zh') {
+  if (!name || !placeholder) return placeholder
+  const current = publicEnquiryFields(locale).find((field) => field.name === name)?.placeholder
+  const other = publicEnquiryFields(locale === 'en' ? 'zh' : 'en').find((field) => field.name === name)?.placeholder
+  if (current && other && placeholder === other) return current
+  return placeholder
+}
+
+function toPublicField(field: unknown, locale: 'en' | 'zh'): PublicEnquiryField[] {
   if (!field || typeof field !== 'object') return []
   const block = field as Record<string, unknown>
   const blockType = typeof block.blockType === 'string' ? block.blockType : ''
@@ -76,7 +92,11 @@ function toPublicField(field: unknown): PublicEnquiryField[] {
       name: typeof block.name === 'string' ? block.name : undefined,
       label: typeof block.label === 'string' ? block.label : undefined,
       required: block.required === true,
-      placeholder: typeof block.placeholder === 'string' ? block.placeholder : undefined,
+      placeholder: placeholderForLocale(
+        typeof block.name === 'string' ? block.name : undefined,
+        typeof block.placeholder === 'string' ? block.placeholder : undefined,
+        locale,
+      ),
       width: typeof block.width === 'number' ? block.width : undefined,
       options,
       multiple: typeof block.multiple === 'boolean' ? block.multiple : undefined,

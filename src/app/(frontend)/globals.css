@@ -44,7 +44,7 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 86rem;
   --font-mono: var(--font-geist-mono);
-  --font-sans: var(--font-dm-sans, var(--font-geist-sans)), "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --font-sans: var(--font-jost, var(--font-dm-sans, var(--font-geist-sans))), "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
   --font-serif: var(--font-cormorant, Georgia), "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
 }
 
@@ -88,138 +88,140 @@
 }
 
 :root {
-  /* Zillion Home Design System - Warm Neutral Palette */
-  /* Based on client feedback 2026-09-28 - Builder-first, no navy */
-  
+  /* Zillion Home Design Canvas — warm cream, charcoal, gold. No navy. */
   /* Backgrounds */
-  --background: #fafaf8;
-  --background-warm: #f7f4f0;
-  --background-section: #f5f5f3;
-  --surface: #ffffff;
+  --background: #f5f2ec;
+  --background-warm: #ebe6dc;
+  --background-section: #efe9de;
+  --surface: #f5f2ec;
   
   /* Foreground / Text */
-  --foreground: #15130e;
-  --foreground-soft: #3d3d3d;
-  --muted-foreground: #6b6b6b;
+  --foreground: #1c1a17;
+  --foreground-soft: #4a453e;
+  --muted-foreground: #7a7268;
   
-  /* Primary - Charcoal (replaces navy) */
-  --primary: #1a1a1a;
-  --primary-hover: #2d2d2d;
-  --primary-foreground: #fafaf8;
+  /* Primary - Charcoal */
+  --primary: #1c1a17;
+  --primary-hover: #2a2622;
+  --primary-foreground: #f5f2ec;
   
   /* Secondary */
-  --secondary: #f5f5f3;
-  --secondary-foreground: #1a1a1a;
+  --secondary: #ebe6dc;
+  --secondary-foreground: #1c1a17;
   
-  /* Accent - Warm Beige */
-  --accent: #b8a48f;
-  --accent-hover: #a89578;
-  --accent-foreground: #15130e;
-  --accent-tan: #a88f71;
-  --accent-gold: #b28a68;
+  /* Accent - Canvas gold. Enquiry fill stays this warm gold with charcoal text. */
+  --accent: #c9a978;
+  --accent-hover: #b89762;
+  --accent-foreground: #1c1a17;
+  --accent-tan: #9a7b52;
+  --accent-gold: #e3cfa9;
   
   /* UI Elements */
-  --card: #ffffff;
-  --card-foreground: #15130e;
-  --popover: #ffffff;
-  --popover-foreground: #15130e;
-  --muted: #f5f5f3;
+  --card: #f5f2ec;
+  --card-foreground: #1c1a17;
+  --popover: #f5f2ec;
+  --popover-foreground: #1c1a17;
+  --muted: #efe9de;
   
   /* Borders & Inputs */
-  --border: #e5e5e5;
-  --input: #e5e5e5;
-  --ring: #b8a48f;
+  --border: #d9d2c5;
+  --input: #c9c0b0;
+  --ring: #9a7b52;
   
   /* Status Colours */
-  --destructive: #dc2626;
-  --destructive-foreground: #fef2f2;
+  --destructive: #a0452e;
+  --destructive-foreground: #f5f2ec;
   --success: #16a34a;
   --warning: #ca8a04;
-  --error: #dc2626;
+  --error: #a0452e;
   
-  /* Dark Section (for CTAs, footers) */
-  --dark: #1c1c1c;
-  --dark-foreground: #fafaf8;
+  /* Dark bands and the deeper footer */
+  --dark: #1c1a17;
+  --dark-foreground: #efe9de;
+  --footer: #141210;
+  --footer-foreground: #b5ac9e;
   
   /* Layout */
   --radius: 4px;
   --container: 1280px;
   
   /* Chart colours (muted warm tones) */
-  --chart-1: #b8a48f;
-  --chart-2: #a88f71;
-  --chart-3: #8b7355;
-  --chart-4: #d4c4b0;
-  --chart-5: #c9b89d;
+  --chart-1: #c9a978;
+  --chart-2: #9a7b52;
+  --chart-3: #7a7268;
+  --chart-4: #e3cfa9;
+  --chart-5: #d9d2c5;
   
   /* Sidebar */
-  --sidebar: #fafaf8;
-  --sidebar-foreground: #15130e;
-  --sidebar-primary: #1a1a1a;
-  --sidebar-primary-foreground: #fafaf8;
-  --sidebar-accent: #f5f5f3;
-  --sidebar-accent-foreground: #1a1a1a;
-  --sidebar-border: #e5e5e5;
-  --sidebar-ring: #b8a48f;
+  --sidebar: #f5f2ec;
+  --sidebar-foreground: #1c1a17;
+  --sidebar-primary: #1c1a17;
+  --sidebar-primary-foreground: #f5f2ec;
+  --sidebar-accent: #ebe6dc;
+  --sidebar-accent-foreground: #1c1a17;
+  --sidebar-border: #d9d2c5;
+  --sidebar-ring: #9a7b52;
 }
 
 [data-theme='dark'] {
-  /* Dark theme - warm charcoal tones */
-  --background: #1c1c1c;
-  --background-warm: #242420;
-  --background-section: #2a2a26;
-  --surface: #2d2d29;
+  /* Dark theme stays on the same warm charcoal, not a cool or navy palette. */
+  --background: #1c1a17;
+  --background-warm: #24211c;
+  --background-section: #2a2622;
+  --surface: #24211c;
   
-  --foreground: #fafaf8;
-  --foreground-soft: #d4d4d0;
-  --muted-foreground: #8b8b87;
+  --foreground: #efe9de;
+  --foreground-soft: #d9d2c5;
+  --muted-foreground: #b5ac9e;
   
-  --primary: #fafaf8;
-  --primary-hover: #e5e5e3;
-  --primary-foreground: #1c1c1c;
+  --primary: #efe9de;
+  --primary-hover: #e3cfa9;
+  --primary-foreground: #1c1a17;
   
-  --secondary: #2d2d29;
-  --secondary-foreground: #fafaf8;
+  --secondary: #2a2622;
+  --secondary-foreground: #efe9de;
   
-  --accent: #c9b89d;
-  --accent-hover: #d4c4a8;
-  --accent-foreground: #1c1c1c;
-  --accent-tan: #b8a48f;
-  --accent-gold: #c9a06e;
+  --accent: #c9a978;
+  --accent-hover: #e3cfa9;
+  --accent-foreground: #1c1a17;
+  --accent-tan: #e3cfa9;
+  --accent-gold: #e3cfa9;
   
-  --card: #2d2d29;
-  --card-foreground: #fafaf8;
-  --popover: #2d2d29;
-  --popover-foreground: #fafaf8;
-  --muted: #2d2d29;
+  --card: #24211c;
+  --card-foreground: #efe9de;
+  --popover: #24211c;
+  --popover-foreground: #efe9de;
+  --muted: #2a2622;
   
-  --border: #3d3d39;
-  --input: #3d3d39;
-  --ring: #c9b89d;
+  --border: #3a342c;
+  --input: #3a342c;
+  --ring: #c9a978;
   
-  --destructive: #ef4444;
-  --destructive-foreground: #fef2f2;
+  --destructive: #e07a68;
+  --destructive-foreground: #1c1a17;
   --success: #22c55e;
   --warning: #eab308;
-  --error: #ef4444;
+  --error: #e07a68;
   
-  --dark: #15130e;
-  --dark-foreground: #fafaf8;
+  --dark: #141210;
+  --dark-foreground: #efe9de;
+  --footer: #141210;
+  --footer-foreground: #b5ac9e;
   
-  --chart-1: #c9b89d;
-  --chart-2: #b8a48f;
-  --chart-3: #a88f71;
-  --chart-4: #d4c4b0;
-  --chart-5: #e5d5c1;
+  --chart-1: #c9a978;
+  --chart-2: #e3cfa9;
+  --chart-3: #9a7b52;
+  --chart-4: #b5ac9e;
+  --chart-5: #d9d2c5;
   
-  --sidebar: #1c1c1c;
-  --sidebar-foreground: #fafaf8;
-  --sidebar-primary: #c9b89d;
-  --sidebar-primary-foreground: #1c1c1c;
-  --sidebar-accent: #2d2d29;
-  --sidebar-accent-foreground: #fafaf8;
-  --sidebar-border: #3d3d39;
-  --sidebar-ring: #c9b89d;
+  --sidebar: #1c1a17;
+  --sidebar-foreground: #efe9de;
+  --sidebar-primary: #c9a978;
+  --sidebar-primary-foreground: #1c1a17;
+  --sidebar-accent: #2a2622;
+  --sidebar-accent-foreground: #efe9de;
+  --sidebar-border: #3a342c;
+  --sidebar-ring: #c9a978;
 }
 
 @theme inline {
@@ -259,6 +261,8 @@
   /* Dark section colors */
   --color-dark: var(--dark);
   --color-dark-foreground: var(--dark-foreground);
+  --color-footer: var(--footer);
+  --color-footer-foreground: var(--footer-foreground);
   
   /* Chart colors */
   --color-chart-1: var(--chart-1);

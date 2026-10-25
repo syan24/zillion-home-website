@@ -37,8 +37,9 @@ const blockComponents: Record<string, React.ComponentType<any>> = {
 
 export const RenderBlocks: React.FC<{
   blocks: Page['layout'][0][]
+  pageSlug?: string | null
 }> = (props) => {
-  const { blocks } = props
+  const { blocks, pageSlug } = props
 
   const hasBlocks = blocks && Array.isArray(blocks) && blocks.length > 0
 
@@ -51,7 +52,7 @@ export const RenderBlocks: React.FC<{
 
           if (Block) {
             if (MARKETING_BLOCK_TYPES.has(blockType)) {
-              return <Block {...block} key={block.id || index} />
+              return <Block {...block} pageSlug={pageSlug} key={block.id || index} />
             }
 
             return (

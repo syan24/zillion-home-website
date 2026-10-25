@@ -107,19 +107,6 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
         },
         layout: [
           {
-            blockType: 'serviceCards' as const,
-            eyebrow: homeContent.serviceCards.eyebrow,
-            heading: homeContent.serviceCards.heading,
-            cards: homeContent.serviceCards.cards.map((card) => ({
-              image: imageId(ids, card.image),
-              imageAlt: card.image.alt,
-              title: card.title,
-              subtitle: card.subtitle,
-              description: card.description,
-              href: card.href,
-            })),
-          },
-          {
             blockType: 'splitFeature' as const,
             variant: homeContent.briefs.variant,
             eyebrow: homeContent.briefs.eyebrow,
@@ -133,6 +120,19 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
               imageAlt: item.image.alt,
               title: item.title,
               subtitle: item.subtitle,
+            })),
+          },
+          {
+            blockType: 'serviceCards' as const,
+            eyebrow: homeContent.serviceCards.eyebrow,
+            heading: homeContent.serviceCards.heading,
+            cards: homeContent.serviceCards.cards.map((card) => ({
+              image: imageId(ids, card.image),
+              imageAlt: card.image.alt,
+              title: card.title,
+              subtitle: card.subtitle,
+              description: card.description,
+              href: card.href,
             })),
           },
           {
@@ -238,6 +238,8 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
             heading: servicesContent.intro.heading,
             headingAccent: servicesContent.intro.headingAccent,
             description: servicesContent.intro.description,
+            image: imageId(ids, servicesContent.intro.image),
+            imageAlt: servicesContent.intro.image?.alt,
           },
           {
             blockType: 'serviceDetails' as const,
@@ -287,6 +289,71 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
   ]
 
   return pages
+}
+
+function blockTypeOf(block: unknown) {
+  return isRecord(block) && typeof block.blockType === 'string' ? block.blockType : ''
+}
+
+/**
+ * Existing demo pages keep their copy. The canvas refresh only reorders the
+ * original home blocks and attaches the services hero when that image is empty.
+ */
+async function alignCanvasLayout(payload: Payload, id: number, draft: boolean, ids: MediaIds) {
+  const saved = await payload.findByID({
+    collection: 'pages',
+    id,
+    depth: 0,
+    draft,
+    locale: 'en',
+    fallbackLocale: false,
+    overrideAccess: true,
+  })
+  if (!Array.isArray(saved.layout)) return null
+  const types = saved.layout.map((block) => blockTypeOf(block))
+  let next = saved.layout
+  let changed = false
+
+  if (
+    saved.slug === 'home' &&
+    types.join(',') === 'serviceCards,splitFeature,processSection,categoryBar,ctaBand'
+  ) {
+    next = [next[1], next[0], next[2], next[3], next[4]]
+    changed = true
+  }
+
+  if (saved.slug === 'services') {
+    next = next.map((block) => {
+      if (!isRecord(block)) return block
+      if (block.blockType === 'pageIntro' && !block.image) {
+        changed = true
+        return {
+          ...block,
+          image: ids.serviceInterior,
+          imageAlt: typeof block.imageAlt === 'string' && block.imageAlt ? block.imageAlt : 'Interior fit-out',
+        }
+      }
+      // The canvas enquire band is a dark photo. Only the original light demo band is flipped.
+      if (block.blockType === 'ctaBand' && block.tone === 'light') {
+        changed = true
+        return { ...block, tone: 'dark' }
+      }
+      return block
+    })
+  }
+
+  if (!changed) return null
+
+  await payload.update({
+    collection: 'pages',
+    id,
+    draft,
+    locale: 'en',
+    overrideAccess: true,
+    context: seedContext,
+    data: { layout: next as never },
+  })
+  return saved.slug === 'home' ? `page home: reordered to canvas` : `page services: canvas hero and enquire band`
 }
 
 async function seedPages(payload: Payload, ids: MediaIds) {
@@ -341,6 +408,9 @@ async function seedPages(payload: Payload, ids: MediaIds) {
         summary.push(`page ${page.slug}: english kept`)
       }
     }
+
+    const aligned = id ? await alignCanvasLayout(payload, id, draft, ids) : null
+    if (aligned) summary.push(aligned)
 
     if (!zhPage) continue
 

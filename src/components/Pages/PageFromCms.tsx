@@ -24,7 +24,7 @@ export function PageFromCms({
       <PayloadRedirects disableNotFound url={url} />
       {draft && <LivePreviewListener />}
       <RenderHero {...page.hero} />
-      <RenderBlocks blocks={page.layout} />
+      <RenderBlocks blocks={page.layout} pageSlug={page.slug} />
     </>
   )
 

@@ -23,103 +23,55 @@ export async function Footer() {
     { name: copy.footer.terms, href: '/terms' },
   ]
 
+  const columnLabel = 'mb-1.5 text-[10px] uppercase tracking-[0.34em] text-accent'
+  const itemClass = 'text-sm text-footer-foreground transition-colors hover:text-[#efe9de]'
+
   return (
-    <footer className="mt-auto border-t border-border bg-dark text-dark-foreground">
-      <div className="container py-12 lg:py-16">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          {/* Brand Column */}
-          <div className="lg:col-span-1">
+    <footer className="mt-auto bg-footer text-footer-foreground">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-16 px-[clamp(20px,4vw,56px)] pb-9 pt-20">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="flex flex-col gap-5 sm:col-span-2">
             <Link href="/" className="inline-block">
               <Logo variant="light" />
             </Link>
-            <p className="mt-4 text-sm text-dark-foreground/70 max-w-xs">{blurb}</p>
-            {tagline && <p className="mt-4 text-sm text-dark-foreground/70">{tagline}</p>}
+            <p className="max-w-sm text-sm leading-8">{blurb}</p>
+            {tagline && <p className="text-sm leading-8">{tagline}</p>}
           </div>
 
-          {/* Services */}
-          <div>
-            <h3 className="text-sm font-semibold tracking-wider uppercase">{copy.footer.services}</h3>
-            <ul className="mt-4 space-y-3">
-              {serviceLinks.length > 0
-                ? serviceLinks.map(({ link }, i) => (
-                    <li key={i}>
-                      <CMSLink
-                        {...link}
-                        className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
-                      />
-                    </li>
-                  ))
-                : footerContent.services.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-            </ul>
+          <div className="flex flex-col gap-3.5 text-sm">
+            <h3 className={columnLabel}>{copy.footer.services}</h3>
+            {serviceLinks.length > 0
+              ? serviceLinks.map(({ link }, i) => <CMSLink key={i} {...link} className={itemClass} />)
+              : footerContent.services.map((item) => (
+                  <Link key={item.href} href={item.href} className={itemClass}>
+                    {item.label}
+                  </Link>
+                ))}
           </div>
 
-          {/* Company */}
-          <div>
-            <h3 className="text-sm font-semibold tracking-wider uppercase">{copy.footer.company}</h3>
-            <ul className="mt-4 space-y-3">
-              {navItems.length > 0
-                ? navItems.map(({ link }, i) => (
-                    <li key={i}>
-                      <CMSLink
-                        {...link}
-                        className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
-                      />
-                    </li>
-                  ))
-                : footerContent.company.map((item) => (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className="text-sm text-dark-foreground/70 hover:text-dark-foreground transition-colors"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))}
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="text-sm font-semibold tracking-wider uppercase">{copy.footer.contact}</h3>
-            <div className="mt-4 space-y-3">
-              <Link
-                href="/enquiry"
-                className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors"
-              >
-                {copy.enquiryCta}
-              </Link>
-              <p className="text-sm text-dark-foreground/70">{location}</p>
-            </div>
+          <div className="flex flex-col gap-3.5 text-sm">
+            <h3 className={columnLabel}>{copy.footer.company}</h3>
+            {navItems.length > 0
+              ? navItems.map(({ link }, i) => <CMSLink key={i} {...link} className={itemClass} />)
+              : footerContent.company.map((item) => (
+                  <Link key={item.href} href={item.href} className={itemClass}>
+                    {item.label}
+                  </Link>
+                ))}
+            {location && <span>{location}</span>}
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-dark-foreground/10">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-xs text-dark-foreground/60">
-              © {new Date().getFullYear()} Zillion Home. {copy.footer.rights}
-            </p>
-            <div className="flex gap-6">
-              {legal.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-xs text-dark-foreground/60 hover:text-dark-foreground transition-colors"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </div>
+        <div className="flex flex-wrap items-center justify-between gap-6 border-t border-[#efe9de]/10 pt-7 text-xs tracking-wide">
+          <p>
+            © {new Date().getFullYear()} Zillion Home. {copy.footer.rights}
+          </p>
+          <div className="flex gap-7">
+            {legal.map((item) => (
+              <Link key={item.name} href={item.href} className="transition-colors hover:text-[#efe9de]">
+                {item.name}
+              </Link>
+            ))}
           </div>
         </div>
       </div>
