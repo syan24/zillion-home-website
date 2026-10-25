@@ -90,35 +90,40 @@ function Eyebrow({
   return <p className={cn('text-[11px] uppercase tracking-[0.4em]', color)}>{label}</p>
 }
 
-function PhotoTitle({ text, accent = 'word' }: { text?: string | null; accent?: 'word' | 'line' }) {
-  const value = text || ''
-  const [first, ...rest] = value.split('\n')
-  const second = rest.join('\n').trim()
-  if (!second) return <>{first}</>
-  if (accent === 'line') {
-    return (
-      <>
-        {first}
-        <br />
-        <em className="italic text-accent-gold">{second}</em>
-      </>
-    )
-  }
-  const match = second.match(/^(\S+)([\s\S]*)$/)
+/** One flowing line. A stored newline must not force a break inside a display heading. */
+export function goldPhrase(text?: string | null, phrase?: string | null) {
+  const value = (text || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
+  const mark = (phrase || '').trim()
+  if (!value) return null
+  if (!mark) return value
+  const index = value.toLowerCase().indexOf(mark.toLowerCase())
+  if (index < 0) return value
   return (
     <>
-      {first}
-      <br />
-      {match ? (
-        <>
-          <em className="italic text-accent-gold">{match[1]}</em>
-          {match[2]}
-        </>
-      ) : (
-        second
-      )}
+      {value.slice(0, index)}
+      <em className="italic text-accent-gold">{value.slice(index, index + mark.length)}</em>
+      {value.slice(index + mark.length)}
     </>
   )
+}
+
+function homeAccent(headline?: string | null) {
+  const value = headline || ''
+  if (/ground/i.test(value)) return 'ground'
+  if (value.includes('开始')) return '开始'
+  return null
+}
+
+function flowingTitle(heading?: string | null, accent?: string | null) {
+  let lead = (heading || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
+  let mark = (accent || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
+  if (lead === 'Building with' && /^care and precision\.?$/i.test(mark)) {
+    lead = 'Building with care & precision.'
+    mark = 'care'
+  }
+  if (mark && lead.toLowerCase().includes(mark.toLowerCase())) return goldPhrase(lead, mark)
+  if (lead && mark) return goldPhrase(`${lead} ${mark}`, mark)
+  return goldPhrase(lead)
 }
 
 function accentHeading(heading?: string | null) {
@@ -179,6 +184,7 @@ export function HomeHero({
   links?: MarketingLink[] | null
 }) {
   const badges = [badgePrimary, badgeSecondary, badgeMuted].filter(Boolean)
+  const extraLinks = (links || []).filter((link) => link.href !== '/enquiry')
 
   return (
     <section className="relative flex min-h-[100svh] items-end overflow-hidden text-[#f5f2ec]">
@@ -192,20 +198,20 @@ export function HomeHero({
         <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,18,15,0.55)] via-[rgba(20,18,15,0.12)] to-[rgba(20,18,15,0.82)]" />
       </div>
       <div className={cn(wrap, 'relative flex flex-col gap-12 pb-14 pt-28')}>
-        <div className="flex max-w-[14ch] flex-col gap-7">
+        <div className="flex flex-col gap-7">
           <Eyebrow tone="photo" rule>
             {eyebrow}
           </Eyebrow>
           {headline && (
-            <h1 className={cn(display, 'text-[clamp(56px,9vw,148px)] leading-[0.92]')}>
-              <PhotoTitle text={headline} />
+            <h1 className={cn(display, 'w-full max-w-[12ch] text-[clamp(56px,9vw,148px)] leading-[0.92]')}>
+              {goldPhrase(headline, homeAccent(headline))}
             </h1>
           )}
         </div>
         <div className="flex flex-wrap items-end justify-between gap-10 border-t border-[#f5f2ec]/30 pt-7">
-          <div className="flex max-w-md flex-col gap-6">
+          <div className="flex max-w-[440px] flex-col gap-6">
             {description && <p className="text-base leading-7 text-[#f5f2ec]/90">{description}</p>}
-            <MarketingLinks links={links} tone="dark" />
+            <MarketingLinks links={extraLinks} tone="dark" />
           </div>
           {badges.length > 0 && (
             <div className="flex flex-wrap gap-x-10 gap-y-3 text-[11px] uppercase tracking-[0.28em]">
@@ -288,6 +294,7 @@ export function PageIntro({
   headingAccent,
   description,
   image,
+  measure = 'services',
 }: {
   layout?: 'split' | 'text' | null
   eyebrow?: string | null
@@ -295,10 +302,13 @@ export function PageIntro({
   headingAccent?: string | null
   description?: string | null
   image?: MarketingImage | null
+  /** About and Services use different canvas measures. The width sits on the heading, not the eyebrow. */
+  measure?: 'about' | 'services'
 }) {
   if (image?.src || layout === 'split') {
+    const about = measure === 'about'
     return (
-      <section className="relative flex min-h-[78vh] items-end overflow-hidden text-[#f5f2ec] md:min-h-[620px] md:h-[82vh]">
+      <section className="relative flex min-h-[78vh] items-end overflow-hidden text-[#f5f2ec] md:h-[82vh] md:min-h-[620px]">
         <div className="absolute inset-0">
           <PlaceholderImage
             src={image?.src || undefined}
@@ -312,15 +322,22 @@ export function PageIntro({
           <Eyebrow tone="photo" rule>
             {eyebrow}
           </Eyebrow>
-          <div className="flex flex-wrap items-end justify-between gap-10">
-            <h1 className={cn(display, 'max-w-[14ch] text-[clamp(48px,7vw,112px)] leading-[0.95]')}>
-              {lines(heading)}
-              {headingAccent && (
-                <>
-                  {heading ? ' ' : null}
-                  <em className="italic text-accent-gold">{headingAccent}</em>
-                </>
+          <div
+            className={cn(
+                about
+                  ? 'flex flex-wrap items-end justify-between gap-10'
+                  : 'flex flex-col gap-7',
+            )}
+          >
+            <h1
+              className={cn(
+                display,
+                about
+                  ? 'w-full max-w-[11ch] text-[clamp(52px,8vw,128px)] leading-[0.94]'
+                  : 'w-full max-w-[14ch] text-[clamp(48px,7vw,112px)] leading-[0.95]',
               )}
+            >
+              {flowingTitle(heading, headingAccent)}
             </h1>
             {description && <p className="max-w-md text-base leading-7 text-[#f5f2ec]/90">{description}</p>}
           </div>

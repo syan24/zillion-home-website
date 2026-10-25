@@ -65,16 +65,16 @@ export const BuilderHero: React.FC<BuilderHeroProps> = ({
 
   return (
     <HomeHero
-      eyebrow={eyebrow ?? 'Residential / Commercial / Joinery / Interior Fit-out'}
-      headline={headline ?? 'Built from the\nground up.'}
+      eyebrow={eyebrow ?? 'Builders & Joiners · Est. Melbourne'}
+      headline={headline ?? 'Built from the ground up.'}
       description={
         description ??
-        'Residential construction, renovation, commercial fit-out and custom joinery — built with quality, precision and care.'
+        'Residential construction, renovation, commercial fit-out and custom joinery — delivered by one team, with precision and care.'
       }
       image={resolveMedia(media)}
-      badgePrimary={badgePrimary ?? 'Quality'}
-      badgeSecondary={badgeSecondary ?? 'Construction'}
-      badgeMuted={badgeMuted ?? 'Lasting Value'}
+      badgePrimary={badgePrimary ?? 'Residential'}
+      badgeSecondary={badgeSecondary ?? 'Commercial'}
+      badgeMuted={badgeMuted ?? 'Joinery'}
       links={buttonLinks}
     />
   )

@@ -3,6 +3,7 @@ import configPromise from '@payload-config'
 import React from 'react'
 import { getPayload } from 'payload'
 
+import { goldPhrase } from '@/components/Marketing/sections'
 import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { getLocale } from '@/i18n/getLocale'
 import { getMessages } from '@/i18n/messages'
@@ -43,17 +44,11 @@ export default async function EnquiryPage() {
               <span className="h-px w-12 bg-accent" aria-hidden />
               {copy.overlayEyebrow}
             </p>
-            <h1 className="font-serif text-[clamp(52px,6.4vw,104px)] font-light leading-[0.95]">
-              {copy.overlayTitle.split('\n').map((line, index) => (
-                <span key={line}>
-                  {index > 0 && <br />}
-                  {index === copy.overlayTitle.split('\n').length - 1 ? (
-                    <em className="italic text-accent-gold">{line}</em>
-                  ) : (
-                    line
-                  )}
-                </span>
-              ))}
+            <h1 className="w-full max-w-[9ch] font-serif text-[clamp(52px,6.4vw,104px)] font-light leading-[0.95] tracking-[-0.01em]">
+              {goldPhrase(
+                copy.overlayTitle.replace(/^Start an Enquiry\.?$/i, 'Start an enquiry.'),
+                copy.overlayAccent,
+              )}
             </h1>
             <p className="max-w-md text-base leading-7 text-[#f5f2ec]/90">{copy.overlayBody}</p>
             <div className="flex flex-wrap gap-10 border-t border-[#f5f2ec]/30 pt-6 text-[11px] uppercase tracking-[0.26em]">

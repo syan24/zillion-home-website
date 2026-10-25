@@ -43,7 +43,8 @@ const en = {
     metaDescription:
       'Tell us about your project. Our team will be in touch to discuss your needs, provide guidance and next steps.',
     overlayEyebrow: "Let's Create Together",
-    overlayTitle: 'Start an\nEnquiry',
+    overlayTitle: 'Start an enquiry.',
+    overlayAccent: 'enquiry.',
     overlayBody:
       'Tell us about your project and our team will be in touch to discuss your needs, provide guidance and next steps.',
     overlayLine1: 'Tailored Joinery',
@@ -89,7 +90,8 @@ const en = {
     metaDescription:
       'Browse residential construction, commercial fit-outs, and custom joinery projects. Filter by project type, room, and style.',
     eyebrow: 'Projects',
-    heading: 'Real projects.\nBetter ways to live.',
+    heading: 'Real projects. Better ways to live.',
+    headingAccent: 'Better ways to live.',
     intro:
       'Explore our portfolio of residential and commercial projects, or browse by room to find inspiration for your space.',
     heroAlt: 'Project showcase',
@@ -194,7 +196,8 @@ const zh: typeof en = {
     metaTitle: '开始咨询 | Zillion Home',
     metaDescription: '告诉我们您的项目需求。团队会与您联系，说明下一步。',
     overlayEyebrow: '一起把项目落地',
-    overlayTitle: '开始\n咨询',
+    overlayTitle: '开始咨询。',
+    overlayAccent: '咨询。',
     overlayBody: '告诉我们您的项目，团队会与您联系，讨论需求并说明下一步。',
     overlayLine1: '定制木作',
     overlayLine2: '为更好的生活',
@@ -236,7 +239,8 @@ const zh: typeof en = {
     metaTitle: '项目 | Zillion Home',
     metaDescription: '浏览住宅施工、商业装修与定制木作项目。可按项目类型、空间和风格筛选。',
     eyebrow: '项目',
-    heading: '真实项目，\n启发更好的生活方式。',
+    heading: '真实项目，启发更好的生活方式。',
+    headingAccent: '启发更好的生活方式。',
     intro: '浏览住宅与商业项目，或按空间寻找灵感。',
     heroAlt: '项目展示',
     byProject: '按项目',
