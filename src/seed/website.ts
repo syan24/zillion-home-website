@@ -356,6 +356,136 @@ async function alignCanvasLayout(payload: Payload, id: number, draft: boolean, i
   return saved.slug === 'home' ? `page home: reordered to canvas` : `page services: canvas hero and enquire band`
 }
 
+const heroTypography = {
+  en: {
+    eyebrowFrom: 'Residential / Commercial / Joinery / Interior Fit-out',
+    eyebrow: 'Builders & Joiners · Est. Melbourne',
+    headlineFrom: 'Built from the\nground up.',
+    headline: 'Built from the ground up.',
+    descriptionFrom:
+      'Residential construction, renovation, commercial fit-out and custom joinery — built with quality, precision and care.',
+    description:
+      'Residential construction, renovation, commercial fit-out and custom joinery — delivered by one team, with precision and care.',
+    badgesFrom: ['Quality', 'Construction', 'Lasting Value'],
+    badges: ['Residential', 'Commercial', 'Joinery'],
+  },
+  zh: {
+    eyebrowFrom: '住宅施工 / 商业装修 / 定制木作 / 室内交付',
+    eyebrow: '建筑与木作 · 墨尔本',
+    headlineFrom: '从施工落地\n开始。',
+    headline: '从施工落地开始。',
+    descriptionFrom: '住宅施工、翻新、商业装修与定制木作，以品质、精度和用心完成。',
+    description: '住宅施工、翻新、商业装修与定制木作，由同一个团队完成，讲究精度和用心。',
+    badgesFrom: ['品质', '施工', '长久价值'],
+    badges: ['住宅', '商业', '木作'],
+  },
+} as const
+
+function enquiryOnlyLinks(links: unknown) {
+  if (!Array.isArray(links) || links.length === 0) return false
+  return links.every((item) => {
+    if (!isRecord(item) || !isRecord(item.link)) return false
+    const label = typeof item.link.label === 'string' ? item.link.label : ''
+    return item.link.url === '/enquiry' && (/enquiry/i.test(label) || label.includes('咨询'))
+  })
+}
+
+/**
+ * Rewrites only the previous demo hero strings. Edited headlines are left alone.
+ * Headline, eyebrow, and badge fields are localized, so each locale is patched on its own.
+ */
+async function alignHeroTypography(payload: Payload, id: number, draft: boolean, locale: 'en' | 'zh') {
+  const saved = await payload.findByID({
+    collection: 'pages',
+    id,
+    depth: 0,
+    draft,
+    locale,
+    fallbackLocale: false,
+    overrideAccess: true,
+  })
+  const copy = heroTypography[locale]
+  let changed = false
+  let hero = saved.hero
+  let layout = saved.layout
+
+  if (saved.slug === 'home' && isRecord(hero)) {
+    const next = { ...hero }
+    if (next.eyebrow === copy.eyebrowFrom) {
+      next.eyebrow = copy.eyebrow
+      changed = true
+    }
+    if (next.headline === copy.headlineFrom) {
+      next.headline = copy.headline
+      changed = true
+    }
+    if (next.description === copy.descriptionFrom) {
+      next.description = copy.description
+      changed = true
+    }
+    if (
+      next.badgePrimary === copy.badgesFrom[0] &&
+      next.badgeSecondary === copy.badgesFrom[1] &&
+      next.badgeMuted === copy.badgesFrom[2]
+    ) {
+      next.badgePrimary = copy.badges[0]
+      next.badgeSecondary = copy.badges[1]
+      next.badgeMuted = copy.badges[2]
+      changed = true
+    }
+    if (enquiryOnlyLinks(next.links)) {
+      next.links = []
+      changed = true
+    }
+    hero = next
+  }
+
+  if (Array.isArray(layout)) {
+    layout = layout.map((block) => {
+      if (!isRecord(block) || block.blockType !== 'pageIntro') return block
+      let heading = typeof block.heading === 'string' ? block.heading : ''
+      let headingAccent = typeof block.headingAccent === 'string' ? block.headingAccent : ''
+      let description = typeof block.description === 'string' ? block.description : ''
+      let blockChanged = false
+      if (heading === 'Building with' && headingAccent === 'care and precision') {
+        heading = 'Building with care & precision.'
+        headingAccent = 'care'
+        blockChanged = true
+      }
+      if (
+        description ===
+        'Zillion Home is a Melbourne-based builder bringing construction, interiors and joinery together under one team. We deliver residential and commercial projects with a clear process and close attention to every detail.'
+      ) {
+        description = 'A Melbourne builder bringing construction, interiors and joinery together under one team.'
+        blockChanged = true
+      }
+      if (heading === '住宅、商业与\n定制木作') {
+        heading = '住宅、商业与定制木作'
+        blockChanged = true
+      }
+      if (!blockChanged) return block
+      changed = true
+      return { ...block, heading, headingAccent, description }
+    })
+  }
+
+  if (!changed) return null
+
+  await payload.update({
+    collection: 'pages',
+    id,
+    draft,
+    locale,
+    overrideAccess: true,
+    context: seedContext,
+    data: {
+      ...(saved.slug === 'home' ? { hero: hero as never } : {}),
+      ...(Array.isArray(layout) ? { layout: layout as never } : {}),
+    },
+  })
+  return `page ${saved.slug}: hero typography aligned (${locale})`
+}
+
 async function seedPages(payload: Payload, ids: MediaIds) {
   const english = pageDefinitions(getMarketing('en'), ids)
   const chinese = pageDefinitions(getMarketing('zh'), ids)
@@ -411,6 +541,8 @@ async function seedPages(payload: Payload, ids: MediaIds) {
 
     const aligned = id ? await alignCanvasLayout(payload, id, draft, ids) : null
     if (aligned) summary.push(aligned)
+    const heroAligned = id ? await alignHeroTypography(payload, id, draft, 'en') : null
+    if (heroAligned) summary.push(heroAligned)
 
     if (!zhPage) continue
 
@@ -425,7 +557,8 @@ async function seedPages(payload: Payload, ids: MediaIds) {
     })
 
     if (zhSaved.title) {
-      summary.push(`page ${page.slug}: zh kept`)
+      const zhHero = await alignHeroTypography(payload, id, draft, 'zh')
+      summary.push(zhHero || `page ${page.slug}: zh kept`)
       continue
     }
 

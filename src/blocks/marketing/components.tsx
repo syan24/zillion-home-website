@@ -31,8 +31,16 @@ export function PageIntroBlock(props: {
   description?: string | null
   image?: Upload
   imageAlt?: string | null
+  pageSlug?: string | null
 }) {
-  return <PageIntro {...props} image={placed(props.image, props.imageAlt)} />
+  const { pageSlug, image, imageAlt, ...intro } = props
+  return (
+    <PageIntro
+      {...intro}
+      measure={pageSlug === 'about' ? 'about' : 'services'}
+      image={placed(image, imageAlt)}
+    />
+  )
 }
 
 export function ServiceCardsBlock(props: {

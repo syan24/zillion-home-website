@@ -4,6 +4,7 @@ import React from 'react'
 
 import { DesktopProjectFilter, FilterDrawer } from '@/components/Projects/FilterDrawer'
 import { Lightbox } from '@/components/Projects/Lightbox'
+import { goldPhrase } from '@/components/Marketing/sections'
 import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { Button } from '@/components/ui/button'
 import { getLocale } from '@/i18n/getLocale'
@@ -22,19 +23,6 @@ type Args = {
 }
 
 const wrap = 'mx-auto w-full max-w-[1440px] px-[clamp(20px,4vw,56px)]'
-
-function photoTitle(text: string) {
-  const [first, ...rest] = text.split('\n')
-  const second = rest.join(' ').trim()
-  if (!second) return first
-  return (
-    <>
-      {first}
-      <br />
-      <em className="italic text-accent-gold">{second}</em>
-    </>
-  )
-}
 
 function withView(href: string, view: 'project' | 'room') {
   const [path, hash] = href.split('#')
@@ -95,8 +83,8 @@ export default async function ProjectsPage({ searchParams }: Args) {
             {copy.eyebrow}
           </p>
           <div className="flex flex-wrap items-end justify-between gap-10">
-            <h1 className="max-w-[12ch] font-serif text-[clamp(52px,8vw,128px)] font-light leading-[0.94]">
-              {photoTitle(copy.heading)}
+            <h1 className="w-full max-w-[12ch] font-serif text-[clamp(52px,8vw,128px)] font-light leading-[0.94] tracking-[-0.01em]">
+              {goldPhrase(copy.heading, copy.headingAccent)}
             </h1>
             {hero?.projectTitle && (
               <span className="text-[11px] uppercase tracking-[0.3em] text-[#f5f2ec]/85">

@@ -55,7 +55,7 @@ export const hero: Field = localizeCopyField({
       type: 'textarea',
       admin: {
         condition: (_, siblingData) => siblingData?.type === 'builder',
-        description: 'Use a new line for a line break.',
+        description: 'Wraps on its own. In the default headline, the word “ground” is shown in gold italic.',
       },
     },
     {

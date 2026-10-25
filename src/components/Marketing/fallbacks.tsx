@@ -52,7 +52,7 @@ export async function FallbackAbout() {
   const content = getMarketing(await getLocale()).about
   return (
     <main className="min-h-screen">
-      <PageIntro {...content.intro} image={stock(content.intro.image)} />
+      <PageIntro {...content.intro} image={stock(content.intro.image)} measure="about" />
       <ProseSection {...content.prose} />
       <CapabilityList {...content.capabilities} />
       <SplitFeature

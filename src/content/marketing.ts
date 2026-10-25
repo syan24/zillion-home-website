@@ -68,15 +68,15 @@ const enquiryLink = {
 
 export const homeContent = {
   hero: {
-    eyebrow: 'Residential / Commercial / Joinery / Interior Fit-out',
-    headline: 'Built from the\nground up.',
+    eyebrow: 'Builders & Joiners · Est. Melbourne',
+    headline: 'Built from the ground up.',
     description:
-      'Residential construction, renovation, commercial fit-out and custom joinery — built with quality, precision and care.',
+      'Residential construction, renovation, commercial fit-out and custom joinery — delivered by one team, with precision and care.',
     image: image('heroHouse', 'Modern house at dusk'),
-    badgePrimary: 'Quality',
-    badgeSecondary: 'Construction',
-    badgeMuted: 'Lasting Value',
-    links: [enquiryLink],
+    badgePrimary: 'Residential',
+    badgeSecondary: 'Commercial',
+    badgeMuted: 'Joinery',
+    links: [] as { label: string; href: string; variant: 'enquiry' }[],
   },
   serviceCards: {
     eyebrow: 'Our Services',
@@ -241,10 +241,9 @@ export const aboutContent = {
   intro: {
     layout: 'split' as const,
     eyebrow: 'About Zillion Home',
-    heading: 'Building with',
-    headingAccent: 'care and precision',
-    description:
-      'Zillion Home is a Melbourne-based builder bringing construction, interiors and joinery together under one team. We deliver residential and commercial projects with a clear process and close attention to every detail.',
+    heading: 'Building with care & precision.',
+    headingAccent: 'care',
+    description: 'A Melbourne builder bringing construction, interiors and joinery together under one team.',
     image: image('trustQuality', 'Construction team at work'),
   },
   prose: {

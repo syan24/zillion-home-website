@@ -179,7 +179,7 @@ export interface Page {
     type: 'none' | 'builder' | 'highImpact' | 'mediumImpact' | 'lowImpact';
     eyebrow?: string | null;
     /**
-     * Use a new line for a line break.
+     * Wraps on its own. In the default headline, the word “ground” is shown in gold italic.
      */
     headline?: string | null;
     description?: string | null;
