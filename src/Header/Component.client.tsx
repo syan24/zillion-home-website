@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 import type { Header } from '@/payload-types'
 
@@ -28,6 +28,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, locale }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [menuPath, setMenuPath] = useState(pathname)
   const [scrolled, setScrolled] = useState(false)
+  const barRef = useRef<HTMLDivElement>(null)
   if (menuPath !== pathname) {
     setMenuPath(pathname)
     setMobileMenuOpen(false)
@@ -41,6 +42,21 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, locale }) => {
     return () => window.removeEventListener('scroll', onScroll)
   }, [pathname])
 
+  useEffect(() => {
+    const bar = barRef.current
+    if (!bar) return
+    const apply = () => {
+      document.documentElement.style.setProperty(
+        '--site-header-height',
+        `${Math.ceil(bar.getBoundingClientRect().height)}px`,
+      )
+    }
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(bar)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <header
       className={cn(
@@ -50,7 +66,10 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, locale }) => {
           : 'border-[#d9d2c5] bg-[#f5f2ec]/95 text-foreground backdrop-blur-sm',
       )}
     >
-      <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-8 px-[clamp(20px,4vw,56px)] py-[22px]">
+      <div
+        ref={barRef}
+        className="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-8 px-[clamp(20px,4vw,56px)] py-[22px]"
+      >
         <Link href="/" className="flex items-center text-current">
           <Logo />
         </Link>

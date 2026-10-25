@@ -1,3 +1,5 @@
+import { ourProcessSteps } from '@/content/processSteps'
+
 export const marketingImages = {
   heroHouse: {
     file: 'hero-house.jpg',
@@ -208,13 +210,7 @@ export const homeContent = {
         description: 'Practical solutions, professional delivery',
       },
     ],
-    steps: [
-      { title: 'Consultation' },
-      { title: 'Planning & Coordination' },
-      { title: 'Construction / Fit-out' },
-      { title: 'Joinery & Finishes' },
-      { title: 'Handover' },
-    ],
+    steps: ourProcessSteps,
   },
   categories: {
     eyebrow: 'More than spaces',
@@ -415,13 +411,7 @@ export const servicesContent = {
     variant: 'centered' as const,
     eyebrow: 'How We Work',
     heading: 'Our process',
-    steps: [
-      { title: 'Consultation', description: 'We meet to understand your project needs' },
-      { title: 'Planning', description: 'Detailed planning and design coordination' },
-      { title: 'Construction', description: 'Quality construction with regular updates' },
-      { title: 'Joinery', description: 'Custom joinery and finishing touches' },
-      { title: 'Handover', description: 'Final walkthrough and project completion' },
-    ],
+    steps: ourProcessSteps,
   },
   joinery: {
     variant: 'darkCopy' as const,

@@ -20,8 +20,10 @@ interface HeaderNavProps {
   onDark?: boolean
 }
 
-const linkClass =
-  'text-[11px] uppercase tracking-[0.24em] text-current transition-opacity hover:opacity-70'
+/** Design Canvas header nav: Jost 300, 11px, 0.24em tracking, uppercase. */
+const menuType = 'font-sans text-[11px] font-light uppercase tracking-[0.24em]'
+
+const linkClass = cn(menuType, 'text-current no-underline transition-opacity hover:no-underline hover:opacity-70')
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = false, onDark = false }) => {
   const copy = getMessages(locale)
@@ -50,11 +52,16 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
   }
 
   return (
-    <nav className={cn(mobile ? 'flex flex-col gap-4' : 'flex flex-wrap items-center justify-end gap-x-7 gap-y-3')}>
+    <nav
+      className={cn(
+        menuType,
+        mobile ? 'flex flex-col gap-4' : 'flex flex-wrap items-center justify-end gap-x-7 gap-y-3',
+      )}
+    >
       <div className={cn(mobile ? 'flex flex-col gap-3' : 'flex flex-wrap items-center gap-x-7 gap-y-2')}>
         {navItems
           ? navItems.map(({ link }, i) => (
-              <CMSLink key={i} {...link} appearance="link" className={linkClass} />
+              <CMSLink key={i} {...link} appearance="inline" className={linkClass} />
             ))
           : defaultNavItems.map((item) => (
               <Link
@@ -68,7 +75,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
         {(navItems ? cmsSecondaryItems.length > 0 : true) &&
           (navItems
             ? cmsSecondaryItems.map(({ link }, i) => (
-                <CMSLink key={`secondary-${i}`} {...link} appearance="link" className={linkClass} />
+                <CMSLink key={`secondary-${i}`} {...link} appearance="inline" className={linkClass} />
               ))
             : secondaryNavItems.map((item) => (
                 <Link
@@ -82,11 +89,11 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
       </div>
 
       <div className={cn(mobile ? 'flex flex-col gap-3 border-t border-border pt-3' : 'flex items-center gap-5')}>
-        <div className="flex items-center gap-2.5 text-[11px] uppercase tracking-[0.2em] opacity-80">
+        <div className={cn(menuType, 'flex items-center gap-2.5 opacity-80')}>
           <form action={setLocale.bind(null, 'en')}>
             <button
               type="submit"
-              className={cn('transition-opacity', locale === 'en' ? 'opacity-100' : 'opacity-60 hover:opacity-100')}
+              className={cn(menuType, 'transition-opacity', locale === 'en' ? 'opacity-100' : 'opacity-60 hover:opacity-100')}
               aria-label={copy.switchToEnglish}
               aria-pressed={locale === 'en'}
             >
@@ -97,7 +104,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
           <form action={setLocale.bind(null, 'zh')}>
             <button
               type="submit"
-              className={cn('transition-opacity', locale === 'zh' ? 'opacity-100' : 'opacity-60 hover:opacity-100')}
+              className={cn(menuType, 'transition-opacity', locale === 'zh' ? 'opacity-100' : 'opacity-60 hover:opacity-100')}
               aria-label={copy.switchToChinese}
               aria-pressed={locale === 'zh'}
             >
@@ -110,7 +117,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
           asChild
           variant={onDark ? 'outlineDark' : 'enquiry'}
           className={cn(
-            'h-auto rounded-none px-5 py-3 text-[11px] font-normal uppercase tracking-[0.24em] shadow-none',
+            menuType,
+            'h-auto rounded-none px-5 py-3 shadow-none',
             mobile && 'w-full',
             onDark && 'border-current text-current hover:bg-white/10',
           )}

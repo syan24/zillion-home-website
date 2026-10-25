@@ -144,6 +144,8 @@
   /* Layout */
   --radius: 4px;
   --container: 1280px;
+  /* Fixed header bar. The desktop nav can wrap, so lg starts taller until the header measures itself. */
+  --site-header-height: 5.75rem;
   
   /* Chart colours (muted warm tones) */
   --chart-1: #c9a978;
@@ -299,6 +301,12 @@
   }
   body {
     @apply bg-background text-foreground min-h-[100vh] flex flex-col;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --site-header-height: 9.25rem;
   }
 }
 

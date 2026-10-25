@@ -8,6 +8,14 @@ import {
   type ImageRef,
   type MarketingImageKey,
 } from '@/content/marketing'
+import {
+  alignHomeProcessLayout,
+  isLegacyHomeProcess,
+  ourProcessSteps,
+  ourProcessStepsZh,
+  readProcessSteps,
+  type ProcessLocale,
+} from '@/content/processSteps'
 import { ensureSeedMedia } from '@/seed/ensureSeedMedia'
 import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
 
@@ -486,6 +494,57 @@ async function alignHeroTypography(payload: Payload, id: number, draft: boolean,
   return `page ${saved.slug}: hero typography aligned (${locale})`
 }
 
+/**
+ * Home used its own five step titles. When that demo list is still stored,
+ * replace it with the Services page process (CMS copy when present).
+ */
+async function alignHomeProcess(payload: Payload, id: number, draft: boolean, locale: ProcessLocale) {
+  const saved = await payload.findByID({
+    collection: 'pages',
+    id,
+    depth: 0,
+    draft,
+    locale,
+    fallbackLocale: false,
+    overrideAccess: true,
+  })
+  if (saved.slug !== 'home' || !Array.isArray(saved.layout)) return null
+  const legacy = saved.layout.some(
+    (block) => isRecord(block) && block.blockType === 'processSection' && isLegacyHomeProcess(block.steps, locale),
+  )
+  if (!legacy) return null
+
+  let canonical = locale === 'zh' ? ourProcessStepsZh : ourProcessSteps
+  const services = await findPage(payload, 'services')
+  if (services) {
+    const servicesPage = await payload.findByID({
+      collection: 'pages',
+      id: services.id,
+      depth: 0,
+      draft: services.draft,
+      locale,
+      fallbackLocale: false,
+      overrideAccess: true,
+    })
+    const fromServices = readProcessSteps(servicesPage.layout)
+    if (fromServices.length >= 5) canonical = fromServices
+  }
+
+  const aligned = alignHomeProcessLayout(saved.layout, locale, canonical)
+  if (!aligned.changed) return null
+
+  await payload.update({
+    collection: 'pages',
+    id,
+    draft,
+    locale,
+    overrideAccess: true,
+    context: seedContext,
+    data: { layout: aligned.layout as never },
+  })
+  return `page home: process steps aligned to services (${locale})`
+}
+
 async function seedPages(payload: Payload, ids: MediaIds) {
   const english = pageDefinitions(getMarketing('en'), ids)
   const chinese = pageDefinitions(getMarketing('zh'), ids)
@@ -543,6 +602,8 @@ async function seedPages(payload: Payload, ids: MediaIds) {
     if (aligned) summary.push(aligned)
     const heroAligned = id ? await alignHeroTypography(payload, id, draft, 'en') : null
     if (heroAligned) summary.push(heroAligned)
+    const processAligned = id ? await alignHomeProcess(payload, id, draft, 'en') : null
+    if (processAligned) summary.push(processAligned)
 
     if (!zhPage) continue
 
@@ -559,6 +620,8 @@ async function seedPages(payload: Payload, ids: MediaIds) {
     if (zhSaved.title) {
       const zhHero = await alignHeroTypography(payload, id, draft, 'zh')
       summary.push(zhHero || `page ${page.slug}: zh kept`)
+      const zhProcess = await alignHomeProcess(payload, id, draft, 'zh')
+      if (zhProcess) summary.push(zhProcess)
       continue
     }
 

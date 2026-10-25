@@ -3,7 +3,7 @@ import configPromise from '@payload-config'
 import React from 'react'
 import { getPayload } from 'payload'
 
-import { goldPhrase } from '@/components/Marketing/sections'
+import { goldPhrase, photoHeroFrame } from '@/components/Marketing/sections'
 import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { getLocale } from '@/i18n/getLocale'
 import { getMessages } from '@/i18n/messages'
@@ -31,7 +31,7 @@ export default async function EnquiryPage() {
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
       <aside className="relative bg-[#1c1a17] text-[#f5f2ec]">
-        <div className="relative h-[72vh] min-h-[560px] overflow-hidden lg:sticky lg:top-0 lg:h-screen">
+        <div className={`${photoHeroFrame} min-h-[70svh] lg:sticky lg:top-0 lg:min-h-screen`}>
           <PlaceholderImage
             src="/api/media/file/kew-kitchen.jpg"
             alt={copy.imageAlt}
@@ -39,7 +39,7 @@ export default async function EnquiryPage() {
             aspectRatio="auto"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(20,18,15,0.35)] via-[rgba(20,18,15,0.2)] to-[rgba(20,18,15,0.85)]" />
-          <div className="absolute inset-x-0 bottom-0 flex flex-col justify-end gap-7 px-[clamp(24px,4vw,64px)] pb-14 pt-32">
+          <div className="relative flex flex-col justify-end gap-7 px-[clamp(24px,4vw,64px)] pb-14">
             <p className="flex items-center gap-4 text-[11px] uppercase tracking-[0.4em]">
               <span className="h-px w-12 bg-accent" aria-hidden />
               {copy.overlayEyebrow}
@@ -59,7 +59,7 @@ export default async function EnquiryPage() {
         </div>
       </aside>
 
-      <section className="flex w-full max-w-[820px] flex-col gap-12 px-[clamp(24px,5vw,88px)] pb-[clamp(64px,8vw,120px)] pt-32 lg:pt-40">
+      <section className="flex w-full max-w-[820px] flex-col gap-12 px-[clamp(24px,5vw,88px)] pb-[clamp(64px,8vw,120px)] pt-[calc(var(--site-header-height,6rem)+2.5rem)] lg:pt-[calc(var(--site-header-height,6rem)+4rem)]">
         <div className="flex flex-col gap-5">
           <p className="text-[11px] uppercase tracking-[0.4em] text-accent-tan">— {copy.formEyebrow}</p>
           <h2 className="font-serif text-[clamp(36px,3.8vw,56px)] font-light leading-tight">{copy.formHeading}</h2>

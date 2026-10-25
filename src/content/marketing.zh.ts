@@ -5,6 +5,7 @@ import {
   homeContent,
   servicesContent,
 } from '@/content/marketing'
+import { ourProcessStepsZh } from '@/content/processSteps'
 
 const enquiryLink = {
   label: '开始咨询 →',
@@ -89,13 +90,7 @@ export const homeContentZh = {
         description: '实用方案，专业交付',
       },
     ],
-    steps: [
-      { title: '沟通' },
-      { title: '规划与协调' },
-      { title: '施工 / 装修' },
-      { title: '木作与收尾' },
-      { title: '交付' },
-    ],
+    steps: ourProcessStepsZh,
   },
   categories: {
     eyebrow: '不止是空间',
@@ -225,13 +220,7 @@ export const servicesContentZh = {
     ...servicesContent.process,
     eyebrow: '我们如何工作',
     heading: '我们的流程',
-    steps: [
-      { title: '沟通', description: '见面了解项目需求' },
-      { title: '规划', description: '详细规划并协调设计' },
-      { title: '施工', description: '按品质施工，并定期更新' },
-      { title: '木作', description: '定制木作与收尾' },
-      { title: '交付', description: '最终验收并完成项目' },
-    ],
+    steps: ourProcessStepsZh,
   },
   joinery: {
     ...servicesContent.joinery,
