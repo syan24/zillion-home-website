@@ -318,10 +318,11 @@ export const servicesContent = {
   intro: {
     layout: 'text' as const,
     eyebrow: 'Our Services',
-    heading: 'Building residential,\ncommercial &',
-    headingAccent: 'custom joinery',
+    heading: 'Homes, workplaces &',
+    headingAccent: 'bespoke joinery.',
     description:
-      'Four core capabilities under one roof. From ground-up construction to precision cabinetry, we deliver complete building solutions for homes and businesses.',
+      'Four capabilities under one roof — from ground-up construction to precision cabinetry, delivered as one complete building service.',
+    image: image('serviceInterior', 'Interior fit-out'),
   },
   details: {
     services: [
@@ -433,7 +434,7 @@ export const servicesContent = {
     links: [{ label: 'Enquire about Custom Joinery →', href: '/enquiry', variant: 'enquiry' as const }],
   },
   cta: {
-    tone: 'light' as const,
+    tone: 'dark' as const,
     heading: 'Ready to discuss your project?',
     body: "Tell us about your requirements and we'll help you understand how we can bring your vision to life.",
     links: [enquiryLink],

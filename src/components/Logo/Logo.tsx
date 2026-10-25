@@ -6,31 +6,31 @@ interface Props {
   loading?: 'lazy' | 'eager'
   priority?: 'auto' | 'high' | 'low'
   variant?: 'dark' | 'light'
+  detail?: string
 }
 
-export const Logo = (props: Props) => {
-  const { className, variant = 'dark' } = props
-
-  const textColor = variant === 'light' ? 'text-white' : 'text-foreground'
+export const Logo = ({ className, variant = 'dark', detail }: Props) => {
+  const light = variant === 'light'
+  const line = detail || (light ? 'Home · Build better living' : 'Home · Melbourne')
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <span className={cn('flex flex-col gap-1 leading-none', className)}>
       <span
         className={cn(
-          'font-serif text-xl tracking-[0.2em] font-medium uppercase',
-          textColor,
+          'font-serif text-2xl font-normal uppercase tracking-[0.32em]',
+          light ? 'text-[#efe9de]' : 'text-current',
         )}
       >
-        Zillion Home
+        Zillion
       </span>
       <span
         className={cn(
-          'text-[10px] tracking-[0.15em] uppercase',
-          variant === 'light' ? 'text-white/70' : 'text-muted-foreground',
+          'text-[9px] uppercase tracking-[0.5em] opacity-70',
+          light ? 'text-[#efe9de]' : 'text-current',
         )}
       >
-        Build Better Living
+        {line}
       </span>
-    </div>
+    </span>
   )
 }

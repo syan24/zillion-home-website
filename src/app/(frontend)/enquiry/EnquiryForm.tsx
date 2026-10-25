@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useSyncExternalStore } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import RichText from '@/components/RichText'
 import { cn } from '@/utilities/ui'
@@ -23,8 +24,9 @@ import { OptionIcon } from './OptionIcon'
 
 type EnquiryCopy = Messages['enquiry']
 
+const labelClass = 'text-[10px] uppercase tracking-[0.32em] text-muted-foreground'
 const fieldClass =
-  'w-full px-4 py-3 bg-background border border-input rounded text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+  'w-full border-0 border-b border-[#c9c0b0] bg-transparent px-0 py-2.5 text-[17px] text-foreground rounded-none shadow-none placeholder:text-[#a39b8f] focus:border-accent-tan focus:outline-none focus:ring-0'
 
 function formatBytes(size: number) {
   if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`
@@ -64,19 +66,36 @@ function subscribeToEnquiryResult(listener: () => void) {
   }
 }
 
-function readStoredReference() {
-  const saved = readStorage(enquiryResultStorageKey)
-  if (!saved) return ''
-  try {
-    const parsed = JSON.parse(saved) as { reference?: string }
-    return parsed.reference || ''
-  } catch {
-    return ''
+let enquirySnapshot = { raw: '', reference: '', name: '' }
+
+function readEnquirySnapshot() {
+  const raw = readStorage(enquiryResultStorageKey) || ''
+  if (raw === enquirySnapshot.raw) return enquirySnapshot
+  let reference = ''
+  let name = ''
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as { reference?: string; name?: string }
+      reference = parsed.reference || ''
+      name = parsed.name || ''
+    } catch {
+      reference = ''
+    }
   }
+  enquirySnapshot = { raw, reference, name }
+  return enquirySnapshot
 }
 
-function storeEnquiryResult(reference: string) {
-  writeStorage(enquiryResultStorageKey, JSON.stringify({ reference }))
+function readStoredReference() {
+  return readEnquirySnapshot().reference
+}
+
+function readStoredName() {
+  return readEnquirySnapshot().name
+}
+
+function storeEnquiryResult(reference: string, name = '') {
+  writeStorage(enquiryResultStorageKey, JSON.stringify({ reference, name }))
   clearStorage(enquiryDraftStorageKey)
   resultListeners.forEach((listener) => listener())
 }
@@ -151,6 +170,7 @@ export function EnquiryForm({
   const [progress, setProgress] = useState<string | null>(null)
   const [issues, setIssues] = useState<EnquiryIssue[]>([])
   const storedReference = useSyncExternalStore(subscribeToEnquiryResult, readStoredReference, () => '')
+  const storedName = useSyncExternalStore(subscribeToEnquiryResult, readStoredName, () => '')
 
   const setScalar = (name: string, value: string | boolean | string[]) => {
     setValues((current) => ({ ...current, [name]: value }))
@@ -267,7 +287,9 @@ export function EnquiryForm({
         if (result.issues.some((issue) => issue.code === 'files')) setFileMessage(copy.errors.files)
         return
       }
-      storeEnquiryResult(result.submissionReference)
+      const given =
+        typeof values.name === 'string' ? values.name.trim().split(/\s+/)[0] || '' : ''
+      storeEnquiryResult(result.submissionReference, given)
     } catch {
       setIssues([{ field: 'form', code: 'generic' }])
     } finally {
@@ -286,21 +308,31 @@ export function EnquiryForm({
 
   if (storedReference) {
     return (
-      <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-accent/20 flex items-center justify-center">
-          <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h3 className="font-serif text-2xl mb-4">{copy.thanksTitle}</h3>
-        <p className="text-foreground-soft mb-2">{copy.thanksBody}</p>
+      <div className="flex flex-col gap-7 pt-[8vh]">
+        {storedName ? (
+          <p className="font-serif text-[22px] italic text-accent-tan">
+            {copy.thanksName.replace('{name}', storedName)}
+          </p>
+        ) : null}
+        <h2 className="font-serif text-[clamp(40px,4.6vw,68px)] font-light leading-none">{copy.thanksTitle}</h2>
+        <p className="max-w-lg text-base leading-8 text-foreground-soft">{copy.thanksBody}</p>
         <p className="text-sm text-muted-foreground">{copy.thanksTiming}</p>
-        <p className="mt-6 text-sm">
-          {copy.referenceLabel} <span className="font-medium tracking-wide">{storedReference}</span>
+        <p className="text-sm">
+          {copy.referenceLabel} <span className="tracking-wide">{storedReference}</span>
         </p>
-        <Button type="button" variant="outline" className="mt-8" onClick={startAnother}>
-          {copy.submitAnother}
-        </Button>
+        <div className="flex flex-wrap gap-4 pt-2">
+          <Button asChild className="h-auto rounded-none px-9 py-5 text-[11px] uppercase tracking-[0.3em]">
+            <Link href="/projects">{copy.viewProjects}</Link>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto rounded-none border-foreground bg-transparent px-9 py-5 text-[11px] uppercase tracking-[0.3em] shadow-none"
+            onClick={startAnother}
+          >
+            {copy.submitAnother}
+          </Button>
+        </div>
       </div>
     )
   }
@@ -312,9 +344,9 @@ export function EnquiryForm({
   const formIssues = issues.filter((issue) => issue.field === 'form')
 
   return (
-    <form className="space-y-8" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-10" onSubmit={handleSubmit}>
       {formIssues.length > 0 ? (
-        <div role="alert" className="text-sm text-destructive space-y-1">
+        <div role="alert" className="text-sm text-error space-y-1">
           {formIssues.map((issue) => (
             <p key={`${issue.field}-${issue.code}`}>{issueText(copy, fields, issue)}</p>
           ))}
@@ -324,7 +356,7 @@ export function EnquiryForm({
       {groupFields(fields).map((row) => (
         <div
           key={row.map((field) => field.name || field.blockType).join('-')}
-          className={row.length > 1 ? 'grid sm:grid-cols-2 gap-4' : undefined}
+          className={row.length > 1 ? 'grid gap-9 sm:grid-cols-2 sm:gap-x-10' : undefined}
         >
           {row.map((field) => (
             <FieldControl
@@ -352,11 +384,18 @@ export function EnquiryForm({
         </div>
       ))}
 
-      <div className="pt-4">
-        <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? progress || copy.submitting : form.submitButtonLabel || copy.submit}
-        </Button>
-        <p className="text-xs text-muted-foreground mt-4 text-center">{copy.consent}</p>
+      <div className="flex flex-col gap-4 border-t border-border pt-8">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <p className="max-w-sm text-xs leading-7 text-muted-foreground">{copy.consent}</p>
+          <Button
+            type="submit"
+            size="lg"
+            className="h-auto rounded-none px-11 py-5 text-[11px] uppercase tracking-[0.3em] hover:bg-accent-tan"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? progress || copy.submitting : form.submitButtonLabel || copy.submit}
+          </Button>
+        </div>
       </div>
     </form>
   )
@@ -402,19 +441,21 @@ function FieldControl({
     const selected = Array.isArray(value) ? value : []
     return (
       <div>
-        <p className="text-sm font-medium mb-3">
+        <p className={cn(labelClass, 'mb-4', issue && 'text-error')}>
           {label}
-          {field.required ? <span className="text-destructive"> *</span> : null}
+          {field.required ? <span className="text-accent-tan"> *</span> : null}
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="flex flex-wrap gap-2.5">
           {(field.options || []).map((option) => {
             const checked = selected.includes(option.value)
             return (
               <label
                 key={option.value}
                 className={cn(
-                  'flex items-center gap-3 px-4 py-3 border rounded cursor-pointer transition-all',
-                  checked ? 'border-primary bg-primary/5' : 'border-input hover:border-foreground/30',
+                  'cursor-pointer border px-5 py-2.5 text-[13px] tracking-wide transition-colors',
+                  checked
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-[#c9c0b0] bg-transparent text-foreground',
                 )}
               >
                 <input
@@ -431,7 +472,7 @@ function FieldControl({
             )
           })}
         </div>
-        {error ? <p className="text-sm text-destructive mt-2">{error}</p> : null}
+        {error ? <p className="text-sm text-error mt-2">{error}</p> : null}
       </div>
     )
   }
@@ -441,11 +482,11 @@ function FieldControl({
     if (options.length > 0 && options.length <= 6) {
       return (
         <div>
-          <p className="text-sm font-medium mb-3">
+          <p className={cn(labelClass, 'mb-4', issue && 'text-error')}>
             {label}
-            {field.required ? <span className="text-destructive"> *</span> : null}
+            {field.required ? <span className="text-accent-tan"> *</span> : null}
           </p>
-          <div className={cn('grid gap-3', options.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
+          <div className={cn('grid gap-3', options.length === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2')}>
             {options.map((option) => (
               <button
                 key={option.value}
@@ -453,18 +494,18 @@ function FieldControl({
                 aria-pressed={value === option.value}
                 onClick={() => onValue(option.value)}
                 className={cn(
-                  'p-4 border rounded text-center transition-all',
+                  'border px-4 py-5 text-center font-serif text-[21px] transition-colors',
                   value === option.value
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                    : 'border-input hover:border-foreground/30',
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-[#c9c0b0] bg-transparent text-foreground',
                 )}
               >
                 <OptionIcon icon={option.icon} iconUrl={option.iconUrl} />
-                <span className="font-medium text-sm block">{option.label}</span>
+                <span className="block">{option.label}</span>
               </button>
             ))}
           </div>
-          {error ? <p className="text-sm text-destructive mt-2">{error}</p> : null}
+          {error ? <p className="text-sm text-error mt-2">{error}</p> : null}
         </div>
       )
     }
@@ -479,16 +520,16 @@ function FieldControl({
           : field.options || []
     return (
       <div>
-        <label htmlFor={name} className="block text-sm font-medium mb-1">
+        <label htmlFor={name} className={cn(labelClass, 'mb-2.5 block', issue && 'text-error')}>
           {label}
-          {field.required ? <span className="text-destructive"> *</span> : null}
+          {field.required ? <span className="text-accent-tan"> *</span> : null}
         </label>
         <select
           id={name}
           value={typeof value === 'string' ? value : ''}
           aria-invalid={Boolean(issue)}
           onChange={(event) => onValue(event.target.value)}
-          className={fieldClass}
+          className={cn(fieldClass, 'appearance-none', issue && 'border-error')}
         >
           <option value="">{field.placeholder || label}</option>
           {options.map((option) => (
@@ -497,7 +538,7 @@ function FieldControl({
             </option>
           ))}
         </select>
-        {error ? <p className="text-sm text-destructive mt-2">{error}</p> : null}
+        {error ? <p className="text-sm text-error mt-2">{error}</p> : null}
       </div>
     )
   }
@@ -513,10 +554,10 @@ function FieldControl({
           />
           <span>
             {label}
-            {field.required ? <span className="text-destructive"> *</span> : null}
+            {field.required ? <span className="text-accent-tan"> *</span> : null}
           </span>
         </label>
-        {error ? <p className="text-sm text-destructive mt-2">{error}</p> : null}
+        {error ? <p className="text-sm text-error mt-2">{error}</p> : null}
       </div>
     )
   }
@@ -524,10 +565,6 @@ function FieldControl({
   if (field.blockType === 'upload') {
     return (
       <div>
-        <p className="block text-sm font-medium mb-1">
-          {label}
-          {field.required ? <span className="text-destructive"> *</span> : null}
-        </p>
         <div
           onDragOver={(event) => {
             event.preventDefault()
@@ -540,8 +577,8 @@ function FieldControl({
             onFiles(event.dataTransfer.files)
           }}
           className={cn(
-            'border-2 border-dashed border-input rounded-lg p-8 text-center',
-            dragOver && 'border-primary bg-primary/5',
+            'border border-dashed border-[#b9b0a1] bg-background-section px-6 py-9 text-center',
+            dragOver && 'border-accent-tan',
           )}
         >
           <label className="block cursor-pointer">
@@ -555,8 +592,8 @@ function FieldControl({
                 event.target.value = ''
               }}
             />
-            <p className="text-sm text-muted-foreground">{copy.uploadHint}</p>
-            <p className="text-xs text-muted-foreground mt-1">{copy.uploadTypes}</p>
+            <p className="font-serif text-[22px]">{label || copy.uploadLabel}</p>
+            <p className="mt-2 text-xs tracking-wide text-muted-foreground">{copy.uploadTypes}</p>
           </label>
         </div>
         {files.length > 0 ? (
@@ -580,7 +617,7 @@ function FieldControl({
             ))}
           </ul>
         ) : null}
-        {fileMessage || error ? <p className="text-sm text-destructive mt-2">{fileMessage || error}</p> : null}
+        {fileMessage || error ? <p className="text-sm text-error mt-2">{fileMessage || error}</p> : null}
         {progress ? <p className="text-sm text-muted-foreground mt-2">{progress}</p> : null}
       </div>
     )
@@ -589,18 +626,18 @@ function FieldControl({
   const multiline = field.blockType === 'textarea'
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium mb-1">
+      <label htmlFor={name} className={cn(labelClass, 'mb-2.5 block', issue && 'text-error')}>
         {label}
-        {field.required ? <span className="text-destructive"> *</span> : null}
+        {field.required ? <span className="text-accent-tan"> *</span> : null}
       </label>
       {multiline ? (
         <textarea
           id={name}
-          rows={4}
+          rows={5}
           value={typeof value === 'string' ? value : ''}
           aria-invalid={Boolean(issue)}
           onChange={(event) => onValue(event.target.value)}
-          className={`${fieldClass} resize-none`}
+          className={cn(fieldClass, 'resize-y leading-relaxed', issue && 'border-error')}
         />
       ) : (
         <input
@@ -611,10 +648,10 @@ function FieldControl({
           value={typeof value === 'string' ? value : ''}
           aria-invalid={Boolean(issue)}
           onChange={(event) => onValue(event.target.value)}
-          className={fieldClass}
+          className={cn(fieldClass, issue && 'border-error')}
         />
       )}
-      {error ? <p className="text-sm text-destructive mt-2">{error}</p> : null}
+      {error ? <p className="mt-2 text-sm text-error">{error}</p> : null}
     </div>
   )
 }

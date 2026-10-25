@@ -269,6 +269,36 @@ const projects: ProjectSeed[] = [
       },
     ],
   },
+  {
+    slug: 'wheelers-hill-renovation',
+    title: 'Wheelers Hill Renovation',
+    titleZh: 'Wheelers Hill 翻新',
+    type: 'residential',
+    address: 'Wheelers Hill VIC 3150',
+    suburb: 'Wheelers Hill',
+    showAddressPublicly: false,
+    short: 'Kitchen joinery for a Wheelers Hill renovation.',
+    shortZh: 'Wheelers Hill 一处翻新中的厨房木作。',
+    description:
+      'A residential kitchen renovation in Wheelers Hill. The public page shows the suburb only.',
+    descriptionZh: 'Wheelers Hill 的一处住宅厨房翻新。网站只显示区域。',
+    styles: ['modern'],
+    spaces: ['kitchen'],
+    order: 5,
+    images: [
+      {
+        file: 'DSC03791.jpg',
+        alt: 'Kitchen, Wheelers Hill Renovation',
+        title: 'Kitchen',
+        titleZh: '厨房',
+        caption: 'Kitchen joinery.',
+        captionZh: '厨房木作。',
+        styles: ['modern'],
+        spaces: ['kitchen'],
+        order: 0,
+      },
+    ],
+  },
 ]
 
 async function ensureMedia(payload: Payload, file: string, alt: string) {

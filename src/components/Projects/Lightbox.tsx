@@ -13,10 +13,12 @@ export function Lightbox({
   images,
   initialId,
   copy,
+  layout = 'grid',
 }: {
   images: GalleryImage[]
   initialId?: number | null
   copy: Copy
+  layout?: 'grid' | 'masonry'
 }) {
   const [openId, setOpenId] = useState<number | null>(initialId ?? null)
   const index = images.findIndex((image) => image.id === openId)
@@ -35,22 +37,42 @@ export function Lightbox({
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className={layout === 'masonry' ? 'columns-1 gap-7 sm:columns-2 lg:columns-3' : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'}>
         {images.map((item) => (
-          <figure key={item.id} className="overflow-hidden rounded bg-background-warm">
+          <figure
+            key={item.id}
+            className={layout === 'masonry' ? 'mb-7 break-inside-avoid' : 'overflow-hidden bg-background-warm'}
+          >
             <button type="button" className="block w-full text-left" onClick={() => setOpenId(item.id)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.src} alt={item.alt} className="aspect-[4/3] w-full object-cover" />
+              <img
+                src={item.src}
+                alt={item.alt}
+                className={
+                  layout === 'masonry'
+                    ? 'h-auto w-full object-cover motion-safe:transition-transform motion-safe:duration-700 hover:scale-[1.02]'
+                    : 'aspect-[4/3] w-full object-cover'
+                }
+              />
             </button>
-            <figcaption className="flex items-start justify-between gap-3 p-4">
-              <div>
-                <p className="font-medium">{item.title}</p>
-                <p className="text-sm text-muted-foreground">{item.projectTitle}</p>
-              </div>
-              <button type="button" className="text-sm text-accent" onClick={() => setOpenId(item.id)}>
-                {copy.viewProject}
-              </button>
-            </figcaption>
+            {layout === 'masonry' ? (
+              <figcaption className="flex items-start justify-between gap-3 pt-3.5 text-[11px] uppercase tracking-[0.22em]">
+                <span>{item.projectTitle}</span>
+                <button type="button" className="text-accent-tan" onClick={() => setOpenId(item.id)}>
+                  {item.spaceNames[0] || item.title}
+                </button>
+              </figcaption>
+            ) : (
+              <figcaption className="flex items-start justify-between gap-3 p-4">
+                <div>
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-sm text-muted-foreground">{item.projectTitle}</p>
+                </div>
+                <button type="button" className="text-sm text-accent-tan" onClick={() => setOpenId(item.id)}>
+                  {copy.viewProject}
+                </button>
+              </figcaption>
+            )}
           </figure>
         ))}
       </div>

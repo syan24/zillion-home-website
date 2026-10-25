@@ -1,11 +1,12 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 import type { Header as HeaderType } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
 import type { SiteLocale } from '@/i18n/config'
@@ -16,10 +17,15 @@ interface HeaderNavProps {
   data: HeaderType
   locale: SiteLocale
   mobile?: boolean
+  onDark?: boolean
 }
 
-export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = false }) => {
+const linkClass =
+  'text-[11px] uppercase tracking-[0.24em] text-current transition-opacity hover:opacity-70'
+
+export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = false, onDark = false }) => {
   const copy = getMessages(locale)
+  const pathname = usePathname()
   const cmsNavItems = data?.navItems || []
   const cmsSecondaryItems = data?.secondaryNavItems || []
   const navItems = cmsNavItems.length > 0 || cmsSecondaryItems.length > 0 ? cmsNavItems : null
@@ -37,87 +43,61 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
     { href: '/about', label: locale === 'zh' ? '关于我们' : 'About Us' },
   ]
 
+  const active = (href: string) => {
+    const path = href.split('#')[0] || '/'
+    if (path === '/') return pathname === '/'
+    return pathname === path || pathname.startsWith(`${path}/`)
+  }
+
   return (
-    <nav
-      className={cn(
-        mobile ? 'flex flex-col gap-4' : 'flex items-center gap-6',
-        'text-sm font-medium',
-      )}
-    >
-      <div className={cn(mobile ? 'flex flex-col gap-3' : 'flex items-center gap-5')}>
+    <nav className={cn(mobile ? 'flex flex-col gap-4' : 'flex flex-wrap items-center justify-end gap-x-7 gap-y-3')}>
+      <div className={cn(mobile ? 'flex flex-col gap-3' : 'flex flex-wrap items-center gap-x-7 gap-y-2')}>
         {navItems
           ? navItems.map(({ link }, i) => (
-              <CMSLink
-                key={i}
-                {...link}
-                appearance="link"
-                className="text-foreground hover:text-foreground-soft transition-colors"
-              />
+              <CMSLink key={i} {...link} appearance="link" className={linkClass} />
             ))
           : defaultNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-foreground hover:text-foreground-soft transition-colors"
+                className={cn(linkClass, active(item.href) && 'border-b border-current pb-1')}
               >
                 {item.label}
               </Link>
             ))}
-      </div>
-
-      {(navItems ? cmsSecondaryItems.length > 0 : true) && (
-        <div className={cn(
-          mobile ? 'flex flex-col gap-3 pt-3 border-t border-border' : 'flex items-center gap-5',
-          'text-muted-foreground'
-        )}>
-          {navItems
+        {(navItems ? cmsSecondaryItems.length > 0 : true) &&
+          (navItems
             ? cmsSecondaryItems.map(({ link }, i) => (
-                <CMSLink
-                  key={i}
-                  {...link}
-                  appearance="link"
-                  className="hover:text-foreground transition-colors"
-                />
+                <CMSLink key={`secondary-${i}`} {...link} appearance="link" className={linkClass} />
               ))
             : secondaryNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="hover:text-foreground transition-colors"
+                  className={cn(linkClass, active(item.href) && 'border-b border-current pb-1')}
                 >
                   {item.label}
                 </Link>
-              ))}
-        </div>
-      )}
+              )))}
+      </div>
 
-      <div className={cn(mobile ? 'flex flex-col gap-3 pt-3 border-t border-border' : 'flex items-center gap-4')}>
-        <div className="flex items-center gap-1 text-sm">
+      <div className={cn(mobile ? 'flex flex-col gap-3 border-t border-border pt-3' : 'flex items-center gap-5')}>
+        <div className="flex items-center gap-2.5 text-[11px] uppercase tracking-[0.2em] opacity-80">
           <form action={setLocale.bind(null, 'en')}>
             <button
               type="submit"
-              className={cn(
-                'px-2 py-1 rounded transition-colors',
-                locale === 'en'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
+              className={cn('transition-opacity', locale === 'en' ? 'opacity-100' : 'opacity-60 hover:opacity-100')}
               aria-label={copy.switchToEnglish}
               aria-pressed={locale === 'en'}
             >
               EN
             </button>
           </form>
-          <span className="text-border">|</span>
+          <span aria-hidden>/</span>
           <form action={setLocale.bind(null, 'zh')}>
             <button
               type="submit"
-              className={cn(
-                'px-2 py-1 rounded transition-colors',
-                locale === 'zh'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
+              className={cn('transition-opacity', locale === 'zh' ? 'opacity-100' : 'opacity-60 hover:opacity-100')}
               aria-label={copy.switchToChinese}
               aria-pressed={locale === 'zh'}
             >
@@ -126,7 +106,15 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
           </form>
         </div>
 
-        <Button asChild variant="enquiry" className={cn(mobile && 'w-full')}>
+        <Button
+          asChild
+          variant={onDark ? 'outlineDark' : 'enquiry'}
+          className={cn(
+            'h-auto rounded-none px-5 py-3 text-[11px] font-normal uppercase tracking-[0.24em] shadow-none',
+            mobile && 'w-full',
+            onDark && 'border-current text-current hover:bg-white/10',
+          )}
+        >
           <Link href="/enquiry">{copy.enquiryCta}</Link>
         </Button>
       </div>

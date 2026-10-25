@@ -42,7 +42,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Args) 
 
   return (
     <main className="min-h-screen bg-background">
-      <section className="border-b border-border bg-background-warm py-12 lg:py-16">
+      <section className="border-b border-border bg-background-warm pb-12 pt-32 lg:pb-16">
         <div className="container">
           <Link href="/projects" className="text-sm text-muted-foreground hover:text-foreground">
             {copy.back}
