@@ -17,6 +17,7 @@ import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 }
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
 import { FolderTableCell as FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { FolderField as FolderField_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { default as default_924ffcebe8f0f5d3fe424149ba5e79ab } from '@/components/Projects/BulkGalleryUpload'
 import { default as default_c3a7e2d4eeba1f72cb836624f1807ec6 } from '@/components/SWMS/SWMSPublicLinkField'
 import { default as default_23999dbae2abd4d55954c25c75223463 } from '@/components/SWMS/SignaturePreviewField'
 import { default as default_c1c59d5e847ab162ccbbea62bd2b9c2e } from '@/components/SWMS/ExportRegisterButton'
@@ -50,6 +51,7 @@ export const importMap = {
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
   "@payloadcms/next/rsc#FolderTableCell": FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/next/rsc#FolderField": FolderField_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@/components/Projects/BulkGalleryUpload#default": default_924ffcebe8f0f5d3fe424149ba5e79ab,
   "@/components/SWMS/SWMSPublicLinkField#default": default_c3a7e2d4eeba1f72cb836624f1807ec6,
   "@/components/SWMS/SignaturePreviewField#default": default_23999dbae2abd4d55954c25c75223463,
   "@/components/SWMS/ExportRegisterButton#default": default_c1c59d5e847ab162ccbbea62bd2b9c2e,
