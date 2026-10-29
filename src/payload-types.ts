@@ -1173,7 +1173,7 @@ export interface Project {
    */
   summary?: string | null;
   /**
-   * Images live in Project Images. Change display order there to reorder the gallery.
+   * Photos added above appear here. Change display order on a photo to reorder the gallery.
    */
   gallery?: {
     docs?: (number | ProjectImage)[];
@@ -1219,7 +1219,7 @@ export interface Space {
   createdAt: string;
 }
 /**
- * Lower display order appears first. Unpublish an image to hide it without deleting the file.
+ * Add several photos at once from the project page. Lower display order appears first. Unpublish an image to hide it without deleting the file.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "project-images".

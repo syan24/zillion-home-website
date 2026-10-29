@@ -9,7 +9,8 @@ export const ProjectImages: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'project', 'displayOrder', 'published', 'allowDownload'],
     group: 'Projects',
-    description: 'Lower display order appears first. Unpublish an image to hide it without deleting the file.',
+    description:
+      'Add several photos at once from the project page. Lower display order appears first. Unpublish an image to hide it without deleting the file.',
   },
   access: {
     create: authenticated,

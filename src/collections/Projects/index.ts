@@ -4,6 +4,7 @@ import { slugField } from 'payload'
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { revalidatePortfolio } from '../../hooks/revalidatePortfolio'
+import { addProjectGalleryEndpoint } from './addGalleryImages'
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
@@ -20,6 +21,13 @@ export const Projects: CollectionConfig = {
     read: authenticatedOrPublished,
     update: authenticated,
   },
+  endpoints: [
+    {
+      path: '/:id/gallery',
+      method: 'post',
+      handler: addProjectGalleryEndpoint,
+    },
+  ],
   defaultSort: 'displayOrder',
   fields: [
     {
@@ -146,12 +154,22 @@ export const Projects: CollectionConfig = {
       },
     },
     {
+      name: 'bulkGalleryUpload',
+      type: 'ui',
+      label: 'Add photos',
+      admin: {
+        components: {
+          Field: '@/components/Projects/BulkGalleryUpload',
+        },
+      },
+    },
+    {
       name: 'gallery',
       type: 'join',
       collection: 'project-images',
       on: 'project',
       admin: {
-        description: 'Images live in Project Images. Change display order there to reorder the gallery.',
+        description: 'Photos added above appear here. Change display order on a photo to reorder the gallery.',
       },
     },
   ],
