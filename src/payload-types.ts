@@ -1157,6 +1157,15 @@ export interface Project {
    */
   showAddressPublicly?: boolean | null;
   featuredImage?: (number | null) | Media;
+  galleryBatch?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   styles?: (number | Style)[] | null;
   spaces?: (number | Space)[] | null;
   featured?: boolean | null;
@@ -1173,7 +1182,7 @@ export interface Project {
    */
   summary?: string | null;
   /**
-   * Photos added above appear here. Change display order on a photo to reorder the gallery.
+   * Gallery photos for this project. Choose the featured image in Project photos above. Change display order on a photo to reorder the gallery.
    */
   gallery?: {
     docs?: (number | ProjectImage)[];
@@ -2206,6 +2215,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   suburb?: T;
   showAddressPublicly?: T;
   featuredImage?: T;
+  galleryBatch?: T;
   styles?: T;
   spaces?: T;
   featured?: T;

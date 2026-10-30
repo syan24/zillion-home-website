@@ -2,9 +2,20 @@ import { getPayload, type Payload, type PayloadRequest } from 'payload'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { addProjectGalleryEndpoint } from '@/collections/Projects/addGalleryImages'
+import { galleryCardsFromDocs, mediaIDFromField } from '@/components/Projects/galleryCards'
 import { buildMediaUploadFormData } from '@/components/Projects/mediaUploadFormData'
+import {
+  buildGalleryBatch,
+  keepFeaturedId,
+  withinGalleryLimit,
+} from '@/components/Projects/pendingProjectPhotos'
+import { projectPhotoCopy } from '@/components/Projects/projectPhotoCopy'
 import { uploadGalleryFiles } from '@/components/Projects/uploadGalleryFiles'
-import { isGalleryImageFile, titleFromFilename } from '@/lib/projects/galleryTitle'
+import {
+  isGalleryImageFile,
+  MAX_GALLERY_UPLOAD,
+  titleFromFilename,
+} from '@/lib/projects/galleryTitle'
 import { loadProjectDetail } from '@/lib/projects/loadPortfolio'
 import config from '@/payload.config'
 
@@ -26,6 +37,59 @@ describe('gallery file names', () => {
     expect(isGalleryImageFile({ name: 'room.png', type: 'image/png' })).toBe(true)
     expect(isGalleryImageFile({ name: 'room.heic', type: '' })).toBe(true)
     expect(isGalleryImageFile({ name: 'notes.pdf', type: 'application/pdf' })).toBe(false)
+  })
+})
+
+describe('project photo batch', () => {
+  it('keeps one featured photo and places it first', () => {
+    expect(keepFeaturedId(['a', 'b'], 'b')).toBe('b')
+    expect(keepFeaturedId(['a', 'b'], 'missing')).toBe('a')
+    expect(keepFeaturedId([], 'a')).toBeNull()
+    expect(withinGalleryLimit(39, 1, MAX_GALLERY_UPLOAD)).toBe(true)
+    expect(withinGalleryLimit(39, 2, MAX_GALLERY_UPLOAD)).toBe(false)
+
+    expect(
+      buildGalleryBatch(
+        [
+          { filename: 'kitchen-hero.png', id: 'a', mediaID: 1 },
+          { filename: 'bath-photo.png', id: 'b', mediaID: 2 },
+        ],
+        'b',
+      ),
+    ).toEqual({
+      featuredImage: 2,
+      items: [
+        { filename: 'bath-photo.png', mediaID: 2 },
+        { filename: 'kitchen-hero.png', mediaID: 1 },
+      ],
+    })
+  })
+
+  it('reads gallery cards and the featured media id', () => {
+    expect(mediaIDFromField(4)).toBe(4)
+    expect(mediaIDFromField({ id: 9 })).toBe(9)
+    expect(mediaIDFromField(null)).toBeNull()
+    expect(
+      galleryCardsFromDocs([
+        {
+          id: 3,
+          image: { id: 8, sizes: { thumbnail: { url: '/thumb.jpg' } }, url: '/full.jpg' },
+          title: 'kitchen hero',
+        },
+      ]),
+    ).toEqual([{ key: 'image-3', mediaID: 8, src: '/thumb.jpg', title: 'kitchen hero' }])
+  })
+
+  it('uses the same phrases in English and Chinese', () => {
+    const english = projectPhotoCopy('en')
+    const chinese = projectPhotoCopy('zh')
+    expect(english.title).toBe('Project photos')
+    expect(chinese.title).toBe('项目照片')
+    expect(english.tooMany(40)).toContain('40')
+    expect(chinese.tooMany(40)).toContain('40')
+    expect(english.progress(1, 2, 'kitchen-hero.png')).toContain('kitchen-hero.png')
+    expect(chinese.progress(1, 2, 'kitchen-hero.png')).toContain('kitchen-hero.png')
+    expect(Object.keys(english).sort()).toEqual(Object.keys(chinese).sort())
   })
 })
 
@@ -236,11 +300,141 @@ describe('project gallery endpoint', () => {
     })
 
     const detail = await loadProjectDetail(`gallery-${stamp}`, 'en')
-    expect(detail?.images.map((image) => image.title)).toEqual(['kitchen hero', 'bath photo', 'kitchen hero'])
+    expect(detail?.images.map((image) => image.title)).toEqual([
+      'kitchen hero',
+      'bath photo',
+      'kitchen hero',
+    ])
     expect(detail?.images[0]?.downloadHref).toBe(`/projects/images/${body.created[0].id}/download`)
 
     const chinese = await loadProjectDetail(`gallery-${stamp}`, 'zh')
     expect(chinese?.images[0]?.title).toBe('kitchen hero')
+  }, 60_000)
+
+  it('creates gallery rows and the featured image while the project is created', async () => {
+    const stamp = Date.now()
+    const user = await payload.create({
+      collection: 'users',
+      data: {
+        email: `batch-${stamp}@example.com`,
+        password: 'test-password-123',
+      },
+    })
+    const kitchen = await createMedia(payload, `batch-kitchen-${stamp}.png`)
+    const bath = await createMedia(payload, `batch-bath-${stamp}.png`)
+    const notes = await payload.create({
+      collection: 'media',
+      data: { alt: 'notes' },
+      file: {
+        data: Buffer.from('%PDF-1.1\n'),
+        mimetype: 'application/pdf',
+        name: `batch-notes-${stamp}.pdf`,
+        size: Buffer.from('%PDF-1.1\n').length,
+      },
+    })
+
+    const project = await payload.create({
+      collection: 'projects',
+      context: { disableRevalidate: true },
+      data: {
+        address: '2 Gallery Street',
+        featuredImage: bath.id,
+        galleryBatch: {
+          items: [
+            { filename: 'bath-photo.png', mediaID: bath.id },
+            { filename: 'kitchen-hero.png', mediaID: kitchen.id },
+          ],
+        },
+        projectStatus: 'active',
+        slug: `batch-${stamp}`,
+        title: `Batch ${stamp}`,
+        type: 'residential',
+      },
+      overrideAccess: false,
+      user,
+    })
+
+    expect(
+      typeof project.featuredImage === 'object' ? project.featuredImage?.id : project.featuredImage,
+    ).toBe(bath.id)
+    expect(project).not.toHaveProperty('galleryBatch')
+
+    const images = await payload.find({
+      collection: 'project-images',
+      depth: 0,
+      sort: 'displayOrder',
+      where: { project: { equals: project.id } },
+    })
+    expect(images.docs.map((image) => image.title)).toEqual(['bath photo', 'kitchen hero'])
+    expect(images.docs.map((image) => image.displayOrder)).toEqual([0, 1])
+    expect(
+      images.docs.map((image) => (typeof image.image === 'object' ? image.image?.id : image.image)),
+    ).toEqual([bath.id, kitchen.id])
+
+    const localized = await payload.findByID({
+      collection: 'project-images',
+      id: images.docs[0].id,
+      locale: 'all',
+    })
+    const title = localized.title as { en?: string | null; zh?: string | null }
+    expect(title.en).toBe('bath photo')
+    expect(title.zh || null).toBeNull()
+
+    await payload.update({
+      collection: 'projects',
+      id: project.id,
+      context: { disableRevalidate: true },
+      data: {
+        galleryBatch: { items: [{ filename: 'kitchen-hero.png', mediaID: kitchen.id }] },
+      },
+      overrideAccess: false,
+      user,
+    })
+    const afterUpdate = await payload.find({
+      collection: 'project-images',
+      where: { project: { equals: project.id } },
+    })
+    expect(afterUpdate.totalDocs).toBe(2)
+
+    await expect(
+      payload.create({
+        collection: 'projects',
+        context: { disableRevalidate: true },
+        data: {
+          address: '3 Gallery Street',
+          galleryBatch: { items: [{ filename: 'notes.pdf', mediaID: notes.id }] },
+          projectStatus: 'active',
+          slug: `batch-bad-${stamp}`,
+          title: `Batch bad ${stamp}`,
+          type: 'residential',
+        },
+        overrideAccess: false,
+        user,
+      }),
+    ).rejects.toThrow(/image/i)
+
+    const rejected = await payload.find({
+      collection: 'projects',
+      where: { slug: { equals: `batch-bad-${stamp}` } },
+    })
+    expect(rejected.totalDocs).toBe(0)
+
+    await expect(
+      payload.create({
+        collection: 'projects',
+        context: { disableRevalidate: true },
+        data: {
+          address: '4 Gallery Street',
+          galleryBatch: { items: [] },
+          projectStatus: 'active',
+          slug: `batch-empty-${stamp}`,
+          title: `Batch empty ${stamp}`,
+          type: 'residential',
+        },
+        overrideAccess: false,
+        user,
+      }),
+    ).rejects.toThrow(/1 and 40/)
   }, 60_000)
 })
 
