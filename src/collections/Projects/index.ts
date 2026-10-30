@@ -5,6 +5,7 @@ import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { revalidatePortfolio } from '../../hooks/revalidatePortfolio'
 import { addProjectGalleryEndpoint } from './addGalleryImages'
+import { attachProjectGalleryBatch, stashProjectGalleryBatch } from './attachGalleryBatch'
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
@@ -68,7 +69,9 @@ export const Projects: CollectionConfig = {
       access: {
         read: ({ req, doc }) => {
           if (req.user) return true
-          return Boolean((doc as { showAddressPublicly?: boolean } | undefined)?.showAddressPublicly)
+          return Boolean(
+            (doc as { showAddressPublicly?: boolean } | undefined)?.showAddressPublicly,
+          )
         },
       },
       admin: {
@@ -81,7 +84,8 @@ export const Projects: CollectionConfig = {
       type: 'text',
       label: 'Public location',
       admin: {
-        description: 'Suburb or general location. Shown on the website when the full address is hidden.',
+        description:
+          'Suburb or general location. Shown on the website when the full address is hidden.',
       },
     },
     {
@@ -94,10 +98,33 @@ export const Projects: CollectionConfig = {
       },
     },
     {
+      name: 'projectPhotos',
+      type: 'ui',
+      label: 'Project photos',
+      admin: {
+        components: {
+          Field: '@/components/Projects/ProjectPhotosField',
+        },
+      },
+    },
+    {
       name: 'featuredImage',
       type: 'upload',
       relationTo: 'media',
       label: 'Featured image',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'galleryBatch',
+      type: 'json',
+      virtual: true,
+      admin: {
+        hidden: true,
+        readOnly: false,
+        disableListColumn: true,
+      },
     },
     {
       name: 'styles',
@@ -154,27 +181,19 @@ export const Projects: CollectionConfig = {
       },
     },
     {
-      name: 'bulkGalleryUpload',
-      type: 'ui',
-      label: 'Add photos',
-      admin: {
-        components: {
-          Field: '@/components/Projects/BulkGalleryUpload',
-        },
-      },
-    },
-    {
       name: 'gallery',
       type: 'join',
       collection: 'project-images',
       on: 'project',
       admin: {
-        description: 'Photos added above appear here. Change display order on a photo to reorder the gallery.',
+        description:
+          'Gallery photos for this project. Choose the featured image in Project photos above. Change display order on a photo to reorder the gallery.',
       },
     },
   ],
   hooks: {
-    afterChange: [revalidatePortfolio],
+    beforeChange: [stashProjectGalleryBatch],
+    afterChange: [attachProjectGalleryBatch, revalidatePortfolio],
   },
   versions: {
     drafts: true,
