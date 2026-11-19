@@ -11,9 +11,9 @@ Until that seed exists, Home, About and Services still render the previous hardc
 | Surface | Where | Notes |
 | --- | --- | --- |
 | Home | Pages → Home | Builder hero (headline, copy, badge, hero image, enquiry link) plus layout blocks |
-| About | Pages → About | Page intro, prose, capabilities, checklist, CTA |
+| About | Pages → About | Page intro, prose, checklist, CTA. The capabilities list is not part of the page |
 | Services | Pages → Services | Intro, service sections with anchors, process, joinery feature, CTA |
-| Header navigation | Globals → Header | Primary and secondary links. The beige **Start an Enquiry** button stays in code and always goes to `/enquiry` |
+| Header navigation | Globals → Header | Primary links can include dropdown children. Our Services holds Residential, Commercial, and Custom Joinery. The beige **Start an Enquiry** button stays in code and always goes to `/enquiry` |
 | Footer | Globals → Footer | Blurb, tagline, location, service links, company links |
 | Images | Media, then the upload field on the hero or block | Replace the file in Media, or choose a different image on the block |
 
@@ -31,7 +31,7 @@ Marketing blocks (group **Marketing** in the layout editor):
 
 Hero and section images are Media uploads. Alt text can be set on the media item or overridden on that placement.
 
-Service anchors (`residential`, `commercial`, `joinery`, `interior`) keep `/services#…` links working. Edit the anchor if you change those hashes, and update the header/footer links to match.
+Service anchors (`residential`, `commercial`, `joinery`) keep `/services#…` links working and are the project-type filters behind View Related Project (`/projects?view=project&type=residential`, and the same for `commercial` and `joinery`). Edit the anchor if you change those hashes, and update the header and footer links to match. Interior Fit-out is not a promoted service.
 
 ## Live preview
 
@@ -84,7 +84,7 @@ The homepage hero uses a dusk architectural photograph with a dark left-to-right
 - runs the existing SWMS demo (Rosebery Residence, Linfield House, Marrickville Duplex)
 - uploads stock images from `src/seed/assets` (marketing images and portfolio images)
 
-Running it again does **not** overwrite pages, project records, project-image rows, or SWMS records an admin has changed. To re-seed a page, delete that page in admin and run `pnpm seed:demo` again.
+Running it again does **not** overwrite pages, project records, project-image rows, or SWMS records an admin has changed, apart from the Phase 1 alignment in `docs/03-assumptions.md` (G3). That pass never rewrites the Home briefs block. To re-seed a whole page from the current defaults, delete that page in admin and run `pnpm seed:demo` again.
 
 ### Media files
 

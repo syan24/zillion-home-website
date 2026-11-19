@@ -16,6 +16,7 @@ import {
   roomSlugs,
   type ProjectFilters,
 } from '@/lib/projects/filters'
+import { projectTypeLabel } from '@/lib/projects/types'
 import { loadPortfolio } from '@/lib/projects/loadPortfolio'
 
 type Args = {
@@ -118,7 +119,7 @@ export default async function ProjectsPage({ searchParams }: Args) {
                 <div className="flex flex-col gap-1.5">
                   <span className="font-serif text-[28px] leading-tight">{project.title}</span>
                   <span className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-                    {project.type === 'commercial' ? copy.commercial : copy.residential}
+                    {projectTypeLabel(project.type, copy)}
                     {project.location ? ` · ${project.location}` : ''}
                   </span>
                 </div>

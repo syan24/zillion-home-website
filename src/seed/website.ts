@@ -8,14 +8,8 @@ import {
   type ImageRef,
   type MarketingImageKey,
 } from '@/content/marketing'
-import {
-  alignHomeProcessLayout,
-  isLegacyHomeProcess,
-  ourProcessSteps,
-  ourProcessStepsZh,
-  readProcessSteps,
-  type ProcessLocale,
-} from '@/content/processSteps'
+import { alignHeaderNav, asNavItems, withoutInteriorLinks } from '@/content/navMenu'
+import { alignPhase1Layout } from '@/content/phase1Align'
 import { ensureSeedMedia } from '@/seed/ensureSeedMedia'
 import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
 
@@ -28,13 +22,19 @@ function filePathFor(filename: string) {
 
 type MediaIds = Record<MarketingImageKey, number>
 
-function navLink(item: { label: string; href: string }) {
+type SeedNavLink = {
+  link: { type: 'custom'; url: string; label: string }
+  children?: SeedNavLink[]
+}
+
+function navLink(item: { label: string; href: string; children?: { label: string; href: string }[] }): SeedNavLink {
   return {
     link: {
-      type: 'custom' as const,
+      type: 'custom',
       url: item.href,
       label: item.label,
     },
+    ...(item.children?.length ? { children: item.children.map((child) => navLink(child)) } : {}),
   }
 }
 
@@ -132,8 +132,11 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
           },
           {
             blockType: 'serviceCards' as const,
+            variant: homeContent.serviceCards.variant,
             eyebrow: homeContent.serviceCards.eyebrow,
             heading: homeContent.serviceCards.heading,
+            headingAccent: homeContent.serviceCards.headingAccent,
+            body: homeContent.serviceCards.body,
             cards: homeContent.serviceCards.cards.map((card) => ({
               image: imageId(ids, card.image),
               imageAlt: card.image.alt,
@@ -149,9 +152,9 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
             eyebrow: homeContent.process.eyebrow,
             heading: homeContent.process.heading,
             body: homeContent.process.body,
+            trustEyebrow: homeContent.process.trustEyebrow,
+            trustHeading: homeContent.process.trustHeading,
             trustItems: homeContent.process.trustItems.map((item) => ({
-              image: imageId(ids, item.image),
-              imageAlt: item.image.alt,
               title: item.title,
               description: item.description,
             })),
@@ -198,12 +201,6 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
             eyebrow: aboutContent.prose.eyebrow,
             heading: aboutContent.prose.heading,
             body: aboutContent.prose.body,
-          },
-          {
-            blockType: 'capabilityList' as const,
-            eyebrow: aboutContent.capabilities.eyebrow,
-            heading: aboutContent.capabilities.heading,
-            items: aboutContent.capabilities.items,
           },
           {
             blockType: 'splitFeature' as const,
@@ -267,6 +264,7 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
             variant: servicesContent.process.variant,
             eyebrow: servicesContent.process.eyebrow,
             heading: servicesContent.process.heading,
+            body: servicesContent.process.body,
             steps: servicesContent.process.steps,
           },
           {
@@ -338,7 +336,7 @@ async function alignCanvasLayout(payload: Payload, id: number, draft: boolean, i
         return {
           ...block,
           image: ids.serviceInterior,
-          imageAlt: typeof block.imageAlt === 'string' && block.imageAlt ? block.imageAlt : 'Interior fit-out',
+          imageAlt: typeof block.imageAlt === 'string' && block.imageAlt ? block.imageAlt : 'Finished interior',
         }
       }
       // The canvas enquire band is a dark photo. Only the original light demo band is flipped.
@@ -495,10 +493,17 @@ async function alignHeroTypography(payload: Payload, id: number, draft: boolean,
 }
 
 /**
- * Home used its own five step titles. When that demo list is still stored,
- * replace it with the Services page process (CMS copy when present).
+ * Rewrites known pre-feedback blocks (process, capabilities cards, category bar,
+ * services, joinery, in-house sentences). The Home briefs block is left as stored
+ * so an edited Home 01 is not overwritten.
  */
-async function alignHomeProcess(payload: Payload, id: number, draft: boolean, locale: ProcessLocale) {
+async function alignPhase1Page(
+  payload: Payload,
+  id: number,
+  draft: boolean,
+  locale: 'en' | 'zh',
+  ids: MediaIds,
+) {
   const saved = await payload.findByID({
     collection: 'pages',
     id,
@@ -508,29 +513,11 @@ async function alignHomeProcess(payload: Payload, id: number, draft: boolean, lo
     fallbackLocale: false,
     overrideAccess: true,
   })
-  if (saved.slug !== 'home' || !Array.isArray(saved.layout)) return null
-  const legacy = saved.layout.some(
-    (block) => isRecord(block) && block.blockType === 'processSection' && isLegacyHomeProcess(block.steps, locale),
-  )
-  if (!legacy) return null
-
-  let canonical = locale === 'zh' ? ourProcessStepsZh : ourProcessSteps
-  const services = await findPage(payload, 'services')
-  if (services) {
-    const servicesPage = await payload.findByID({
-      collection: 'pages',
-      id: services.id,
-      depth: 0,
-      draft: services.draft,
-      locale,
-      fallbackLocale: false,
-      overrideAccess: true,
-    })
-    const fromServices = readProcessSteps(servicesPage.layout)
-    if (fromServices.length >= 5) canonical = fromServices
-  }
-
-  const aligned = alignHomeProcessLayout(saved.layout, locale, canonical)
+  if (!Array.isArray(saved.layout) || typeof saved.slug !== 'string') return null
+  const aligned = alignPhase1Layout(saved.layout, locale, saved.slug, {
+    idea: ids.featureInterior,
+    plans: ids.trustQualified,
+  })
   if (!aligned.changed) return null
 
   await payload.update({
@@ -542,7 +529,7 @@ async function alignHomeProcess(payload: Payload, id: number, draft: boolean, lo
     context: seedContext,
     data: { layout: aligned.layout as never },
   })
-  return `page home: process steps aligned to services (${locale})`
+  return `page ${saved.slug}: phase 1 copy aligned (${locale})`
 }
 
 async function seedPages(payload: Payload, ids: MediaIds) {
@@ -602,8 +589,8 @@ async function seedPages(payload: Payload, ids: MediaIds) {
     if (aligned) summary.push(aligned)
     const heroAligned = id ? await alignHeroTypography(payload, id, draft, 'en') : null
     if (heroAligned) summary.push(heroAligned)
-    const processAligned = id ? await alignHomeProcess(payload, id, draft, 'en') : null
-    if (processAligned) summary.push(processAligned)
+    const phaseAligned = id ? await alignPhase1Page(payload, id, draft, 'en', ids) : null
+    if (phaseAligned) summary.push(phaseAligned)
 
     if (!zhPage) continue
 
@@ -620,8 +607,8 @@ async function seedPages(payload: Payload, ids: MediaIds) {
     if (zhSaved.title) {
       const zhHero = await alignHeroTypography(payload, id, draft, 'zh')
       summary.push(zhHero || `page ${page.slug}: zh kept`)
-      const zhProcess = await alignHomeProcess(payload, id, draft, 'zh')
-      if (zhProcess) summary.push(zhProcess)
+      const zhPhase = await alignPhase1Page(payload, id, draft, 'zh', ids)
+      if (zhPhase) summary.push(zhPhase)
       continue
     }
 
@@ -668,9 +655,15 @@ async function seedGlobals(payload: Payload) {
 
   if (!header.navItems?.length) {
     headerData.navItems = english.header.primary.map(navLink)
+  } else {
+    const aligned = alignHeaderNav(asNavItems(header.navItems), 'en')
+    if (aligned.changed) headerData.navItems = aligned.items
   }
   if (!header.secondaryNavItems?.length) {
     headerData.secondaryNavItems = english.header.secondary.map(navLink)
+  } else {
+    const aligned = withoutInteriorLinks(header.secondaryNavItems)
+    if (aligned.changed) headerData.secondaryNavItems = aligned.items
   }
   if (Object.keys(headerData).length) {
     await payload.updateGlobal({
@@ -680,7 +673,7 @@ async function seedGlobals(payload: Payload) {
       context: seedContext,
       data: headerData,
     })
-    summary.push('header: filled empty navigation')
+    summary.push(header.navItems?.length ? 'header: services grouped' : 'header: filled empty navigation')
   } else {
     summary.push('header: english kept')
   }
@@ -691,6 +684,10 @@ async function seedGlobals(payload: Payload) {
   if (!footer.tagline) footerData.tagline = english.footer.tagline
   if (!footer.location) footerData.location = english.footer.location
   if (!footer.serviceLinks?.length) footerData.serviceLinks = english.footer.services.map(navLink)
+  else {
+    const aligned = withoutInteriorLinks(footer.serviceLinks)
+    if (aligned.changed) footerData.serviceLinks = aligned.items
+  }
   if (!footer.navItems?.length) footerData.navItems = english.footer.company.map(navLink)
 
   if (Object.keys(footerData).length) {
@@ -769,26 +766,71 @@ async function fillFooterLocale(
   return 'footer: zh filled'
 }
 
-function localizeNav(
-  items: { id?: string | null; link?: { type?: string | null; url?: string | null; label?: string | null; newTab?: boolean | null } | null }[] | null | undefined,
-  translations: { label: string; href: string }[],
-) {
-  if (!items?.length) return null
-  if (items.every((item) => item.link?.label)) return null
+type NavTranslation = { label: string; href: string; children?: NavTranslation[] }
 
-  return items.map((item) => {
-    const href = item.link?.url
-    const match = translations.find((entry) => entry.href === href)
+type StoredNavItem = {
+  id?: string | null
+  link?: { type?: string | null; url?: string | null; label?: string | null; newTab?: boolean | null } | null
+  children?: StoredNavItem[] | null
+}
+
+type LocalizedNav = {
+  id?: string | null
+  link: {
+    type: 'reference' | 'custom'
+    url?: string | null
+    newTab?: boolean | null
+    label: string
+  }
+  children?: LocalizedNav[]
+}
+
+function findTranslation(translations: NavTranslation[], href: string | null | undefined): NavTranslation | undefined {
+  if (!href) return undefined
+  for (const entry of translations) {
+    if (entry.href === href) return entry
+    const nested = entry.children ? findTranslation(entry.children, href) : undefined
+    if (nested) return nested
+  }
+  return undefined
+}
+
+function storedNav(items: StoredNavItem[]): LocalizedNav[] {
+  return items.map((item) => ({
+    id: item.id,
+    link: {
+      type: item.link?.type === 'reference' ? 'reference' : 'custom',
+      url: item.link?.url,
+      newTab: item.link?.newTab,
+      label: item.link?.label || '',
+    },
+    ...(item.children?.length ? { children: storedNav(item.children) } : {}),
+  }))
+}
+
+function localizeNav(items: StoredNavItem[] | null | undefined, translations: NavTranslation[]): LocalizedNav[] | null {
+  if (!items?.length) return null
+  let changed = false
+  const next: LocalizedNav[] = items.map((item) => {
+    const match = findTranslation(translations, item.link?.url)
+    const label = item.link?.label || match?.label || ''
+    if (!item.link?.label && match?.label) changed = true
+    const childTranslations = match?.children?.length ? match.children : translations
+    const localizedChildren = item.children?.length ? localizeNav(item.children, childTranslations) : null
+    if (localizedChildren) changed = true
+    const children = localizedChildren || (item.children?.length ? storedNav(item.children) : undefined)
     return {
       id: item.id,
       link: {
-        type: item.link?.type === 'reference' ? ('reference' as const) : ('custom' as const),
+        type: item.link?.type === 'reference' ? 'reference' : 'custom',
         url: item.link?.url,
         newTab: item.link?.newTab,
-        label: item.link?.label || match?.label || '',
+        label,
       },
+      ...(children ? { children } : {}),
     }
   })
+  return changed ? next : null
 }
 
 export async function seedWebsite(payload: Payload) {

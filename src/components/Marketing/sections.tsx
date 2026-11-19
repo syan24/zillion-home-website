@@ -1,8 +1,10 @@
 import React, { Fragment } from 'react'
 import Link from 'next/link'
 
+import { isLegacyEnquireLabel } from '@/content/phase1Align'
 import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { Button } from '@/components/ui/button'
+import { relatedProjectHrefForAnchor } from '@/lib/projects/types'
 import { cn } from '@/utilities/ui'
 
 export type MarketingImage = { src?: string | null; alt?: string | null }
@@ -31,12 +33,7 @@ const linkChrome =
   'h-auto rounded-none px-10 py-5 text-[11px] font-normal uppercase tracking-[0.3em] shadow-none'
 
 const romans = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII']
-const capabilityHrefs = [
-  '/services#residential',
-  '/services#commercial',
-  '/services#joinery',
-  '/services#interior',
-]
+const capabilityHrefs = ['/services#residential', '/services#commercial', '/services#joinery']
 
 const statementGold = ['living', 'working', 'business', '居住', '工作', '商业']
 
@@ -101,7 +98,7 @@ function Eyebrow({
 }
 
 /** One flowing line. A stored newline must not force a break inside a display heading. */
-export function goldPhrase(text?: string | null, phrase?: string | null) {
+export function goldPhrase(text?: string | null, phrase?: string | null, accentClass = 'italic text-accent-gold') {
   const value = (text || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
   const mark = (phrase || '').trim()
   if (!value) return null
@@ -111,7 +108,7 @@ export function goldPhrase(text?: string | null, phrase?: string | null) {
   return (
     <>
       {value.slice(0, index)}
-      <em className="italic text-accent-gold">{value.slice(index, index + mark.length)}</em>
+      <em className={accentClass}>{value.slice(index, index + mark.length)}</em>
       {value.slice(index + mark.length)}
     </>
   )
@@ -237,12 +234,18 @@ export function HomeHero({
 }
 
 export function ServiceCards({
+  variant = 'grid',
   eyebrow,
   heading,
+  headingAccent,
+  body,
   cards,
 }: {
+  variant?: 'grid' | 'pair' | null
   eyebrow?: string | null
   heading?: string | null
+  headingAccent?: string | null
+  body?: string | null
   cards?: {
     title?: string | null
     subtitle?: string | null
@@ -251,6 +254,46 @@ export function ServiceCards({
     image?: MarketingImage | null
   }[] | null
 }) {
+  const visible = (cards || []).filter(
+    (card) => !card.href?.includes('#interior') && !/interior fit-out|室内装修|室内交付/i.test(card.title || ''),
+  )
+  if (variant === 'pair') {
+    return (
+      <section id="difference" className="bg-background-warm py-[clamp(96px,10vw,150px)]">
+        <div className={cn(wrap, 'flex flex-col gap-14')}>
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+            <Eyebrow rule>{eyebrow}</Eyebrow>
+            {heading && (
+              <h2 className={cn(display, 'text-[clamp(40px,4.8vw,72px)] leading-[1.05]')}>
+                {goldPhrase(heading, headingAccent, 'italic')}
+              </h2>
+            )}
+            {body && <p className="max-w-xl text-base leading-8 text-foreground-soft">{body}</p>}
+          </div>
+          <div className="grid gap-8 lg:grid-cols-2">
+            {visible.map((card, index) => (
+              <article
+                key={card.title || index}
+                className="grid items-center gap-6 bg-background p-4 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.15fr)] sm:p-6"
+              >
+                <PlaceholderImage
+                  src={card.image?.src || undefined}
+                  alt={card.image?.alt || card.title || ''}
+                  aspectRatio="3/4"
+                  className="bg-[#d9d2c5]"
+                />
+                <div className="flex flex-col gap-4 px-1 py-2 sm:pr-4">
+                  <h3 className="font-serif text-[clamp(26px,2.4vw,34px)] font-normal leading-tight">{card.title}</h3>
+                  {card.description && <p className="text-[15px] leading-7 text-[#5c564d]">{card.description}</p>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section id="services" className="bg-background-warm py-[clamp(96px,10vw,150px)]">
       <div className={cn(wrap, 'flex flex-col gap-16')}>
@@ -267,7 +310,7 @@ export function ServiceCards({
           </Link>
         </div>
         <div className="grid gap-7 sm:grid-cols-2 xl:grid-cols-4">
-          {(cards || []).map((card, index) => (
+          {visible.map((card, index) => (
             <Link
               key={card.title || card.href || index}
               href={card.href || '/services'}
@@ -560,7 +603,7 @@ export function SplitFeature({
               {lines(heading)}
               {headingAccent && (
                 <>
-                  {heading ? ' ' : null}
+                  {heading ? <br /> : null}
                   <em className="italic text-accent-tan">{headingAccent}</em>
                 </>
               )}
@@ -646,6 +689,8 @@ export function ProcessSection({
   eyebrow,
   heading,
   body,
+  trustEyebrow,
+  trustHeading,
   trustItems,
   steps,
 }: {
@@ -653,6 +698,8 @@ export function ProcessSection({
   eyebrow?: string | null
   heading?: string | null
   body?: string | null
+  trustEyebrow?: string | null
+  trustHeading?: string | null
   trustItems?: {
     title?: string | null
     description?: string | null
@@ -660,60 +707,63 @@ export function ProcessSection({
   }[] | null
   steps?: { title?: string | null; description?: string | null }[] | null
 }) {
+  const list = steps || []
+  const columns = list.length > 4 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'
+  const chinese = Boolean(
+    trustItems?.some((item) => item.title?.match(/[\u4e00-\u9fff]/)) ||
+      trustHeading?.match(/[\u4e00-\u9fff]/) ||
+      heading?.match(/[\u4e00-\u9fff]/),
+  )
+  const whyEyebrow = trustEyebrow || (chinese ? '为什么选择 Zillion Home' : 'Why Zillion Home')
+  const whyHeading = trustHeading || (chinese ? '始终把整体放在心里。' : 'Built with the bigger picture in mind.')
+
   return (
     <>
-      <section id="process" className="bg-dark py-[clamp(96px,10vw,160px)] text-dark-foreground">
-        <div className={cn(wrap, 'flex flex-col gap-[clamp(64px,8vw,110px)]')}>
-          <div className="grid items-end gap-12 lg:grid-cols-2">
-            <div className="flex flex-col gap-6">
-              <Eyebrow tone="dark">{eyebrow}</Eyebrow>
-              {heading && (
-                <h2 className={cn(display, 'text-[clamp(44px,5.4vw,84px)] leading-none')}>{lines(heading)}</h2>
-              )}
-            </div>
-            {body && <p className="max-w-lg text-base leading-8 text-[#b5ac9e]">{body}</p>}
+      <section id="process" className="bg-background py-[clamp(96px,10vw,160px)]">
+        <div className={cn(wrap, 'flex flex-col gap-[clamp(56px,7vw,96px)]')}>
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
+            <Eyebrow>{eyebrow}</Eyebrow>
+            {heading && (
+              <h2 className={cn(display, 'text-[clamp(32px,3.4vw,48px)] italic leading-tight')}>{lines(heading)}</h2>
+            )}
+            {body && <p className="max-w-2xl text-base leading-8 text-foreground-soft">{body}</p>}
           </div>
-          <ol className="grid list-none border-t border-[#efe9de]/20 sm:grid-cols-2 lg:grid-cols-5">
-            {(steps || []).map((step, index) => (
-              <li key={step.title || index} className="flex flex-col gap-10 py-8 pr-6">
-                <span className={cn(display, 'text-[56px] leading-none text-accent')}>
-                  {String(index + 1).padStart(2, '0')}
-                </span>
-                <div className="flex flex-col gap-3">
-                  <h3 className="font-serif text-[26px] font-normal leading-tight">{step.title}</h3>
-                  {step.description && <p className="text-sm leading-7 text-[#9d9486]">{step.description}</p>}
-                </div>
+          <ol className={cn('grid list-none gap-y-12 sm:grid-cols-2', columns)}>
+            {list.map((step, index) => (
+              <li key={step.title || index} className="relative flex flex-col gap-4 px-4 text-center sm:px-6">
+                {index > 0 && (
+                  <span
+                    className="absolute left-0 top-1 hidden -translate-x-1/2 text-accent-tan lg:block"
+                    aria-hidden
+                  >
+                    →
+                  </span>
+                )}
+                <h3 className="font-serif text-[15px] tracking-wide">
+                  <span className="text-accent-tan">{String(index + 1).padStart(2, '0')}</span>
+                  <span className="text-muted-foreground"> / </span>
+                  <span>{step.title}</span>
+                </h3>
+                {step.description && <p className="text-sm leading-7 text-[#5c564d]">{step.description}</p>}
               </li>
             ))}
           </ol>
         </div>
       </section>
       {!!trustItems?.length && (
-        <section className="bg-background py-[clamp(96px,10vw,160px)]">
-          <div className={cn(wrap, 'flex flex-col gap-16')}>
+        <section id="why" className="bg-background pb-[clamp(96px,10vw,160px)]">
+          <div className={cn(wrap, 'flex flex-col gap-16 border-t border-border pt-[clamp(80px,8vw,120px)]')}>
             <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
-              <Eyebrow>
-                {trustItems.some((item) => item.title?.match(/[\u4e00-\u9fff]/)) ? '我们的保证' : 'Our assurances'}
-              </Eyebrow>
-              <h2 className={cn(display, 'max-w-[16ch] text-[clamp(40px,4.6vw,72px)] leading-none')}>
-                {trustItems.some((item) => item.title?.match(/[\u4e00-\u9fff]/))
-                  ? '看得见的工艺，感受得到的把握。'
-                  : 'Craft you can see. Confidence you can feel.'}
+              <Eyebrow>{whyEyebrow}</Eyebrow>
+              <h2 className={cn(display, 'max-w-[18ch] text-[clamp(36px,4vw,60px)] italic leading-tight')}>
+                {whyHeading}
               </h2>
             </div>
             <div className="grid gap-12 md:grid-cols-3">
               {trustItems.map((item) => (
-                <div key={item.title} className="flex flex-col gap-6">
-                  <PlaceholderImage
-                    src={item.image?.src || undefined}
-                    alt={item.image?.alt || item.title || ''}
-                    aspectRatio="4/3"
-                    className="aspect-[5/4] bg-[#d9d2c5]"
-                  />
-                  <div className="flex flex-col gap-2.5 text-center">
-                    <h3 className="font-serif text-[28px] font-normal">{item.title}</h3>
-                    <p className="text-sm leading-7 text-[#5c564d]">{item.description}</p>
-                  </div>
+                <div key={item.title} className="flex flex-col gap-4 text-center">
+                  <h3 className="font-serif text-[26px] font-normal">{item.title}</h3>
+                  {item.description && <p className="text-sm leading-7 text-[#5c564d]">{item.description}</p>}
                 </div>
               ))}
             </div>
@@ -741,7 +791,9 @@ export function CategoryBar({
           <p className={cn(display, 'text-[clamp(36px,4.4vw,68px)] leading-[1.12]')}>{lines(heading, true)}</p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[11px] uppercase tracking-[0.26em] text-muted-foreground">
-          {(items || []).map((item, index) => (
+          {(items || [])
+            .filter((item) => !/interior fit-out|室内装修|室内交付/i.test(item.title || ''))
+            .map((item, index) => (
             <Fragment key={item.title || index}>
               {index > 0 && <span aria-hidden>·</span>}
               <span>{item.title}</span>
@@ -818,6 +870,7 @@ export function CtaBand({
 export function ServiceDetails({
   services,
   featuresLabel = 'What we deliver',
+  relatedLabel = 'View Related Project',
 }: {
   services?: {
     anchor?: string | null
@@ -829,12 +882,15 @@ export function ServiceDetails({
     enquireLabel?: string | null
   }[] | null
   featuresLabel?: string
+  relatedLabel?: string
 }) {
-  const list = services || []
+  const list = (services || []).filter(
+    (service) => service.anchor !== 'interior' && !/interior fit-out|室内装修|室内交付/i.test(service.title || ''),
+  )
   return (
     <div className={cn(wrap, 'flex flex-col gap-[clamp(96px,11vw,170px)] py-[clamp(80px,10vw,150px)]')}>
       {list.length > 0 && (
-        <nav className="grid border-t border-[#f5f2ec]/0 sm:grid-cols-2 lg:grid-cols-4">
+        <nav className={cn('grid border-t border-[#f5f2ec]/0 sm:grid-cols-2', list.length > 3 ? 'lg:grid-cols-4' : 'lg:grid-cols-3')}>
           {list.map((service, index) => (
             <a
               key={service.anchor || service.title || index}
@@ -880,14 +936,32 @@ export function ServiceDetails({
                 </ul>
               </div>
             )}
-            {service.enquireLabel && (
-              <Link href="/enquiry" className="self-start border-b border-current pb-1.5 text-[11px] uppercase tracking-[0.28em]">
-                {service.enquireLabel}
-              </Link>
-            )}
+            <ServiceAction anchor={service.anchor} label={service.enquireLabel} relatedLabel={relatedLabel} />
           </div>
         </section>
       ))}
     </div>
+  )
+}
+
+function ServiceAction({
+  anchor,
+  label,
+  relatedLabel,
+}: {
+  anchor?: string | null
+  label?: string | null
+  relatedLabel: string
+}) {
+  const href = relatedProjectHrefForAnchor(anchor)
+  if (!href && !label) return null
+  const text = href && (!label || isLegacyEnquireLabel(label)) ? relatedLabel : label
+  return (
+    <Link
+      href={href || '/enquiry'}
+      className="self-start border-b border-current pb-1.5 text-[11px] uppercase tracking-[0.28em]"
+    >
+      {text}
+    </Link>
   )
 }

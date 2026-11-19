@@ -773,8 +773,14 @@ export interface PageIntroBlock {
  * via the `definition` "ServiceCardsBlock".
  */
 export interface ServiceCardsBlock {
+  /**
+   * Two starting points is the Home “What makes us different” pair. Title, accent, body, and each card image are editable.
+   */
+  variant?: ('grid' | 'pair') | null;
   eyebrow?: string | null;
   heading?: string | null;
+  headingAccent?: string | null;
+  body?: string | null;
   cards?:
     | {
         image?: (number | null) | Media;
@@ -853,6 +859,14 @@ export interface ProcessSectionBlock {
   eyebrow?: string | null;
   heading?: string | null;
   body?: string | null;
+  /**
+   * Shown above the reason columns. Home uses “Why Zillion Home”.
+   */
+  trustEyebrow?: string | null;
+  /**
+   * Home uses “Built with the bigger picture in mind.”
+   */
+  trustHeading?: string | null;
   trustItems?:
     | {
         image?: (number | null) | Media;
@@ -981,7 +995,7 @@ export interface ServiceDetailsBlock {
          */
         imageAlt?: string | null;
         /**
-         * Links to /enquiry. Leave blank to hide.
+         * Button under this service. Residential, commercial, and joinery link to the projects gallery for that type. Leave blank to use “View Related Project”.
          */
         enquireLabel?: string | null;
         id?: string | null;
@@ -1141,7 +1155,7 @@ export interface Project {
    */
   generateSlug?: boolean | null;
   slug?: string | null;
-  type: 'residential' | 'commercial';
+  type: 'residential' | 'commercial' | 'joinery';
   shortDescription?: string | null;
   description?: string | null;
   /**
@@ -1864,8 +1878,11 @@ export interface PageIntroBlockSelect<T extends boolean = true> {
  * via the `definition` "ServiceCardsBlock_select".
  */
 export interface ServiceCardsBlockSelect<T extends boolean = true> {
+  variant?: T;
   eyebrow?: T;
   heading?: T;
+  headingAccent?: T;
+  body?: T;
   cards?:
     | T
     | {
@@ -1921,6 +1938,8 @@ export interface ProcessSectionBlockSelect<T extends boolean = true> {
   eyebrow?: T;
   heading?: T;
   body?: T;
+  trustEyebrow?: T;
+  trustHeading?: T;
   trustItems?:
     | T
     | {
@@ -2723,6 +2742,24 @@ export interface Header {
           url?: string | null;
           label: string;
         };
+        /**
+         * Optional. These links open under this item. Leave empty for a normal top-level link.
+         */
+        children?:
+          | {
+              link: {
+                type?: ('reference' | 'custom') | null;
+                newTab?: boolean | null;
+                reference?: {
+                  relationTo: 'pages';
+                  value: number | Page;
+                } | null;
+                url?: string | null;
+                label: string;
+              };
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
@@ -2808,6 +2845,20 @@ export interface HeaderSelect<T extends boolean = true> {
               reference?: T;
               url?: T;
               label?: T;
+            };
+        children?:
+          | T
+          | {
+              link?:
+                | T
+                | {
+                    type?: T;
+                    newTab?: T;
+                    reference?: T;
+                    url?: T;
+                    label?: T;
+                  };
+              id?: T;
             };
         id?: T;
       };

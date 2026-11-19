@@ -78,8 +78,23 @@ export const ServiceCards: Block = {
   labels: { singular: 'Service cards', plural: 'Service cards' },
   ...marketingAdmin,
   fields: [
+    {
+      name: 'variant',
+      type: 'select',
+      defaultValue: 'grid',
+      options: [
+        { label: 'Image grid', value: 'grid' },
+        { label: 'Two starting points', value: 'pair' },
+      ],
+      admin: {
+        description:
+          'Two starting points is the Home “What makes us different” pair. Title, accent, body, and each card image are editable.',
+      },
+    },
     { name: 'eyebrow', type: 'text' },
     { name: 'heading', type: 'text' },
+    { name: 'headingAccent', type: 'text', label: 'Accent phrase' },
+    { name: 'body', type: 'textarea' },
     {
       name: 'cards',
       type: 'array',
@@ -156,6 +171,18 @@ export const ProcessSection: Block = {
     { name: 'eyebrow', type: 'text' },
     { name: 'heading', type: 'text' },
     { name: 'body', type: 'textarea' },
+    {
+      name: 'trustEyebrow',
+      type: 'text',
+      label: 'Reasons eyebrow',
+      admin: { description: 'Shown above the reason columns. Home uses “Why Zillion Home”.' },
+    },
+    {
+      name: 'trustHeading',
+      type: 'text',
+      label: 'Reasons heading',
+      admin: { description: 'Home uses “Built with the bigger picture in mind.”' },
+    },
     {
       name: 'trustItems',
       type: 'array',
@@ -278,7 +305,15 @@ export const ServiceDetails: Block = {
         },
         imageField(),
         imageAltField,
-        { name: 'enquireLabel', type: 'text', admin: { description: 'Links to /enquiry. Leave blank to hide.' } },
+        {
+          name: 'enquireLabel',
+          type: 'text',
+          label: 'Related projects label',
+          admin: {
+            description:
+              'Button under this service. Residential, commercial, and joinery link to the projects gallery for that type. Leave blank to use “View Related Project”.',
+          },
+        },
       ],
     },
   ],

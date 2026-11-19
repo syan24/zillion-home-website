@@ -1,3 +1,5 @@
+import { isProjectType, type ProjectType } from '@/lib/projects/types'
+
 export const roomSlugs = [
   'kitchen',
   'bathroom',
@@ -10,7 +12,7 @@ export const roomSlugs = [
 ] as const
 
 export type RoomSlug = (typeof roomSlugs)[number]
-export type ProjectTypeFilter = 'residential' | 'commercial'
+export type ProjectTypeFilter = ProjectType
 
 export type ProjectFilters = {
   type?: ProjectTypeFilter
@@ -33,7 +35,7 @@ function one(params: SearchParams, key: string) {
 export function parseProjectFilters(params: SearchParams): ProjectFilters {
   const type = one(params, 'type')
   return {
-    type: type === 'residential' || type === 'commercial' ? type : undefined,
+    type: isProjectType(type) ? type : undefined,
     style: one(params, 'style'),
     space: one(params, 'space'),
     project: one(params, 'project'),

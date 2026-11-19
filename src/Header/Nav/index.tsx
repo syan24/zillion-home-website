@@ -2,12 +2,14 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { ChevronDown } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 import type { Header as HeaderType } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { Button } from '@/components/ui/button'
+import { alignHeaderNav, asNavItems, navHref, type NavItemRecord } from '@/content/navMenu'
 import { cn } from '@/utilities/ui'
 import type { SiteLocale } from '@/i18n/config'
 import { getMessages } from '@/i18n/messages'
@@ -25,25 +27,35 @@ const menuType = 'font-sans text-[11px] font-light uppercase tracking-[0.24em]'
 
 const linkClass = cn(menuType, 'text-current no-underline transition-opacity hover:no-underline hover:opacity-70')
 
+function defaultPrimary(locale: SiteLocale): NavItemRecord[] {
+  return [
+    { link: { type: 'custom', url: '/', label: locale === 'zh' ? '首页' : 'Home' } },
+    {
+      link: { type: 'custom', url: '/services', label: locale === 'zh' ? '我们的服务' : 'Our Services' },
+      children: [
+        { link: { type: 'custom', url: '/services#residential', label: locale === 'zh' ? '住宅施工' : 'Residential' } },
+        { link: { type: 'custom', url: '/services#commercial', label: locale === 'zh' ? '商业装修' : 'Commercial' } },
+        { link: { type: 'custom', url: '/services#joinery', label: locale === 'zh' ? '定制木作' : 'Custom Joinery' } },
+      ],
+    },
+  ]
+}
+
+function defaultSecondary(locale: SiteLocale): NavItemRecord[] {
+  return [
+    { link: { type: 'custom', url: '/projects', label: locale === 'zh' ? '项目' : 'Projects' } },
+    { link: { type: 'custom', url: '/about', label: locale === 'zh' ? '关于我们' : 'About Us' } },
+  ]
+}
+
 export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = false, onDark = false }) => {
   const copy = getMessages(locale)
   const pathname = usePathname()
-  const cmsNavItems = data?.navItems || []
-  const cmsSecondaryItems = data?.secondaryNavItems || []
-  const navItems = cmsNavItems.length > 0 || cmsSecondaryItems.length > 0 ? cmsNavItems : null
-
-  const defaultNavItems = [
-    { href: '/', label: locale === 'zh' ? '首页' : 'Home' },
-    { href: '/services#residential', label: locale === 'zh' ? '住宅施工' : 'Residential' },
-    { href: '/services#commercial', label: locale === 'zh' ? '商业装修' : 'Commercial' },
-    { href: '/services#joinery', label: locale === 'zh' ? '定制木作' : 'Custom Joinery' },
-    { href: '/services#interior', label: locale === 'zh' ? '室内交付' : 'Interior Fit-out' },
-  ]
-
-  const secondaryNavItems = [
-    { href: '/projects', label: locale === 'zh' ? '项目' : 'Projects' },
-    { href: '/about', label: locale === 'zh' ? '关于我们' : 'About Us' },
-  ]
+  const cmsNavItems = asNavItems(data?.navItems)
+  const cmsSecondaryItems = asNavItems(data?.secondaryNavItems)
+  const usingCms = cmsNavItems.length > 0 || cmsSecondaryItems.length > 0
+  const navItems = usingCms ? alignHeaderNav(cmsNavItems, locale).items : defaultPrimary(locale)
+  const secondaryItems = usingCms ? cmsSecondaryItems : defaultSecondary(locale)
 
   const active = (href: string) => {
     const path = href.split('#')[0] || '/'
@@ -59,33 +71,17 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
       )}
     >
       <div className={cn(mobile ? 'flex flex-col gap-3' : 'flex flex-wrap items-center gap-x-7 gap-y-2')}>
-        {navItems
-          ? navItems.map(({ link }, i) => (
-              <CMSLink key={i} {...link} appearance="inline" className={linkClass} />
-            ))
-          : defaultNavItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(linkClass, active(item.href) && 'border-b border-current pb-1')}
-              >
-                {item.label}
-              </Link>
-            ))}
-        {(navItems ? cmsSecondaryItems.length > 0 : true) &&
-          (navItems
-            ? cmsSecondaryItems.map(({ link }, i) => (
-                <CMSLink key={`secondary-${i}`} {...link} appearance="inline" className={linkClass} />
-              ))
-            : secondaryNavItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(linkClass, active(item.href) && 'border-b border-current pb-1')}
-                >
-                  {item.label}
-                </Link>
-              )))}
+        {navItems.map((item, index) => (
+          <NavEntry key={item.id || navHref(item) || index} item={item} mobile={mobile} active={active} />
+        ))}
+        {secondaryItems.map((item, index) => (
+          <NavEntry
+            key={item.id || `secondary-${navHref(item) || index}`}
+            item={item}
+            mobile={mobile}
+            active={active}
+          />
+        ))}
       </div>
 
       <div className={cn(mobile ? 'flex flex-col gap-3 border-t border-border pt-3' : 'flex items-center gap-5')}>
@@ -127,5 +123,69 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
         </Button>
       </div>
     </nav>
+  )
+}
+
+function linkProps(item: NavItemRecord) {
+  return {
+    type: item.link?.type,
+    url: item.link?.url,
+    label: item.link?.label,
+    newTab: item.link?.newTab,
+    reference: item.link?.reference as React.ComponentProps<typeof CMSLink>['reference'],
+  }
+}
+
+function NavEntry({
+  item,
+  mobile,
+  active,
+}: {
+  item: NavItemRecord
+  mobile: boolean
+  active: (href: string) => boolean
+}) {
+  const children = item.children || []
+  const href = navHref(item)
+  if (!children.length) {
+    return (
+      <CMSLink
+        {...linkProps(item)}
+        appearance="inline"
+        className={cn(linkClass, href && active(href) && 'border-b border-current pb-1')}
+      />
+    )
+  }
+
+  if (mobile) {
+    return (
+      <div className="flex flex-col gap-3">
+        <CMSLink {...linkProps(item)} appearance="inline" className={linkClass} />
+        <div className="flex flex-col gap-3 border-l border-border pl-4">
+          {children.map((child, index) => (
+            <CMSLink key={child.id || navHref(child) || index} {...linkProps(child)} appearance="inline" className={linkClass} />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="group relative">
+      <CMSLink
+        {...linkProps(item)}
+        appearance="inline"
+        className={cn(linkClass, 'inline-flex items-center gap-1.5', href && active(href) && 'border-b border-current pb-1')}
+      >
+        <ChevronDown className="h-3 w-3 opacity-70" aria-hidden />
+      </CMSLink>
+      <div className="invisible absolute left-0 top-full z-50 pt-3 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+        <div className="flex min-w-56 flex-col gap-3 border border-[#d9d2c5] bg-background px-5 py-4 text-foreground">
+          {children.map((child, index) => (
+            <CMSLink key={child.id || navHref(child) || index} {...linkProps(child)} appearance="inline" className={linkClass} />
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

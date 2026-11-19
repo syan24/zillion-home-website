@@ -43,7 +43,7 @@ type ProjectSeed = {
   slug: string
   title: string
   titleZh: string
-  type: 'residential' | 'commercial'
+  type: 'residential' | 'commercial' | 'joinery'
   address: string
   suburb: string
   showAddressPublicly: boolean

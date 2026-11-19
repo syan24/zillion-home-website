@@ -35,8 +35,9 @@ describe('project filters', () => {
     )
   })
 
-  it('drops unknown project types', () => {
-    expect(parseProjectFilters({ type: 'joinery' }).type).toBeUndefined()
+  it('accepts custom joinery and drops unknown project types', () => {
+    expect(parseProjectFilters({ type: 'joinery' }).type).toBe('joinery')
+    expect(parseProjectFilters({ type: 'interior' }).type).toBeUndefined()
     expect(hasProjectFilters({})).toBe(false)
   })
 

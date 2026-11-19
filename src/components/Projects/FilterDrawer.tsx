@@ -122,6 +122,7 @@ function FilterFields({
           <option value="">{copy.allTypes}</option>
           <option value="residential">{copy.residential}</option>
           <option value="commercial">{copy.commercial}</option>
+          <option value="joinery">{copy.joinery}</option>
         </select>
       </label>
       <label className="mt-4 block text-sm md:mt-0">

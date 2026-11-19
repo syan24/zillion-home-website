@@ -17,6 +17,22 @@ export const Header: GlobalConfig = {
           appearances: false,
           localizedLabel: true,
         }),
+        {
+          name: 'children',
+          type: 'array',
+          maxRows: 6,
+          labels: { singular: 'Dropdown link', plural: 'Dropdown links' },
+          admin: {
+            initCollapsed: true,
+            description: 'Optional. These links open under this item. Leave empty for a normal top-level link.',
+          },
+          fields: [
+            link({
+              appearances: false,
+              localizedLabel: true,
+            }),
+          ],
+        },
       ],
       maxRows: 8,
       admin: {
