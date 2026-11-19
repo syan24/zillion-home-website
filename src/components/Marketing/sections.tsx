@@ -265,7 +265,7 @@ export function ServiceCards({
             <Eyebrow rule>{eyebrow}</Eyebrow>
             {heading && (
               <h2 className={cn(display, 'text-[clamp(40px,4.8vw,72px)] leading-[1.05]')}>
-                {goldPhrase(heading, headingAccent, 'italic')}
+                {goldPhrase(heading, headingAccent, 'italic text-accent-tan')}
               </h2>
             )}
             {body && <p className="max-w-xl text-base leading-8 text-foreground-soft">{body}</p>}
