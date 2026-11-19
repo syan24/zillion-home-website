@@ -20,9 +20,9 @@ describe('shared process steps', () => {
       'Consultation',
       'Planning',
       'Construction',
-      'Joinery',
       'Handover',
     ])
+    expect(ourProcessSteps).toHaveLength(4)
   })
 
   it('recognises the old Home demo titles and leaves edited titles alone', () => {
@@ -44,7 +44,13 @@ describe('shared process steps', () => {
     expect(aligned.changed).toBe(true)
     expect(readProcessSteps(aligned.layout)).toEqual(ourProcessSteps)
     const block = (aligned.layout as { steps?: { id?: string; title: string }[] }[])[1]
-    expect(block.steps?.map((step) => step.id)).toEqual(['step-0', 'step-1', 'step-2', 'step-3', 'step-4'])
+    expect(block.steps?.map((step) => step.id)).toEqual(['step-0', 'step-1', 'step-2', 'step-4'])
+    expect(block.steps?.map((step) => step.title)).toEqual([
+      'Consultation',
+      'Planning',
+      'Construction',
+      'Handover',
+    ])
 
     const edited = alignHomeProcessLayout(
       [{ blockType: 'processSection', steps: [{ title: 'Custom step' }] }],

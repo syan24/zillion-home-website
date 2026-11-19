@@ -4,7 +4,6 @@ import { getMarketing } from '@/content/getMarketing'
 import type { ImageRef } from '@/content/marketing'
 import { getLocale } from '@/i18n/getLocale'
 import {
-  CapabilityList,
   CategoryBar,
   CtaBand,
   HomeHero,
@@ -37,7 +36,10 @@ export async function FallbackHome() {
       />
       <ProcessSection
         {...content.process}
-        trustItems={content.process.trustItems.map((item) => ({ ...item, image: stock(item.image) }))}
+        trustItems={content.process.trustItems.map((item) => ({
+          title: item.title,
+          description: item.description,
+        }))}
       />
       <CategoryBar {...content.categories} />
       <CtaBand
@@ -54,7 +56,6 @@ export async function FallbackAbout() {
     <main className="min-h-screen">
       <PageIntro {...content.intro} image={stock(content.intro.image)} measure="about" />
       <ProseSection {...content.prose} />
-      <CapabilityList {...content.capabilities} />
       <SplitFeature
         {...content.trust}
         image={stock(content.trust.image)}
@@ -73,6 +74,7 @@ export async function FallbackServices() {
       <PageIntro {...content.intro} image={stock(content.intro.image)} />
       <ServiceDetails
         featuresLabel={locale === 'zh' ? '交付内容' : 'What we deliver'}
+        relatedLabel={locale === 'zh' ? '查看相关项目' : 'View Related Project'}
         services={content.details.services.map((service) => ({
           ...service,
           features: service.features.map((text) => ({ text })),

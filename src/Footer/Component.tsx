@@ -3,6 +3,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import { getMarketing } from '@/content/getMarketing'
+import { isInteriorHref } from '@/content/navMenu'
 import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
 import { getLocale } from '@/i18n/getLocale'
@@ -14,7 +15,7 @@ export async function Footer() {
   const footerContent = getMarketing(locale).footer
   const footerData = await getCachedGlobal('footer', 1, locale)()
   const navItems = footerData?.navItems ?? []
-  const serviceLinks = footerData?.serviceLinks ?? []
+  const serviceLinks = (footerData?.serviceLinks ?? []).filter((item) => !isInteriorHref(item.link?.url))
   const blurb = footerData?.blurb || footerContent.blurb
   const tagline = footerData?.tagline || footerContent.tagline
   const location = footerData?.location || footerContent.location

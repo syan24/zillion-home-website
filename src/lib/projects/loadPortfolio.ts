@@ -6,6 +6,7 @@ import type { SiteLocale } from '@/i18n/config'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 
 import { hasProjectFilters, imageMatchesTerm, type ProjectFilters } from './filters'
+import type { ProjectType } from './types'
 import { publicProjectLocation } from './location'
 
 type Relation<T> = number | T | null | undefined
@@ -35,7 +36,7 @@ export type GalleryImage = {
   downloadHref: string | null
   projectSlug: string
   projectTitle: string
-  projectType: 'residential' | 'commercial'
+  projectType: ProjectType
   location: string | null
   styleNames: string[]
   spaceNames: string[]
@@ -44,7 +45,7 @@ export type GalleryImage = {
 
 export type PortfolioTerm = { id: number; name: string; slug: string }
 
-export type PortfolioProjectOption = { slug: string; title: string; type: 'residential' | 'commercial' }
+export type PortfolioProjectOption = { slug: string; title: string; type: ProjectType }
 
 function names(value: Relation<Style | Space>[] | null | undefined) {
   return (value || []).map((item) => asDoc(item)?.name).filter((name): name is string => Boolean(name))
@@ -211,7 +212,7 @@ export type ProjectDetail = {
   id: number
   slug: string
   title: string
-  type: 'residential' | 'commercial'
+  type: ProjectType
   location: string | null
   shortDescription: string | null
   description: string | null

@@ -44,8 +44,11 @@ export function PageIntroBlock(props: {
 }
 
 export function ServiceCardsBlock(props: {
+  variant?: 'grid' | 'pair' | null
   eyebrow?: string | null
   heading?: string | null
+  headingAccent?: string | null
+  body?: string | null
   cards?:
     | {
         title?: string | null
@@ -59,8 +62,11 @@ export function ServiceCardsBlock(props: {
 }) {
   return (
     <ServiceCards
+      variant={props.variant}
       eyebrow={props.eyebrow}
       heading={props.heading}
+      headingAccent={props.headingAccent}
+      body={props.body}
       cards={(props.cards || []).map((card) => ({
         ...card,
         image: placed(card.image, card.imageAlt),
@@ -104,6 +110,8 @@ export function ProcessSectionBlock(props: {
   eyebrow?: string | null
   heading?: string | null
   body?: string | null
+  trustEyebrow?: string | null
+  trustHeading?: string | null
   trustItems?:
     | {
         title?: string | null
@@ -183,6 +191,7 @@ export async function ServiceDetailsBlock(props: {
   return (
     <ServiceDetails
       featuresLabel={locale === 'zh' ? '交付内容' : 'What we deliver'}
+      relatedLabel={locale === 'zh' ? '查看相关项目' : 'View Related Project'}
       services={(props.services || []).map((service) => ({
         ...service,
         image: placed(service.image, service.imageAlt),

@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { slugField } from 'payload'
 
+import { projectTypeOptions } from '../../lib/projects/types'
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { revalidatePortfolio } from '../../hooks/revalidatePortfolio'
@@ -44,10 +45,7 @@ export const Projects: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'residential',
-      options: [
-        { label: 'Residential', value: 'residential' },
-        { label: 'Commercial', value: 'commercial' },
-      ],
+      options: projectTypeOptions.map((option) => ({ label: option.label, value: option.value })),
     },
     {
       name: 'shortDescription',

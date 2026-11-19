@@ -81,52 +81,31 @@ export const homeContent = {
     links: [] as { label: string; href: string; variant: 'enquiry' }[],
   },
   serviceCards: {
-    eyebrow: 'Our Services',
-    heading: 'Four core capabilities',
+    variant: 'pair' as const,
+    eyebrow: 'Your project, your starting point',
+    heading: 'Every great project starts somewhere.',
+    headingAccent: 'starts somewhere.',
+    body: "Whether you have detailed plans or are starting with an idea, we're here to help you take the next step towards construction.",
     cards: [
       {
-        image: image(
-          'serviceResidential',
-          'Residential Construction & Renovation',
-          'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&q=80',
-        ),
-        title: 'Residential Construction & Renovation',
+        image: image('featureInterior', 'Material samples and joinery finishes'),
+        title: 'Starting with an Idea?',
         subtitle: '',
-        description: 'New builds, extensions, renovations and alterations for residential properties.',
-        href: '/services#residential',
+        description:
+          'No plans yet? We can help explore design options, develop practical solutions and coordinate the documentation needed to move your building or joinery project forward.',
+        href: '',
       },
       {
         image: image(
-          'serviceCommercial',
-          'Commercial Fit-out',
-          'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80',
+          'trustQualified',
+          'Drawings and construction plans',
+          'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1000&q=80',
         ),
-        title: 'Commercial Fit-out',
+        title: 'Already Have Plans?',
         subtitle: '',
-        description: 'Office, retail, hospitality and commercial space fit-outs.',
-        href: '/services#commercial',
-      },
-      {
-        image: image(
-          'serviceJoinery',
-          'Custom Joinery & Cabinetry',
-          'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&q=80',
-        ),
-        title: 'Custom Joinery & Cabinetry',
-        subtitle: '',
-        description: 'Kitchens, wardrobes, vanities, entertainment units and bespoke furniture.',
-        href: '/services#joinery',
-      },
-      {
-        image: image(
-          'serviceInterior',
-          'Interior Fit-out & Project Delivery',
-          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&q=80',
-        ),
-        title: 'Interior Fit-out & Project Delivery',
-        subtitle: '',
-        description: 'Complete interior delivery from design coordination to final handover.',
-        href: '/services#interior',
+        description:
+          'Share your drawings with us. We can review the proposed scope, discuss construction requirements and help you plan the next steps towards bringing your project to life.',
+        href: '',
       },
     ],
   },
@@ -165,49 +144,30 @@ export const homeContent = {
         title: 'Custom Joinery',
         subtitle: 'Kitchens, Wardrobes & Cabinetry',
       },
-      {
-        image: image(
-          'serviceInterior',
-          'Interior Fit-out',
-          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=200&q=80',
-        ),
-        title: 'Interior Fit-out',
-        subtitle: 'Complete Project Delivery',
-      },
     ],
   },
   process: {
     variant: 'split' as const,
-    eyebrow: 'The Way We Work',
-    heading: 'Clarity at every stage.',
-    body: 'From initial consultation to final handover, we coordinate construction, interior fit-out and custom joinery to deliver well-managed projects with practical solutions and quality workmanship.',
+    eyebrow: '',
+    heading: 'A considered approach, from start to finish.',
+    body: 'A successful build is about more than individual trades. We consider how construction, building services, interiors and custom joinery work together, helping to identify requirements early and keep every part of the project connected.',
+    trustEyebrow: 'Why Zillion Home',
+    trustHeading: 'Built with the bigger picture in mind.',
     trustItems: [
       {
-        image: image(
-          'trustQualified',
-          'Qualified & Insured',
-          'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400&q=80',
-        ),
-        title: 'Qualified & Insured',
-        description: 'Registered builder with appropriate insurances',
+        title: 'A Broader Perspective',
+        description:
+          'Our experience across construction, fit-outs and custom joinery allows us to consider the project as a whole, not just individual elements.',
       },
       {
-        image: image(
-          'trustJoinery',
-          'In-house Joinery Capability',
-          'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',
-        ),
-        title: 'In-house Joinery Capability',
-        description: 'Custom kitchens, wardrobes, vanities and more',
+        title: 'Thinking Ahead',
+        description:
+          'By understanding how different stages affect one another, we can plan for what comes next and minimise unnecessary adjustments along the way.',
       },
       {
-        image: image(
-          'trustQuality',
-          'Quality & Care',
-          'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=400&q=75',
-        ),
-        title: 'Quality & Care',
-        description: 'Practical solutions, professional delivery',
+        title: 'Clearer Accountability',
+        description:
+          'A coordinated approach means fewer gaps in communication, clearer responsibilities and a more straightforward experience for our clients.',
       },
     ],
     steps: ourProcessSteps,
@@ -216,11 +176,9 @@ export const homeContent = {
     eyebrow: 'More than spaces',
     heading: 'We build better living,\nworking and business spaces.',
     items: [
-      { title: 'Residential Construction' },
-      { title: 'Renovation' },
+      { title: 'Residential Construction & Renovation' },
       { title: 'Commercial Fit-out' },
       { title: 'Custom Joinery' },
-      { title: 'Interior Fit-out & Delivery' },
     ],
   },
   cta: {
@@ -245,36 +203,14 @@ export const aboutContent = {
   prose: {
     eyebrow: 'Who We Are',
     heading: 'A builder, not a design studio',
-    body: "We are first and foremost builders. From the ground up, we manage construction, coordinate trades, and deliver projects on time and on budget. Our in-house joinery capability means we can handle everything from structural work to the finest cabinetry details — all under one roof.\n\nWhether you're planning a home renovation, a commercial fit-out, or custom joinery for your space, we bring the same level of care and professionalism to every project.",
-  },
-  capabilities: {
-    eyebrow: 'What We Do',
-    heading: 'Our capabilities',
-    items: [
-      {
-        title: 'Residential Construction & Renovation',
-        description: 'New builds, extensions, renovations and alterations for homes across Melbourne.',
-      },
-      {
-        title: 'Commercial Fit-out',
-        description: 'Office, retail, hospitality and commercial spaces tailored to your business.',
-      },
-      {
-        title: 'Custom Joinery & Cabinetry',
-        description: 'Kitchens, wardrobes, vanities, and bespoke furniture crafted in-house.',
-      },
-      {
-        title: 'Interior Fit-out & Project Delivery',
-        description: 'Complete interior delivery from design coordination to final handover.',
-      },
-    ],
+    body: "We are first and foremost builders. From the ground up, we manage construction, coordinate trades, and deliver projects on time and on budget. Custom joinery is coordinated with the construction work, so cabinetry can be planned with the rest of the project.\n\nWhether you're planning a home renovation, a commercial fit-out, or custom joinery for your space, we bring the same level of care and professionalism to every project.",
   },
   trust: {
     variant: 'checklist' as const,
     eyebrow: 'Trust & Qualifications',
     heading: 'Qualified, insured,',
     headingAccent: 'ready to build',
-    body: 'Zillion Home is a registered builder operating across Melbourne and surrounding areas. We maintain appropriate insurances and comply with all relevant building codes and regulations.\n\nOur in-house joinery workshop allows us to deliver custom cabinetry with the same quality control as our construction work — no outsourcing, no surprises.',
+    body: 'Zillion Home is a registered builder operating across Melbourne and surrounding areas. We maintain appropriate insurances and comply with all relevant building codes and regulations.\n\nCustom cabinetry is coordinated with the same care as our construction work, so the details stay consistent across the project.',
     image: image(
       'trustQualified',
       'Builder with plans on site',
@@ -316,7 +252,7 @@ export const servicesContent = {
     heading: 'Homes, workplaces &',
     headingAccent: 'bespoke joinery.',
     description:
-      'Four capabilities under one roof — from ground-up construction to precision cabinetry, delivered as one complete building service.',
+      'Three core services — residential construction and renovation, commercial fit-out, and custom joinery — delivered by one building team.',
     image: image('serviceInterior', 'Interior fit-out'),
   },
   details: {
@@ -340,7 +276,7 @@ export const servicesContent = {
           'Residential Construction & Renovation',
           'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1000&q=80',
         ),
-        enquireLabel: 'Enquire about Residential',
+        enquireLabel: 'View Related Project',
       },
       {
         anchor: 'commercial',
@@ -361,14 +297,14 @@ export const servicesContent = {
           'Commercial Fit-out',
           'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1000&q=80',
         ),
-        enquireLabel: 'Enquire about Commercial',
+        enquireLabel: 'View Related Project',
       },
       {
         anchor: 'joinery',
         title: 'Custom Joinery & Cabinetry',
         subtitle: '',
         description:
-          'Bespoke joinery crafted in our workshop. Whether standalone or as part of a larger project, we deliver precision-made cabinetry tailored to your space.',
+          'Made-to-order cabinetry tailored to each project, with flexibility in dimensions, layouts, materials and finishes, including 2PAC painted and laminate options. It suits standalone joinery projects and larger renovations.',
         features: [
           'Custom kitchens',
           'Built-in wardrobes',
@@ -382,43 +318,23 @@ export const servicesContent = {
           'Custom Joinery & Cabinetry',
           'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1000&q=80',
         ),
-        enquireLabel: 'Enquire about Custom',
-      },
-      {
-        anchor: 'interior',
-        title: 'Interior Fit-out & Project Delivery',
-        subtitle: '',
-        description:
-          'Complete interior delivery from design coordination to final handover. We manage the entire process so you can focus on your vision.',
-        features: [
-          'Design coordination',
-          'Project management',
-          'Trade coordination',
-          'Quality assurance',
-          'Timeline management',
-          'Handover and documentation',
-        ],
-        image: image(
-          'serviceInterior',
-          'Interior Fit-out & Project Delivery',
-          'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1000&q=80',
-        ),
-        enquireLabel: 'Enquire about Interior',
+        enquireLabel: 'View Related Project',
       },
     ],
   },
   process: {
     variant: 'centered' as const,
-    eyebrow: 'How We Work',
-    heading: 'Our process',
+    eyebrow: '',
+    heading: 'A considered approach, from start to finish.',
+    body: 'A successful build is about more than individual trades. We consider how construction, building services, interiors and custom joinery work together, helping to identify requirements early and keep every part of the project connected.',
     steps: ourProcessSteps,
   },
   joinery: {
     variant: 'darkCopy' as const,
-    eyebrow: 'In-house Capability',
-    heading: 'Custom joinery,',
-    headingAccent: 'crafted in-house',
-    body: "Our joinery workshop allows us to deliver bespoke cabinetry with the same quality control as our construction work. Whether it's a standalone kitchen project or joinery as part of a complete renovation, everything is built to your specifications.\n\nThis means better coordination, consistent quality, and a single point of accountability for your entire project.",
+    eyebrow: 'made for your space',
+    heading: 'Made to order,',
+    headingAccent: 'made for your space.',
+    body: 'Every space is different. Our made-to-order cabinetry is tailored to each project, offering flexibility in dimensions, layouts, materials and finishes, including 2PAC painted and laminate options. From specifications to installation, we coordinate the details to suit both standalone joinery projects and larger renovations.\n\nGreat joinery starts long before installation. By considering construction and cabinetry together, we ensure the details are planned from the very beginning.',
     image: image('trustJoinery', 'Joinery workshop'),
     links: [{ label: 'Enquire about Custom Joinery →', href: '/enquiry', variant: 'enquiry' as const }],
   },
@@ -430,16 +346,23 @@ export const servicesContent = {
   },
   metaTitle: 'Our Services',
   metaDescription:
-    'Residential construction, commercial fit-out, custom joinery and interior project delivery. Melbourne builder for homes and businesses.',
+    'Residential construction and renovation, commercial fit-out, and custom joinery. Melbourne builder for homes and businesses.',
 }
 
-export const headerNav = {
+export type NavSeedLink = { label: string; href: string; children?: { label: string; href: string }[] }
+
+export const headerNav: { primary: NavSeedLink[]; secondary: NavSeedLink[] } = {
   primary: [
     { label: 'Home', href: '/' },
-    { label: 'Residential', href: '/services#residential' },
-    { label: 'Commercial', href: '/services#commercial' },
-    { label: 'Custom Joinery', href: '/services#joinery' },
-    { label: 'Interior Fit-out', href: '/services#interior' },
+    {
+      label: 'Our Services',
+      href: '/services',
+      children: [
+        { label: 'Residential', href: '/services#residential' },
+        { label: 'Commercial', href: '/services#commercial' },
+        { label: 'Custom Joinery', href: '/services#joinery' },
+      ],
+    },
   ],
   secondary: [
     { label: 'Projects', href: '/projects' },
@@ -456,7 +379,6 @@ export const footerContent = {
     { label: 'Residential Construction', href: '/services#residential' },
     { label: 'Commercial Fit-out', href: '/services#commercial' },
     { label: 'Custom Joinery', href: '/services#joinery' },
-    { label: 'Interior Fit-out', href: '/services#interior' },
   ],
   company: [
     { label: 'About Us', href: '/about' },
