@@ -16,7 +16,7 @@ export const scopeCatalog: readonly ScopeCatalogItem[] = [
     projectType: 'residential',
     value: 'new-home-construction',
     en: 'New Home Construction',
-    zh: '新建住宅',
+    zh: '新房建造',
   },
   {
     projectType: 'residential',

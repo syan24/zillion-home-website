@@ -14,11 +14,12 @@ import {
   parseProjectFilters,
   projectFilterHref,
   roomSlugs,
+  toggleProjectType,
   type ProjectFilters,
 } from '@/lib/projects/filters'
 import { loadPortfolio } from '@/lib/projects/loadPortfolio'
 import { galleryMode } from '@/lib/projects/projectCards'
-import { projectTypeLabel, type ProjectType } from '@/lib/projects/types'
+import { projectTypeLabel } from '@/lib/projects/types'
 
 type Args = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -55,11 +56,10 @@ export default async function ProjectsPage({ searchParams }: Args) {
     portfolio.covers.find((image) => image.filename === 'DSC03791.jpg') ||
     portfolio.covers[0] ||
     null
-  const projectTypes: { value?: ProjectType; label: string }[] = [
-    { label: copy.allTypes },
-    { value: 'commercial', label: copy.commercial },
-    { value: 'residential', label: copy.residential },
-    { value: 'joinery', label: copy.joinery },
+  const projectTypes = [
+    { value: 'commercial' as const, label: copy.commercial },
+    { value: 'residential' as const, label: copy.residential },
+    { value: 'joinery' as const, label: copy.joinery },
   ]
 
   const chipHref = (next: ProjectFilters, view: 'project' | 'room' = mode) =>
@@ -132,12 +132,9 @@ export default async function ProjectsPage({ searchParams }: Args) {
               <div className="flex flex-wrap gap-2.5">
                 {projectTypes.map((type) => (
                   <StyleChip
-                    key={type.value || 'all'}
-                    href={chipHref(
-                      { ...filters, type: type.value, space: undefined, project: undefined },
-                      'project',
-                    )}
-                    active={(filters.type || undefined) === type.value}
+                    key={type.value}
+                    href={chipHref(toggleProjectType(filters, type.value), 'project')}
+                    active={filters.type === type.value}
                   >
                     {type.label}
                   </StyleChip>

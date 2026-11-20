@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { alignEnquiryScopeFields } from '@/lib/enquiry/alignFormScopes'
 import { publicEnquiryFields } from '@/lib/enquiry/defaultForm'
 import { scopeCatalog, scopesForProjectType } from '@/lib/enquiry/scopes'
+import { alignEnquirySelectFields, placeholderForLocale } from '@/lib/enquiry/selectCopy'
 
 const legacyOptions = [
   { id: 'o1', label: 'Full Joinery', value: 'full-joinery' },
@@ -44,7 +45,7 @@ describe('enquiry scope lists', () => {
 
     const zh = publicEnquiryFields('zh').find((field) => field.name === 'scope')?.options || []
     expect(scopesForProjectType(zh, 'residential').map((option) => option.label)).toEqual([
-      '新建住宅',
+      '新房建造',
       '扩建 / 加建',
       '全屋翻新',
       '厨房 / 卫生间翻新',
@@ -94,7 +95,7 @@ describe('enquiry scope lists', () => {
     const zhScope = (aligned.zh as { options?: { label: string; value: string }[] }[])[1]
     expect(
       zhScope?.options?.find((option) => option.value === 'new-home-construction')?.label,
-    ).toBe('新建住宅')
+    ).toBe('新房建造')
     expect((aligned.zh as { label?: string }[])[0]?.label).toBe('姓名')
 
     const again = alignEnquiryScopeFields(aligned.en, aligned.zh)
@@ -117,5 +118,126 @@ describe('enquiry scope lists', () => {
       ],
     )
     expect(custom.changed).toBe(false)
+  })
+
+  it('replaces the previous residential label and keeps a custom one', () => {
+    const options = scopeCatalog.map((item) => ({
+      value: item.value,
+      label: item.value === 'new-home-construction' ? '新建住宅' : item.zh,
+      projectType: item.projectType,
+    }))
+    const customLabel = options.map((option) =>
+      option.value === 'new-home-construction' ? { ...option, label: '自建住宅' } : option,
+    )
+    const fields = [{ blockType: 'checkboxGroup', name: 'scope', options }]
+    const aligned = alignEnquiryScopeFields(fields, fields)
+    expect(aligned.changed).toBe(true)
+    const zhScope = (aligned.zh as { options?: { value: string; label: string }[] }[])[0]
+    expect(
+      zhScope?.options?.find((option) => option.value === 'new-home-construction')?.label,
+    ).toBe('新房建造')
+    expect(zhScope?.options?.find((option) => option.value === 'extension-addition')?.label).toBe(
+      '扩建 / 加建',
+    )
+
+    const kept = alignEnquiryScopeFields(
+      [{ blockType: 'checkboxGroup', name: 'scope', options: customLabel }],
+      [{ blockType: 'checkboxGroup', name: 'scope', options: customLabel }],
+    )
+    expect(kept.changed).toBe(false)
+  })
+})
+
+describe('enquiry budget and timeline copy', () => {
+  const scope = scopeCatalog.map((item) => ({
+    value: item.value,
+    label: item.en,
+    projectType: item.projectType,
+  }))
+
+  function form(placeholder: string, label = '预计预算') {
+    return [
+      { blockType: 'checkboxGroup', name: 'scope', options: scope },
+      {
+        blockType: 'select',
+        name: 'budget',
+        label,
+        placeholder,
+        options: [
+          { value: 'under-50k', label: 'Under $50,000' },
+          { value: '50k-100k', label: '5 万 – 10 万澳元' },
+        ],
+      },
+      {
+        blockType: 'select',
+        name: 'timeline',
+        label: '期望时间',
+        placeholder: 'Select Expected timeline',
+        options: [{ value: 'asap', label: '尽快' }],
+      },
+    ]
+  }
+
+  it('shows Chinese placeholders for the known English defaults and keeps a custom one', () => {
+    expect(placeholderForLocale('budget', 'Select Approximate budget', 'zh')).toBe('请选择预算范围')
+    expect(placeholderForLocale('timeline', 'Select Expected timeline', 'zh')).toBe(
+      '请选择预计开始时间',
+    )
+    expect(placeholderForLocale('budget', 'Select Approximate budget', 'en')).toBe(
+      'Select budget range',
+    )
+    expect(placeholderForLocale('budget', '请选择预算范围', 'en')).toBe('Select budget range')
+    expect(placeholderForLocale('timeline', 'When can you start?', 'zh')).toBe(
+      'When can you start?',
+    )
+    expect(placeholderForLocale('budget', 'Select budget range', 'en')).toBe('Select budget range')
+  })
+
+  it('updates default select copy and leaves a custom form or custom placeholder', () => {
+    const aligned = alignEnquirySelectFields(
+      form('Select Approximate budget', 'Approximate budget'),
+      form('Select Approximate budget', 'Approximate budget'),
+    )
+    expect(aligned.changed).toBe(true)
+    const budget = (
+      aligned.zh as {
+        name?: string
+        label?: string
+        placeholder?: string
+        options?: { label: string }[]
+      }[]
+    )[1]
+    expect(budget?.label).toBe('预计预算')
+    expect(budget?.placeholder).toBe('请选择预算范围')
+    expect(budget?.options?.map((option) => option.label)).toEqual([
+      '5 万澳元以下',
+      '5 万 – 10 万澳元',
+    ])
+    const timeline = (aligned.zh as { placeholder?: string }[])[2]
+    expect(timeline?.placeholder).toBe('请选择预计开始时间')
+
+    const customPlaceholder = alignEnquirySelectFields(form('Around $80k'), form('Around $80k'))
+    expect(customPlaceholder.changed).toBe(true)
+    expect((customPlaceholder.zh as { placeholder?: string }[])[1]?.placeholder).toBe('Around $80k')
+
+    const customForm = alignEnquirySelectFields(
+      [
+        {
+          blockType: 'checkboxGroup',
+          name: 'scope',
+          options: [{ value: 'site-measure', label: 'Site measure' }],
+        },
+        { blockType: 'select', name: 'budget', placeholder: 'Select Approximate budget' },
+      ],
+      [
+        {
+          blockType: 'checkboxGroup',
+          name: 'scope',
+          options: [{ value: 'site-measure', label: '现场测量' }],
+        },
+        { blockType: 'select', name: 'budget', placeholder: 'Select Approximate budget' },
+      ],
+    )
+    expect(customForm.changed).toBe(false)
   })
 })
