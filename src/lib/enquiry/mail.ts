@@ -55,7 +55,10 @@ export function resolveEnquiryMail(
 
   const host = (env.SMTP_HOST || '').trim()
   if (!host) {
-    return { mode: 'skip', detail: 'Skipped: set RESEND_API_KEY or SMTP_HOST to send enquiry email.' }
+    return {
+      mode: 'skip',
+      detail: 'Skipped: set RESEND_API_KEY or SMTP_HOST to send enquiry email.',
+    }
   }
 
   const port = Number(env.SMTP_PORT || 587)
@@ -88,7 +91,7 @@ export async function sendEnquiryNotification(input: {
   submissionReference: string
   attachmentNames: string[]
   adminURL: string
-  env?: NodeJS.ProcessEnv
+  env?: Record<string, string | undefined>
 }): Promise<EnquiryMailResult> {
   const plan = resolveEnquiryMail(input.env)
   if (plan.mode === 'skip') return { status: 'skipped', detail: plan.detail }

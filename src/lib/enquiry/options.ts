@@ -1,3 +1,5 @@
+import { scopeCatalog } from '@/lib/enquiry/scopes'
+
 /** Public enquiry values. Codes are stored; labels are the English admin labels. */
 
 export const enquiryDraftStorageKey = 'zillion-enquiry-draft-id'
@@ -14,14 +16,11 @@ export const projectTypeOptions = [
   { label: 'Custom Joinery', value: 'joinery' },
 ] as const
 
-export const scopeOptions = [
-  { label: 'Full Joinery', value: 'full-joinery' },
-  { label: 'Kitchen', value: 'kitchen' },
-  { label: 'Wardrobe', value: 'wardrobe' },
-  { label: 'Bathroom Vanity', value: 'bathroom-vanity' },
-  { label: 'TV Unit', value: 'tv-unit' },
-  { label: 'Other', value: 'other' },
-] as const
+/** English labels for stored scope values, including the email notification. */
+export const scopeOptions = scopeCatalog.map((item) => ({
+  label: item.en,
+  value: item.value,
+}))
 
 /** Room-like scope values copied onto `spaces` for admin filtering. */
 export const spaceOptions = [

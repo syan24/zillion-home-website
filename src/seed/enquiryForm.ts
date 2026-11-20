@@ -1,5 +1,11 @@
+import { sql } from '@payloadcms/db-postgres'
 import type { Payload } from 'payload'
 
+import {
+  alignEnquiryScopeFields,
+  copyScopeIdentity,
+  stampCatalogScopeLabels,
+} from '@/lib/enquiry/alignFormScopes'
 import { defaultProjectTypeIcons } from '@/lib/enquiry/icons'
 import {
   enquiryConfirmationText,
@@ -41,7 +47,10 @@ function lexical(text: string) {
   }
 }
 
-function fillMissingProjectTypeIcons(fields: Form['fields']): { fields: Form['fields']; changed: boolean } {
+function fillMissingProjectTypeIcons(fields: Form['fields']): {
+  fields: Form['fields']
+  changed: boolean
+} {
   if (!fields) return { fields, changed: false }
   let changed = false
   const next = fields.map((field) => {
@@ -79,6 +88,7 @@ export async function seedEnquiryForm(payload: Payload) {
 
   if (existing.docs[0]) {
     await backfillProjectTypeIcons(payload, existing.docs[0].id)
+    await alignStoredEnquiryScopes(payload, existing.docs[0].id)
     return
   }
 
@@ -102,7 +112,9 @@ export async function seedEnquiryForm(payload: Payload) {
     locale: 'zh',
     overrideAccess: true,
     data: {
-      fields: mergeLocale(created.fields, payloadEnquiryFields('zh')) as NonNullable<Form['fields']>,
+      fields: mergeLocale(created.fields, payloadEnquiryFields('zh')) as NonNullable<
+        Form['fields']
+      >,
       submitButtonLabel: enquirySubmitLabel.zh,
       confirmationMessage: lexical(enquiryConfirmationText.zh),
     },
@@ -148,4 +160,61 @@ async function backfillProjectTypeIcons(payload: Payload, id: number) {
     },
   })
   console.log('Enquiry form project-type icons set.')
+}
+
+/**
+ * Replaces the original joinery-only scope list with the three project-type lists.
+ * A form whose scope values are no longer that list, and are not the canonical list, is left as edited.
+ */
+async function alignStoredEnquiryScopes(payload: Payload, id: number) {
+  const en = await payload.findByID({
+    collection: 'forms',
+    id,
+    locale: 'en',
+    depth: 0,
+    overrideAccess: true,
+  })
+  const zh = await payload.findByID({
+    collection: 'forms',
+    id,
+    locale: 'zh',
+    depth: 0,
+    overrideAccess: true,
+  })
+  const aligned = alignEnquiryScopeFields(en.fields, zh.fields)
+  if (!aligned.changed) {
+    console.log('Enquiry scope options already current.')
+    return
+  }
+
+  // Payload keeps the existing option rows when the replacement objects have no ids,
+  // so the old values survive and the new rows are appended. Delete the rows first.
+  if (aligned.replacedLegacy) {
+    const scope = (en.fields || []).find(
+      (field) => field.blockType === 'checkboxGroup' && field.name === 'scope',
+    )
+    if (scope?.id) {
+      await payload.db.drizzle.execute(sql`
+        DELETE FROM forms_blocks_checkbox_group_options WHERE _parent_id = ${scope.id}
+      `)
+    }
+  }
+
+  const updated = await payload.update({
+    collection: 'forms',
+    id,
+    locale: 'en',
+    overrideAccess: true,
+    data: { fields: aligned.en as NonNullable<Form['fields']> },
+  })
+  const withIdentity = copyScopeIdentity(updated.fields, mergeLocale(updated.fields, zh.fields))
+  const zhFields = stampCatalogScopeLabels(withIdentity, 'zh', aligned.replacedLegacy)
+  await payload.update({
+    collection: 'forms',
+    id,
+    locale: 'zh',
+    overrideAccess: true,
+    data: { fields: zhFields as NonNullable<Form['fields']> },
+  })
+  console.log('Enquiry scope options updated for project type.')
 }

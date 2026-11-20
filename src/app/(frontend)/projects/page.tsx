@@ -16,8 +16,9 @@ import {
   roomSlugs,
   type ProjectFilters,
 } from '@/lib/projects/filters'
-import { projectTypeLabel } from '@/lib/projects/types'
 import { loadPortfolio } from '@/lib/projects/loadPortfolio'
+import { galleryMode } from '@/lib/projects/projectCards'
+import { projectTypeLabel, type ProjectType } from '@/lib/projects/types'
 
 type Args = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -47,21 +48,19 @@ export default async function ProjectsPage({ searchParams }: Args) {
   const params = await searchParams
   const filters = parseProjectFilters(params)
   const viewParam = Array.isArray(params.view) ? params.view[0] : params.view
-  const mode = viewParam === 'room' || filters.space ? 'room' : 'project'
+  const mode = galleryMode(viewParam, filters)
   const portfolio = await loadPortfolio(locale, filters)
   const filtered = hasProjectFilters(filters)
   const hero =
-    portfolio.covers.find((image) => image.filename === 'DSC03791.jpg') || portfolio.covers[0] || null
-
-  const featured = portfolio.projects.map((project) => {
-    const images = portfolio.covers.filter((image) => image.projectSlug === project.slug)
-    return {
-      ...project,
-      cover: images[0] || null,
-      count: images.length,
-      location: images.find((image) => image.location)?.location || null,
-    }
-  })
+    portfolio.covers.find((image) => image.filename === 'DSC03791.jpg') ||
+    portfolio.covers[0] ||
+    null
+  const projectTypes: { value?: ProjectType; label: string }[] = [
+    { label: copy.allTypes },
+    { value: 'commercial', label: copy.commercial },
+    { value: 'residential', label: copy.residential },
+    { value: 'joinery', label: copy.joinery },
+  ]
 
   const chipHref = (next: ProjectFilters, view: 'project' | 'room' = mode) =>
     withView(projectFilterHref(next, 'gallery'), view)
@@ -96,148 +95,206 @@ export default async function ProjectsPage({ searchParams }: Args) {
         </div>
       </section>
 
-      <section className={`${wrap} flex flex-col gap-14 pb-0 pt-[clamp(96px,10vw,150px)]`}>
-        <div className="flex flex-wrap items-end justify-between gap-8">
-          <div className="flex flex-col gap-6">
-            <p className="text-[11px] uppercase tracking-[0.4em] text-accent-tan">— {copy.portfolioEyebrow}</p>
-            <h2 className="font-serif text-[clamp(40px,4.6vw,72px)] font-light leading-none">{copy.portfolioHeading}</h2>
-          </div>
-          <p className="max-w-md text-[15px] leading-8 text-[#5c564d]">{copy.intro}</p>
+      <section
+        id="gallery"
+        className={`${wrap} flex scroll-mt-24 flex-col gap-11 py-[clamp(96px,10vw,150px)]`}
+      >
+        <p className="max-w-xl text-[15px] leading-8 text-[#5c564d]">{copy.intro}</p>
+        <div className="grid grid-cols-2 border border-foreground text-[12px] uppercase tracking-[0.28em]">
+          <Link
+            href={chipHref({ ...filters, space: undefined }, 'project')}
+            aria-current={mode === 'project' ? 'page' : undefined}
+            className={
+              mode === 'project'
+                ? 'flex items-center justify-center bg-background-warm px-4 py-4 text-center text-foreground'
+                : 'flex items-center justify-center px-4 py-4 text-center text-muted-foreground'
+            }
+          >
+            {copy.byProject}
+          </Link>
+          <Link
+            href={chipHref({ ...filters, project: undefined, type: undefined }, 'room')}
+            aria-current={mode === 'room' ? 'page' : undefined}
+            className={
+              mode === 'room'
+                ? 'flex items-center justify-center border-l border-foreground bg-background-warm px-4 py-4 text-center text-foreground'
+                : 'flex items-center justify-center border-l border-foreground px-4 py-4 text-center text-muted-foreground'
+            }
+          >
+            {copy.byRoom}
+          </Link>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
-          {featured.map((project) => (
-            <Link key={project.slug} href={`/projects/${project.slug}`} className="group flex flex-col gap-5">
-              <div className="aspect-[4/5] overflow-hidden bg-[#d9d2c5]">
-                <PlaceholderImage
-                  src={project.cover?.src}
-                  alt={project.cover?.alt || project.title}
-                  aspectRatio="auto"
-                  className="h-full w-full motion-safe:transition-transform motion-safe:duration-700 motion-safe:group-hover:scale-105"
-                />
-              </div>
-              <div className="flex items-baseline justify-between gap-4 border-t border-[#c9c0b0] pt-4">
-                <div className="flex flex-col gap-1.5">
-                  <span className="font-serif text-[28px] leading-tight">{project.title}</span>
-                  <span className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-                    {projectTypeLabel(project.type, copy)}
-                    {project.location ? ` · ${project.location}` : ''}
-                  </span>
-                </div>
-                <span className="font-serif text-[17px] italic text-accent-tan">
-                  {countLabel(copy, project.count)}
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
 
-      <section id="gallery" className={`${wrap} flex scroll-mt-24 flex-col gap-11 py-[clamp(96px,10vw,150px)]`}>
-        <div className="flex flex-col gap-7 border-t border-foreground pt-9">
-          <div className="flex flex-wrap items-baseline justify-between gap-6">
-            <h2 className="font-serif text-[clamp(36px,3.6vw,56px)] font-light leading-none">{copy.gallery}</h2>
-            <div className="flex gap-8 text-[11px] uppercase tracking-[0.28em]">
-              <Link
-                href={chipHref({ ...filters, space: undefined }, 'project')}
-                className={mode === 'project' ? 'border-b border-foreground pb-1.5' : 'pb-1.5 text-muted-foreground'}
-              >
-                {copy.byProject}
-              </Link>
-              <Link
-                href={chipHref({ ...filters, project: undefined, type: undefined }, 'room')}
-                className={mode === 'room' ? 'border-b border-foreground pb-1.5' : 'pb-1.5 text-muted-foreground'}
-              >
-                {copy.byRoom}
-              </Link>
+        {mode === 'project' ? (
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-4">
+              <p className="font-serif text-lg italic text-[#5c564d]">{copy.type}</p>
+              <div className="flex flex-wrap gap-2.5">
+                {projectTypes.map((type) => (
+                  <StyleChip
+                    key={type.value || 'all'}
+                    href={chipHref(
+                      { ...filters, type: type.value, space: undefined, project: undefined },
+                      'project',
+                    )}
+                    active={(filters.type || undefined) === type.value}
+                  >
+                    {type.label}
+                  </StyleChip>
+                ))}
+              </div>
             </div>
+            <div className="flex flex-col gap-4">
+              <p className="font-serif text-lg italic text-[#5c564d]">{copy.filter}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <StyleChip
+                  href={withView(
+                    projectFilterHref({ ...filters, style: undefined }, 'gallery'),
+                    'project',
+                  )}
+                  active={!filters.style}
+                >
+                  {copy.allStyles}
+                </StyleChip>
+                {portfolio.styles.map((style) => (
+                  <StyleChip
+                    key={style.slug}
+                    href={withView(
+                      projectFilterHref({ ...filters, style: style.slug }, 'gallery'),
+                      'project',
+                    )}
+                    active={filters.style === style.slug}
+                  >
+                    {style.name}
+                  </StyleChip>
+                ))}
+                {filtered && (
+                  <Link
+                    href="/projects?view=project#gallery"
+                    className="px-3 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {copy.clear}
+                  </Link>
+                )}
+              </div>
+            </div>
+            {portfolio.cards.length ? (
+              <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-4">
+                {portfolio.cards.map((project) => (
+                  <Link
+                    key={project.slug}
+                    href={`/projects/${project.slug}`}
+                    className="group flex flex-col gap-5"
+                  >
+                    <div className="aspect-[4/5] overflow-hidden bg-[#d9d2c5]">
+                      <PlaceholderImage
+                        src={project.coverSrc || undefined}
+                        alt={project.coverAlt}
+                        aspectRatio="auto"
+                        className="h-full w-full motion-safe:transition-transform motion-safe:duration-700 motion-safe:group-hover:scale-105"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5 border-t border-[#c9c0b0] pt-4">
+                      <span className="font-serif text-[28px] leading-tight">{project.title}</span>
+                      <span className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+                        {projectTypeLabel(project.type, copy)}
+                        {project.location ? ` · ${project.location}` : ''}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="text-foreground-soft">{copy.emptyProjects}</p>
+            )}
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-5">
-            <div className="flex flex-wrap gap-2.5">
-              {mode === 'project' ? (
-                <>
-                  <StyleChip href={chipHref({ ...filters, project: undefined })} active={!filters.project}>
-                    {copy.allProjects}
-                  </StyleChip>
-                  {portfolio.projects.map((project) => (
+        ) : (
+          <div className="flex flex-col gap-7">
+            <div className="flex flex-wrap items-center justify-between gap-5">
+              <div className="flex flex-wrap gap-2.5">
+                <StyleChip
+                  href={chipHref({ ...filters, space: undefined }, 'room')}
+                  active={!filters.space}
+                >
+                  {copy.allSpaces}
+                </StyleChip>
+                {roomSlugs.map((slug) => {
+                  const space = portfolio.spaces.find((item) => item.slug === slug)
+                  return (
                     <StyleChip
-                      key={project.slug}
-                      href={chipHref({ ...filters, project: project.slug, space: undefined })}
-                      active={filters.project === project.slug}
+                      key={slug}
+                      href={chipHref({ ...filters, space: slug, project: undefined }, 'room')}
+                      active={filters.space === slug}
                     >
-                      {project.title}
+                      {space?.name || copy.rooms[slug]}
                     </StyleChip>
-                  ))}
-                </>
-              ) : (
-                <>
-                  <StyleChip href={chipHref({ ...filters, space: undefined }, 'room')} active={!filters.space}>
-                    {copy.allSpaces}
-                  </StyleChip>
-                  {roomSlugs.map((slug) => {
-                    const space = portfolio.spaces.find((item) => item.slug === slug)
-                    return (
-                      <StyleChip
-                        key={slug}
-                        href={chipHref({ ...filters, space: slug, project: undefined }, 'room')}
-                        active={filters.space === slug}
-                      >
-                        {space?.name || copy.rooms[slug]}
-                      </StyleChip>
-                    )
-                  })}
-                </>
+                  )
+                })}
+              </div>
+              <span className="font-serif text-lg italic text-muted-foreground">
+                {countLabel(copy, portfolio.images.length)}
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterDrawer
+                copy={copy}
+                filters={filters}
+                styles={portfolio.styles}
+                spaces={portfolio.spaces}
+                projects={portfolio.projects}
+                view="room"
+              />
+              <StyleChip
+                href={withView(
+                  projectFilterHref({ ...filters, style: undefined }, 'gallery'),
+                  'room',
+                )}
+                active={!filters.style}
+              >
+                {copy.allStyles}
+              </StyleChip>
+              {portfolio.styles.map((style) => (
+                <StyleChip
+                  key={style.slug}
+                  href={withView(
+                    projectFilterHref({ ...filters, style: style.slug }, 'gallery'),
+                    'room',
+                  )}
+                  active={filters.style === style.slug}
+                >
+                  {style.name}
+                </StyleChip>
+              ))}
+              {filtered && (
+                <Link
+                  href="/projects?view=room#gallery"
+                  className="px-3 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {copy.clear}
+                </Link>
               )}
             </div>
-            <span className="font-serif text-lg italic text-muted-foreground">
-              {countLabel(copy, portfolio.images.length)}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <FilterDrawer
+            <DesktopProjectFilter
               copy={copy}
               filters={filters}
               styles={portfolio.styles}
               spaces={portfolio.spaces}
               projects={portfolio.projects}
+              view="room"
             />
-            <StyleChip
-              href={withView(projectFilterHref({ ...filters, style: undefined }, 'gallery'), mode)}
-              active={!filters.style}
-            >
-              {copy.allStyles}
-            </StyleChip>
-            {portfolio.styles.map((style) => (
-              <StyleChip
-                key={style.slug}
-                href={withView(projectFilterHref({ ...filters, style: style.slug }, 'gallery'), mode)}
-                active={filters.style === style.slug}
-              >
-                {style.name}
-              </StyleChip>
-            ))}
-            {filtered && (
-              <Link href="/projects#gallery" className="px-3 text-sm text-muted-foreground hover:text-foreground">
-                {copy.clear}
-              </Link>
+            {portfolio.images.length ? (
+              <Lightbox images={portfolio.images} copy={copy} layout="masonry" />
+            ) : (
+              <p className="text-foreground-soft">{copy.empty}</p>
             )}
           </div>
-          <DesktopProjectFilter
-            copy={copy}
-            filters={filters}
-            styles={portfolio.styles}
-            spaces={portfolio.spaces}
-            projects={portfolio.projects}
-          />
-        </div>
-        {portfolio.images.length ? (
-          <Lightbox images={portfolio.images} copy={copy} layout="masonry" />
-        ) : (
-          <p className="text-foreground-soft">{copy.empty}</p>
         )}
       </section>
 
       <section className="bg-dark text-dark-foreground">
-        <div className={`${wrap} flex flex-col items-center gap-8 py-[clamp(100px,11vw,170px)] text-center`}>
+        <div
+          className={`${wrap} flex flex-col items-center gap-8 py-[clamp(100px,11vw,170px)] text-center`}
+        >
           <p className="text-[11px] uppercase tracking-[0.4em] text-accent">— {copy.bandEyebrow}</p>
           <h2 className="max-w-[14ch] font-serif text-[clamp(44px,5.6vw,92px)] font-light leading-none">
             <BandHeading text={copy.bandHeading} accent={copy.bandAccent} />
@@ -267,7 +324,15 @@ function BandHeading({ text, accent }: { text: string; accent: string }) {
   )
 }
 
-function StyleChip({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+function StyleChip({
+  href,
+  active,
+  children,
+}: {
+  href: string
+  active: boolean
+  children: React.ReactNode
+}) {
   return (
     <Link
       href={href}

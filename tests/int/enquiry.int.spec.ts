@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { publicEnquiryFields } from '@/lib/enquiry/defaultForm'
+import { sendEnquiryNotification } from '@/lib/enquiry/mail'
 import {
   enquiryFileIssue,
   incomingEnquiryPath,
@@ -20,7 +21,7 @@ const valid = {
   email: 'alex@example.com',
   address: 'Kew',
   projectType: 'joinery',
-  scope: ['kitchen', 'tv-unit', 'kitchen'],
+  scope: ['kitchen-cabinetry', 'entertainment-units', 'kitchen-cabinetry'],
   notes: 'Warm oak.',
   budget: '100k-250k',
   timeline: '3-6-months',
@@ -37,7 +38,7 @@ describe('enquiry form mapping', () => {
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.value.projectType).toBe('joinery')
-    expect(result.value.scope).toEqual(['kitchen', 'tv-unit'])
+    expect(result.value.scope).toEqual(['kitchen-cabinetry', 'entertainment-units'])
     expect(result.value.spaces).toEqual(['kitchen'])
     expect(result.value.email).toBe('alex@example.com')
     expect(result.value.budgetRange).toBe('100k-250k')
@@ -47,7 +48,15 @@ describe('enquiry form mapping', () => {
   it('requires the seeded name, email, address, and project type', () => {
     const result = mapEnquiryAnswers({
       fields,
-      values: { ...valid, name: ' ', email: 'not-an-email', address: '', projectType: 'interior', phone: 'abc' },
+      values: {
+        ...valid,
+        name: ' ',
+        email: 'not-an-email',
+        address: '',
+        projectType: 'interior',
+        phone: 'abc',
+        scope: [],
+      },
       files: [],
       clientSubmissionId: valid.clientSubmissionId,
     })
@@ -62,6 +71,18 @@ describe('enquiry form mapping', () => {
     ])
   })
 
+  it('rejects a scope from another project type', () => {
+    const result = mapEnquiryAnswers({
+      fields,
+      values: { ...valid, projectType: 'residential', scope: ['office-fit-out'] },
+      files: [],
+      clientSubmissionId: valid.clientSubmissionId,
+    })
+    expect(result.ok).toBe(false)
+    if (result.ok) return
+    expect(result.issues).toContainEqual({ field: 'scope', code: 'invalid' })
+  })
+
   it('keeps a project type that the form itself offers', () => {
     const custom = fields.map((field) =>
       field.name === 'projectType'
@@ -73,7 +94,7 @@ describe('enquiry form mapping', () => {
     )
     const result = mapEnquiryAnswers({
       fields: custom,
-      values: { ...valid, projectType: 'interior' },
+      values: { ...valid, projectType: 'interior', scope: [] },
       files: [],
       clientSubmissionId: valid.clientSubmissionId,
     })
@@ -153,6 +174,68 @@ describe('enquiry mail plan', () => {
       SMTP_HOST: 'smtp.example.com',
     })
     expect(plan.mode).toBe('resend')
+  })
+
+  it('sends the project type and scope labels when notify env is set', async () => {
+    const calls: string[] = []
+    const original = globalThis.fetch
+    globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+      calls.push(String(init?.body || ''))
+      return new Response('{}', { status: 200 })
+    }) as typeof fetch
+    try {
+      const result = await sendEnquiryNotification({
+        enquiry: {
+          clientSubmissionId: valid.clientSubmissionId,
+          name: 'Alex Chen',
+          phone: '',
+          email: 'alex@example.com',
+          address: 'Richmond',
+          projectType: 'commercial',
+          scope: ['office-fit-out', 'commercial-other'],
+          spaces: [],
+          notes: 'Ground floor.',
+        },
+        locale: 'en',
+        submissionReference: 'ENQ-2601',
+        attachmentNames: [],
+        adminURL: 'http://localhost:3000/admin/collections/enquiries/1',
+        env: {
+          ENQUIRY_NOTIFY_TO: 'office@example.com',
+          ENQUIRY_NOTIFY_FROM: 'Zillion Home <notify@example.com>',
+          RESEND_API_KEY: 're_test',
+        },
+      })
+      expect(result.status).toBe('sent')
+      const body = JSON.parse(calls[0] || '{}') as { text?: string; to?: string[] }
+      expect(body.to).toEqual(['office@example.com'])
+      expect(body.text).toContain('Project type: Commercial')
+      expect(body.text).toContain('Scope: Office Fit-out, Other')
+    } finally {
+      globalThis.fetch = original
+    }
+  })
+
+  it('skips email without failing when notify env is unset', async () => {
+    const result = await sendEnquiryNotification({
+      enquiry: {
+        clientSubmissionId: valid.clientSubmissionId,
+        name: 'Alex Chen',
+        phone: '',
+        email: 'alex@example.com',
+        address: 'Kew',
+        projectType: 'residential',
+        scope: ['new-home-construction'],
+        spaces: [],
+        notes: '',
+      },
+      locale: 'en',
+      submissionReference: 'ENQ-2602',
+      attachmentNames: [],
+      adminURL: 'http://localhost:3000/admin/collections/enquiries/2',
+      env: {},
+    })
+    expect(result.status).toBe('skipped')
   })
 
   it('uses SMTP when Resend is absent', () => {

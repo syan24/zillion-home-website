@@ -70,6 +70,20 @@ export const enquiryCheckboxGroup: Block = {
             },
           ],
         },
+        {
+          name: 'projectType',
+          type: 'select',
+          label: 'Project type',
+          options: [
+            { label: 'Residential', value: 'residential' },
+            { label: 'Commercial', value: 'commercial' },
+            { label: 'Custom Joinery', value: 'joinery' },
+          ],
+          admin: {
+            description:
+              'When set, the public enquiry form shows this option only after that project type is selected. Leave empty to show it for every type.',
+          },
+        },
       ],
     },
   ],

@@ -1,18 +1,12 @@
 import { enquiryFileIssue, isEnquirySubmissionId } from '@/lib/enquiry/files'
-import { isSpaceValue, MAX_ENQUIRY_FILE_BYTES, MAX_ENQUIRY_FILES, type SpaceValue } from '@/lib/enquiry/options'
+import { MAX_ENQUIRY_FILE_BYTES, MAX_ENQUIRY_FILES, type SpaceValue } from '@/lib/enquiry/options'
+import { scopeSelectionsFitType, spacesForScope } from '@/lib/enquiry/scopes'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_PATTERN = /^[0-9+().\-\s]{6,40}$/
 
 export type EnquiryIssueCode =
-  | 'required'
-  | 'invalid'
-  | 'email'
-  | 'phone'
-  | 'length'
-  | 'files'
-  | 'rate'
-  | 'generic'
+  'required' | 'invalid' | 'email' | 'phone' | 'length' | 'files' | 'rate' | 'generic'
 
 export type EnquiryIssue = {
   field: string
@@ -29,7 +23,13 @@ export type PublicEnquiryField = {
   required?: boolean
   placeholder?: string
   width?: number
-  options?: { label: string; value: string; icon?: string; iconUrl?: string }[]
+  options?: {
+    label: string
+    value: string
+    icon?: string
+    iconUrl?: string
+    projectType?: string | null
+  }[]
   multiple?: boolean
   maxFileSize?: number | null
   mimeTypes?: string[]
@@ -142,7 +142,8 @@ export function mapEnquiryAnswers(input: {
     if ((field.blockType === 'email' || name === 'email') && raw && !EMAIL_PATTERN.test(raw)) {
       issues.push({ field: name, code: 'email' })
     }
-    if (name === 'phone' && raw && !PHONE_PATTERN.test(raw)) issues.push({ field: name, code: 'phone' })
+    if (name === 'phone' && raw && !PHONE_PATTERN.test(raw))
+      issues.push({ field: name, code: 'phone' })
     if (field.options?.length && raw && !valuesAllowed([raw], field.options)) {
       issues.push({ field: name, code: 'invalid' })
     }
@@ -151,11 +152,19 @@ export function mapEnquiryAnswers(input: {
   const unknownFiles = [...filesByField.keys()].filter((name) => !seen.has(name))
   if (unknownFiles.length > 0) issues.push({ field: 'files', code: 'files' })
 
-  if (issues.length > 0) return { ok: false, issues: dedupe(issues) }
-
   const hasNotes = uniqueFields.some((field) => field.name === 'notes')
   const notes = hasNotes ? scalars.get('notes') || '' : scalars.get('description') || ''
   const scope = groups.get('scope') || splitList(scalars.get('scope'))
+  const projectType = scalars.get('projectType') || ''
+  const scopeField = uniqueFields.find(
+    (field) => field.name === 'scope' && field.blockType === 'checkboxGroup',
+  )
+  if (scopeField && !scopeSelectionsFitType(scope, projectType, scopeField.options)) {
+    issues.push({ field: 'scope', code: 'invalid' })
+  }
+
+  if (issues.length > 0) return { ok: false, issues: dedupe(issues) }
+
   const additional: Record<string, EnquiryAnswer> = {}
 
   for (const field of uniqueFields) {
@@ -189,9 +198,9 @@ export function mapEnquiryAnswers(input: {
       phone: scalars.get('phone') || '',
       email: (scalars.get('email') || '').toLowerCase(),
       address: scalars.get('address') || '',
-      projectType: scalars.get('projectType') || '',
+      projectType,
       scope,
-      spaces: scope.filter((item): item is SpaceValue => isSpaceValue(item)),
+      spaces: spacesForScope(scope) as SpaceValue[],
       notes,
       ...(budget ? { budgetRange: budget } : {}),
       ...(timeline ? { expectedStart: timeline } : {}),
@@ -217,7 +226,8 @@ function isMappedName(name: string, hasNotes: boolean): boolean {
 }
 
 function fieldLimit(maxFileSize: number | null | undefined): number {
-  if (typeof maxFileSize === 'number' && maxFileSize > 0) return Math.min(maxFileSize, MAX_ENQUIRY_FILE_BYTES)
+  if (typeof maxFileSize === 'number' && maxFileSize > 0)
+    return Math.min(maxFileSize, MAX_ENQUIRY_FILE_BYTES)
   return MAX_ENQUIRY_FILE_BYTES
 }
 
@@ -243,7 +253,8 @@ function maxLength(field: PublicEnquiryField): number {
   if (field.name === 'phone') return 40
   if (field.name === 'email') return 200
   if (field.name === 'address') return 300
-  if (field.name === 'notes' || field.name === 'description' || field.blockType === 'textarea') return 5000
+  if (field.name === 'notes' || field.name === 'description' || field.blockType === 'textarea')
+    return 5000
   return 300
 }
 

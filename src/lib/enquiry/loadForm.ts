@@ -2,6 +2,7 @@ import type { Payload, TypedLocale } from 'payload'
 
 import { publicEnquiryFields } from '@/lib/enquiry/defaultForm'
 import { isEnquiryIcon } from '@/lib/enquiry/icons'
+import { isEnquiryProjectType } from '@/lib/enquiry/scopes'
 import type { PublicEnquiryField } from '@/lib/enquiry/validate'
 
 export type PublicEnquiryForm = {
@@ -45,10 +46,16 @@ function mediaUrl(value: unknown): string | undefined {
  * Chinese string for both locales. When that happens, show the copy for the
  * page locale. A custom placeholder is left as written.
  */
-function placeholderForLocale(name: string | undefined, placeholder: string | undefined, locale: 'en' | 'zh') {
+function placeholderForLocale(
+  name: string | undefined,
+  placeholder: string | undefined,
+  locale: 'en' | 'zh',
+) {
   if (!name || !placeholder) return placeholder
   const current = publicEnquiryFields(locale).find((field) => field.name === name)?.placeholder
-  const other = publicEnquiryFields(locale === 'en' ? 'zh' : 'en').find((field) => field.name === name)?.placeholder
+  const other = publicEnquiryFields(locale === 'en' ? 'zh' : 'en').find(
+    (field) => field.name === name,
+  )?.placeholder
   if (current && other && placeholder === other) return current
   return placeholder
 }
@@ -67,12 +74,16 @@ function toPublicField(field: unknown, locale: 'en' | 'zh'): PublicEnquiryField[
         if (!value) return []
         const icon = isEnquiryIcon(record.icon) ? record.icon : undefined
         const iconUrl = mediaUrl(record.iconImage)
+        const rawProjectType =
+          typeof record.projectType === 'string' ? record.projectType : undefined
+        const projectType = isEnquiryProjectType(rawProjectType) ? rawProjectType : undefined
         return [
           {
             label: typeof record.label === 'string' ? record.label : value,
             value,
             ...(icon ? { icon } : {}),
             ...(iconUrl ? { iconUrl } : {}),
+            ...(projectType ? { projectType } : {}),
           },
         ]
       })

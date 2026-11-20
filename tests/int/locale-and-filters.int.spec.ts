@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
 import { isSiteLocale } from '@/i18n/config'
-import { hasProjectFilters, imageMatchesTerm, parseProjectFilters, projectFilterHref } from '@/lib/projects/filters'
+import {
+  hasProjectFilters,
+  imageMatchesTerm,
+  parseProjectFilters,
+  projectFilterHref,
+} from '@/lib/projects/filters'
 import { publicProjectLocation } from '@/lib/projects/location'
+import {
+  galleryMode,
+  selectProjectCards,
+  type ProjectCardSource,
+} from '@/lib/projects/projectCards'
 import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
 
 describe('locale cookie values', () => {
@@ -56,6 +66,62 @@ describe('project filters', () => {
     expect(imageMatchesTerm([], [9], 9)).toBe(true)
     expect(imageMatchesTerm([], [9], 4)).toBe(false)
     expect(imageMatchesTerm([4], [9], 9)).toBe(false)
+  })
+})
+
+const cards: ProjectCardSource[] = [
+  {
+    slug: 'kew-residence',
+    title: 'Kew Residence',
+    type: 'residential',
+    location: 'Kew',
+    styleIds: [1],
+    imageStyles: [[1]],
+    coverSrc: '/kew.jpg',
+    coverAlt: 'Kew',
+  },
+  {
+    slug: 'richmond-studio',
+    title: 'Richmond Studio',
+    type: 'commercial',
+    location: 'Richmond',
+    styleIds: [],
+    imageStyles: [[2]],
+    coverSrc: '/richmond.jpg',
+    coverAlt: 'Richmond',
+  },
+  {
+    slug: 'rosebery-residence',
+    title: 'Rosebery Residence',
+    type: 'residential',
+    location: null,
+    styleIds: [],
+    imageStyles: [],
+    coverSrc: null,
+    coverAlt: 'Rosebery',
+  },
+]
+
+describe('by project gallery', () => {
+  it('opens By Project for the services query and keeps By Room for a space link', () => {
+    expect(galleryMode('project', parseProjectFilters({ view: 'project', type: 'joinery' }))).toBe(
+      'project',
+    )
+    expect(galleryMode('room', {})).toBe('room')
+    expect(galleryMode(undefined, parseProjectFilters({ space: 'kitchen' }))).toBe('room')
+    expect(galleryMode('project', parseProjectFilters({ space: 'kitchen' }))).toBe('project')
+    expect(galleryMode(undefined, {})).toBe('project')
+  })
+
+  it('shows one cover per matching project and an empty list for a type with none', () => {
+    expect(
+      selectProjectCards(cards, { type: 'residential' }, undefined).map((card) => card.slug),
+    ).toEqual(['kew-residence'])
+    expect(selectProjectCards(cards, { type: 'joinery' }, undefined)).toEqual([])
+    expect(
+      selectProjectCards(cards, { style: 'contemporary' }, 2).map((card) => card.slug),
+    ).toEqual(['richmond-studio'])
+    expect(selectProjectCards(cards, { style: 'missing' }, undefined)).toEqual([])
   })
 })
 
