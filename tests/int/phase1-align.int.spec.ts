@@ -32,16 +32,23 @@ describe('phase 1 layout alignment', () => {
     ]
     const aligned = alignPhase1Layout(layout, 'en', 'home', { idea: 11, plans: 12 })
     expect(aligned.changed).toBe(true)
-    expect(aligned.layout).toEqual(
-      expect.arrayContaining([homeBriefs]),
-    )
+    expect(aligned.layout).toEqual(expect.arrayContaining([homeBriefs]))
     expect((aligned.layout as unknown[])[0]).toEqual(homeBriefs)
 
     const again = alignPhase1Layout(aligned.layout, 'en', 'home', { idea: 11, plans: 12 })
     expect(again.changed).toBe(false)
-    const cards = (aligned.layout as { blockType: string; variant?: string; cards?: { id?: string; title?: string; image?: number }[] }[])[1]
+    const cards = (
+      aligned.layout as {
+        blockType: string
+        variant?: string
+        cards?: { id?: string; title?: string; image?: number }[]
+      }[]
+    )[1]
     expect(cards.variant).toBe('pair')
-    expect(cards.cards?.map((card) => card.title)).toEqual(['Starting with an Idea?', 'Already Have Plans?'])
+    expect(cards.cards?.map((card) => card.title)).toEqual([
+      'Starting with an Idea?',
+      'Already Have Plans?',
+    ])
     expect(cards.cards?.map((card) => card.id)).toEqual(['c0', 'c1'])
     expect(cards.cards?.map((card) => card.image)).toEqual([11, 12])
   })
@@ -78,7 +85,14 @@ describe('phase 1 layout alignment', () => {
       },
     ]
     const aligned = alignPhase1Layout(layout, 'en', 'home')
-    const process = (aligned.layout as { heading?: string; trustHeading?: string; trustItems?: { title: string }[]; steps?: { id: string; title: string }[] }[])[0]
+    const process = (
+      aligned.layout as {
+        heading?: string
+        trustHeading?: string
+        trustItems?: { title: string }[]
+        steps?: { id: string; title: string }[]
+      }[]
+    )[0]
     expect(process.heading).toBe('A considered approach, from start to finish.')
     expect(process.trustHeading).toBe('Built with the bigger picture in mind.')
     expect(process.trustItems?.map((item) => item.title)).toEqual([
@@ -86,7 +100,12 @@ describe('phase 1 layout alignment', () => {
       'Thinking Ahead',
       'Clearer Accountability',
     ])
-    expect(process.steps?.map((step) => step.title)).toEqual(['Consultation', 'Planning', 'Construction', 'Handover'])
+    expect(process.steps?.map((step) => step.title)).toEqual([
+      'Consultation',
+      'Planning',
+      'Construction',
+      'Handover',
+    ])
     expect(process.steps?.map((step) => step.id)).toEqual(['s0', 's1', 's2', 's4'])
     const categories = (aligned.layout as { items?: { title: string }[] }[])[1]
     expect(categories.items?.map((item) => item.title)).toEqual(
@@ -116,7 +135,9 @@ describe('phase 1 layout alignment', () => {
     expect(prose.body).toContain('Custom joinery is coordinated with the construction work')
     expect(prose.body).not.toMatch(/in-house/i)
     expect(prose.body).toContain('The rest stays.')
-    expect((aligned.layout as { body: string }[])[1].body).toBe('A note the client already rewrote.')
+    expect((aligned.layout as { body: string }[])[1].body).toBe(
+      'A note the client already rewrote.',
+    )
   })
 
   it('drops interior services and points the remaining sections at related projects', () => {
@@ -124,9 +145,23 @@ describe('phase 1 layout alignment', () => {
       {
         blockType: 'serviceDetails',
         services: [
-          { anchor: 'residential', title: 'Residential', enquireLabel: 'Enquire about Residential' },
-          { anchor: 'interior', title: 'Interior Fit-out & Project Delivery', enquireLabel: 'Enquire about Interior' },
-          { anchor: 'joinery', title: 'Custom Joinery', description: 'Bespoke joinery crafted in our workshop. Whether standalone or as part of a larger project, we deliver precision-made cabinetry tailored to your space.', enquireLabel: 'See kitchens' },
+          {
+            anchor: 'residential',
+            title: 'Residential',
+            enquireLabel: 'Enquire about Residential',
+          },
+          {
+            anchor: 'interior',
+            title: 'Interior Fit-out & Project Delivery',
+            enquireLabel: 'Enquire about Interior',
+          },
+          {
+            anchor: 'joinery',
+            title: 'Custom Joinery',
+            description:
+              'Bespoke joinery crafted in our workshop. Whether standalone or as part of a larger project, we deliver precision-made cabinetry tailored to your space.',
+            enquireLabel: 'See kitchens',
+          },
         ],
       },
       {
@@ -139,7 +174,11 @@ describe('phase 1 layout alignment', () => {
       },
     ]
     const aligned = alignPhase1Layout(layout, 'en', 'services')
-    const details = (aligned.layout as { services: { anchor: string; enquireLabel: string; description?: string }[] }[])[0]
+    const details = (
+      aligned.layout as {
+        services: { anchor: string; enquireLabel: string; description?: string }[]
+      }[]
+    )[0]
     expect(details.services.map((service) => service.anchor)).toEqual(['residential', 'joinery'])
     expect(details.services[0].enquireLabel).toBe('View Related Project')
     expect(details.services[1].enquireLabel).toBe('See kitchens')
@@ -149,6 +188,33 @@ describe('phase 1 layout alignment', () => {
     expect(band.headingAccent).toBe('made for your space.')
     expect(band.body).toContain('Great joinery starts long before installation.')
     expect(relatedProjectHref('joinery')).toBe('/projects?view=project&type=joinery')
+  })
+
+  it('replaces the live services hero sentence and leaves the corrected Chinese line', () => {
+    const intended =
+      'Three core services — residential construction and renovation, commercial fit-out, and custom joinery — delivered by one building team.'
+    const live =
+      'Four core capabilities under one roof. From ground-up construction to precision cabinetry, we deliver complete building solutions for homes and businesses.'
+    const aligned = alignPhase1Layout(
+      [{ blockType: 'pageIntro', description: live }],
+      'en',
+      'services',
+    )
+    expect((aligned.layout as { description: string }[])[0]?.description).toBe(intended)
+
+    const older =
+      'Four capabilities under one roof — from ground-up construction to precision cabinetry, delivered as one complete building service.'
+    const olderAligned = alignPhase1Layout(
+      [{ blockType: 'pageIntro', description: older }],
+      'en',
+      'services',
+    )
+    expect((olderAligned.layout as { description: string }[])[0]?.description).toBe(intended)
+
+    const zh = '三项核心业务由同一个团队完成：住宅施工与翻新、商业装修和定制木作。'
+    const kept = alignPhase1Layout([{ blockType: 'pageIntro', description: zh }], 'zh', 'services')
+    expect(kept.changed).toBe(false)
+    expect((kept.layout as { description: string }[])[0]?.description).toBe(zh)
   })
 })
 
@@ -160,7 +226,10 @@ describe('header dropdown migration', () => {
         { id: 'res', link: { type: 'custom', url: '/services#residential', label: 'Homes' } },
         { id: 'com', link: { type: 'custom', url: '/services#commercial', label: 'Commercial' } },
         { id: 'joi', link: { type: 'custom', url: '/services#joinery', label: 'Custom Joinery' } },
-        { id: 'int', link: { type: 'custom', url: '/services#interior', label: 'Interior Fit-out' } },
+        {
+          id: 'int',
+          link: { type: 'custom', url: '/services#interior', label: 'Interior Fit-out' },
+        },
       ],
       'en',
     )
@@ -193,6 +262,9 @@ describe('header dropdown migration', () => {
       { link: { url: '/services#joinery' } },
     ])
     expect(footer.changed).toBe(true)
-    expect(footer.items.map((item) => item.link.url)).toEqual(['/services#residential', '/services#joinery'])
+    expect(footer.items.map((item) => item.link.url)).toEqual([
+      '/services#residential',
+      '/services#joinery',
+    ])
   })
 })

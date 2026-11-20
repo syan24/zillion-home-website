@@ -18,7 +18,14 @@ export const Enquiries: CollectionConfig = {
   slug: 'enquiries',
   admin: {
     useAsTitle: 'submissionReference',
-    defaultColumns: ['submissionReference', 'name', 'projectType', 'status', 'submittedAt', 'email'],
+    defaultColumns: [
+      'submissionReference',
+      'name',
+      'projectType',
+      'status',
+      'submittedAt',
+      'email',
+    ],
     listSearchableFields: ['submissionReference', 'name', 'email', 'phone', 'address', 'notes'],
     group: 'Enquiries',
     description:
@@ -157,7 +164,8 @@ export const Enquiries: CollectionConfig = {
       label: 'Spaces',
       admin: {
         ...locked,
-        description: 'Copied from kitchen, wardrobe, and bathroom vanity when the visitor selects those scopes.',
+        description:
+          'Copied when the scope is a kitchen, wardrobe, or bathroom vanity, including kitchen cabinetry, wardrobes, and bathroom vanities.',
       },
     },
     {

@@ -6,6 +6,7 @@ import type { SiteLocale } from '@/i18n/config'
 import { getMediaUrl } from '@/utilities/getMediaUrl'
 
 import { hasProjectFilters, imageMatchesTerm, type ProjectFilters } from './filters'
+import { selectProjectCards, type ProjectCardSource } from './projectCards'
 import type { ProjectType } from './types'
 import { publicProjectLocation } from './location'
 
@@ -48,11 +49,15 @@ export type PortfolioTerm = { id: number; name: string; slug: string }
 export type PortfolioProjectOption = { slug: string; title: string; type: ProjectType }
 
 function names(value: Relation<Style | Space>[] | null | undefined) {
-  return (value || []).map((item) => asDoc(item)?.name).filter((name): name is string => Boolean(name))
+  return (value || [])
+    .map((item) => asDoc(item)?.name)
+    .filter((name): name is string => Boolean(name))
 }
 
 function slugs(value: Relation<Space>[] | null | undefined) {
-  return (value || []).map((item) => asDoc(item)?.slug).filter((slug): slug is string => Boolean(slug))
+  return (value || [])
+    .map((item) => asDoc(item)?.slug)
+    .filter((slug): slug is string => Boolean(slug))
 }
 
 function toGalleryImage(doc: ProjectImage): GalleryImage | null {
@@ -118,21 +123,39 @@ async function publishedImages(locale: SiteLocale, projectIds: number[]) {
     locale: locale as TypedLocale,
     fallbackLocale: 'en',
   })
-  const images = result.docs.map((doc) => toGalleryImage(doc)).filter((image): image is GalleryImage => Boolean(image))
+  const images = result.docs
+    .map((doc) => toGalleryImage(doc))
+    .filter((image): image is GalleryImage => Boolean(image))
   return { images: sortImages(images, result.docs), docs: result.docs }
 }
 
 export async function loadPortfolio(locale: SiteLocale, filters: ProjectFilters) {
   const payload = await getPayload({ config: configPromise })
-  const localeOptions = { locale: locale as TypedLocale, fallbackLocale: 'en' as const, overrideAccess: false as const }
+  const localeOptions = {
+    locale: locale as TypedLocale,
+    fallbackLocale: 'en' as const,
+    overrideAccess: false as const,
+  }
 
   const [styleResult, spaceResult, projectResult] = await Promise.all([
-    payload.find({ collection: 'styles', limit: 50, sort: 'displayOrder', pagination: false, ...localeOptions }),
-    payload.find({ collection: 'spaces', limit: 50, sort: 'displayOrder', pagination: false, ...localeOptions }),
+    payload.find({
+      collection: 'styles',
+      limit: 50,
+      sort: 'displayOrder',
+      pagination: false,
+      ...localeOptions,
+    }),
+    payload.find({
+      collection: 'spaces',
+      limit: 50,
+      sort: 'displayOrder',
+      pagination: false,
+      ...localeOptions,
+    }),
     payload.find({
       collection: 'projects',
       where: { _status: { equals: 'published' } },
-      depth: 0,
+      depth: 1,
       limit: 200,
       pagination: false,
       sort: 'displayOrder',
@@ -140,17 +163,21 @@ export async function loadPortfolio(locale: SiteLocale, filters: ProjectFilters)
     }),
   ])
 
-  const styles: PortfolioTerm[] = styleResult.docs.map((doc: Style) => ({
-    id: doc.id,
-    name: doc.name,
-    slug: doc.slug || '',
-  })).filter((doc) => doc.slug)
+  const styles: PortfolioTerm[] = styleResult.docs
+    .map((doc: Style) => ({
+      id: doc.id,
+      name: doc.name,
+      slug: doc.slug || '',
+    }))
+    .filter((doc) => doc.slug)
 
-  const spaces: PortfolioTerm[] = spaceResult.docs.map((doc: Space) => ({
-    id: doc.id,
-    name: doc.name,
-    slug: doc.slug || '',
-  })).filter((doc) => doc.slug)
+  const spaces: PortfolioTerm[] = spaceResult.docs
+    .map((doc: Space) => ({
+      id: doc.id,
+      name: doc.name,
+      slug: doc.slug || '',
+    }))
+    .filter((doc) => doc.slug)
 
   const publishedProjects = projectResult.docs.filter((doc) => doc.slug)
   const styleId = filters.style ? styles.find((item) => item.slug === filters.style)?.id : undefined
@@ -168,26 +195,76 @@ export async function loadPortfolio(locale: SiteLocale, filters: ProjectFilters)
     .map((project) => project.id)
 
   const loaded = await publishedImages(locale, candidateIds)
-  const covers = hasProjectFilters(filters) ? (await publishedImages(locale, publishedProjects.map((project) => project.id))).images : loaded.images
+  const everyProjectId = publishedProjects.map((project) => project.id)
+  const allImages = hasProjectFilters(filters)
+    ? await publishedImages(locale, everyProjectId)
+    : loaded
+  const covers = allImages.images
 
-  const styleIdsByProject = new Map(publishedProjects.map((project) => [project.id, relationIds(project.styles)]))
-  const spaceIdsByProject = new Map(publishedProjects.map((project) => [project.id, relationIds(project.spaces)]))
-  const projectIdBySlug = new Map(publishedProjects.map((project) => [project.slug as string, project.id]))
+  const styleIdsByProject = new Map(
+    publishedProjects.map((project) => [project.id, relationIds(project.styles)]),
+  )
+  const spaceIdsByProject = new Map(
+    publishedProjects.map((project) => [project.id, relationIds(project.spaces)]),
+  )
+  const projectIdBySlug = new Map(
+    publishedProjects.map((project) => [project.slug as string, project.id]),
+  )
 
   const images = loaded.images.filter((image) => {
     const projectId = projectIdBySlug.get(image.projectSlug)
     if (!projectId) return false
     const onImage = loaded.docs.find((doc) => doc.id === image.id)
-    if (styleId && !imageMatchesTerm(relationIds(onImage?.styles), styleIdsByProject.get(projectId), styleId)) {
+    if (
+      styleId &&
+      !imageMatchesTerm(relationIds(onImage?.styles), styleIdsByProject.get(projectId), styleId)
+    ) {
       return false
     }
-    if (spaceId && !imageMatchesTerm(relationIds(onImage?.spaces), spaceIdsByProject.get(projectId), spaceId)) {
+    if (
+      spaceId &&
+      !imageMatchesTerm(relationIds(onImage?.spaces), spaceIdsByProject.get(projectId), spaceId)
+    ) {
       return false
     }
     return true
   })
 
-  return { styles, spaces, images: hasProjectFilters(filters) ? images : covers, covers, projects: projectOptions(covers) }
+  const imageStylesBySlug = new Map<string, number[][]>()
+  for (const image of covers) {
+    const doc = allImages.docs.find((item) => item.id === image.id)
+    const groups = imageStylesBySlug.get(image.projectSlug) || []
+    groups.push(relationIds(doc?.styles))
+    imageStylesBySlug.set(image.projectSlug, groups)
+  }
+
+  const cardSources: ProjectCardSource[] = publishedProjects
+    .filter((project) => project.slug)
+    .map((project) => {
+      const featured = mediaSrc(project.featuredImage)
+      const fallback = covers.find((image) => image.projectSlug === project.slug)
+      return {
+        slug: project.slug as string,
+        title: project.title,
+        type: project.type,
+        location: publicProjectLocation(project),
+        styleIds: styleIdsByProject.get(project.id) || [],
+        imageStyles: imageStylesBySlug.get(project.slug as string) || [],
+        coverSrc: featured?.src || fallback?.src || null,
+        coverAlt: featured?.alt || fallback?.alt || project.title,
+      }
+    })
+
+  const cards = selectProjectCards(cardSources, filters, filters.style ? styleId : undefined)
+
+  return {
+    styles,
+    spaces,
+    images: hasProjectFilters(filters) ? images : covers,
+    covers,
+    projects: projectOptions(covers),
+    cards,
+  }
 }
 
 function projectOptions(images: GalleryImage[]): PortfolioProjectOption[] {
@@ -224,7 +301,11 @@ export type ProjectDetail = {
 
 export async function loadProjectDetail(slug: string, locale: SiteLocale) {
   const payload = await getPayload({ config: configPromise })
-  const localeOptions = { locale: locale as TypedLocale, fallbackLocale: 'en' as const, overrideAccess: false as const }
+  const localeOptions = {
+    locale: locale as TypedLocale,
+    fallbackLocale: 'en' as const,
+    overrideAccess: false as const,
+  }
   const result = await payload.find({
     collection: 'projects',
     where: { and: [{ slug: { equals: slug } }, { _status: { equals: 'published' } }] },
@@ -275,7 +356,9 @@ export async function loadProjectDetail(slug: string, locale: SiteLocale) {
     description: project.description || null,
     styleNames: names(project.styles),
     spaceNames: names(project.spaces),
-    styleSlugs: (project.styles || []).map((item) => asDoc(item)?.slug).filter((slug): slug is string => Boolean(slug)),
+    styleSlugs: (project.styles || [])
+      .map((item) => asDoc(item)?.slug)
+      .filter((slug): slug is string => Boolean(slug)),
     spaceSlugs: slugs(project.spaces),
   }
 

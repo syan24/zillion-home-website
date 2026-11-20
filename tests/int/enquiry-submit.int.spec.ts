@@ -23,8 +23,8 @@ function enquiry(id: string): ValidEnquiry {
     email: 'alex@example.com',
     address: 'Kew',
     projectType: 'residential',
-    scope: ['kitchen', 'tv-unit'],
-    spaces: ['kitchen'],
+    scope: ['new-home-construction', 'outdoor-works'],
+    spaces: [],
     notes: 'Warm oak kitchen.',
     budgetRange: '100k-250k',
     expectedStart: '3-6-months',
@@ -85,7 +85,8 @@ describe('enquiry submission', () => {
     const doc = found.docs[0]
     expect(doc?.submissionReference).toMatch(/^ENQ-/)
     expect(doc?.projectType).toBe('residential')
-    expect(doc?.spaces).toEqual(['kitchen'])
+    expect(doc?.scope).toEqual(['new-home-construction', 'outdoor-works'])
+    expect(doc?.spaces).toEqual([])
     expect(doc?.locale).toBe('zh')
     expect(doc?.status).toBe('new')
     expect(doc?.notificationStatus).toBe('skipped')

@@ -38,7 +38,9 @@ const oldProcessBodies: Record<ProcessLocale, string[]> = {
   en: [
     'From initial consultation to final handover, we coordinate construction, interior fit-out and custom joinery to deliver well-managed projects with practical solutions and quality workmanship.',
   ],
-  zh: ['从初次沟通到最终交付，我们协调施工、室内装修与定制木作，把项目管清楚，给出实用做法，并保证做工品质。'],
+  zh: [
+    '从初次沟通到最终交付，我们协调施工、室内装修与定制木作，把项目管清楚，给出实用做法，并保证做工品质。',
+  ],
 }
 
 const oldTrustTitles: Record<ProcessLocale, string[]> = {
@@ -47,7 +49,10 @@ const oldTrustTitles: Record<ProcessLocale, string[]> = {
 }
 
 const oldTrustEyebrows = new Set(['Our assurances', '我们的保证'])
-const oldTrustHeadings = new Set(['Craft you can see. Confidence you can feel.', '看得见的工艺，感受得到的把握。'])
+const oldTrustHeadings = new Set([
+  'Craft you can see. Confidence you can feel.',
+  '看得见的工艺，感受得到的把握。',
+])
 
 const oldEnquireLabels = new Set([
   'Enquire about Residential',
@@ -78,6 +83,10 @@ const phraseSwaps: Record<ProcessLocale, [string, string][]> = {
     ],
     [
       'Four capabilities under one roof — from ground-up construction to precision cabinetry, delivered as one complete building service.',
+      'Three core services — residential construction and renovation, commercial fit-out, and custom joinery — delivered by one building team.',
+    ],
+    [
+      'Four core capabilities under one roof. From ground-up construction to precision cabinetry, we deliver complete building solutions for homes and businesses.',
       'Three core services — residential construction and renovation, commercial fit-out, and custom joinery — delivered by one building team.',
     ],
   ],
@@ -145,7 +154,10 @@ function swapPhrases(value: string, locale: ProcessLocale) {
 }
 
 function withId(current: unknown, fields: Record<string, unknown>) {
-  const id = isRecord(current) && (typeof current.id === 'string' || typeof current.id === 'number') ? current.id : undefined
+  const id =
+    isRecord(current) && (typeof current.id === 'string' || typeof current.id === 'number')
+      ? current.id
+      : undefined
   return { ...(id !== undefined ? { id } : {}), ...fields }
 }
 
@@ -196,7 +208,8 @@ function alignBlock(
   if (block.blockType === 'processSection') return alignProcessCopy(block, locale, copy)
   if (block.blockType === 'categoryBar') return alignCategory(block, locale, copy)
   if (block.blockType === 'serviceDetails') return alignServiceDetails(block, locale)
-  if (block.blockType === 'splitFeature' && block.variant === 'darkCopy') return alignJoineryBand(block, locale, copy)
+  if (block.blockType === 'splitFeature' && block.variant === 'darkCopy')
+    return alignJoineryBand(block, locale, copy)
   return alignPhrases(block, locale)
 }
 
@@ -211,7 +224,8 @@ function alignServiceCards(
   const promotesInterior = cards.some(
     (card) =>
       isRecord(card) &&
-      (isInteriorServiceTitle(text(card.title)) || (typeof card.href === 'string' && card.href.includes('#interior'))),
+      (isInteriorServiceTitle(text(card.title)) ||
+        (typeof card.href === 'string' && card.href.includes('#interior'))),
   )
   const legacy = oldServiceCardHeadings.has(heading) || promotesInterior
   if (!legacy) return alignPhrases(block, locale)
@@ -253,7 +267,11 @@ function alignProcessCopy(
   const body = text(next.body)
   const patch: Record<string, unknown> = {}
 
-  if (oldProcessHeadings[locale].includes(heading) || oldProcessEyebrows[locale].includes(eyebrow) || oldProcessBodies[locale].includes(body)) {
+  if (
+    oldProcessHeadings[locale].includes(heading) ||
+    oldProcessEyebrows[locale].includes(eyebrow) ||
+    oldProcessBodies[locale].includes(body)
+  ) {
     patch.eyebrow = source.eyebrow
     patch.heading = source.heading
     patch.body = source.body
@@ -275,8 +293,10 @@ function alignProcessCopy(
   const hasTrust = Array.isArray(next.trustItems) && next.trustItems.length > 0
   const trustEyebrow = text(next.trustEyebrow)
   const trustHeading = text(next.trustHeading)
-  if (hasTrust && (!trustEyebrow || oldTrustEyebrows.has(trustEyebrow))) patch.trustEyebrow = source.trustEyebrow
-  if (hasTrust && (!trustHeading || oldTrustHeadings.has(trustHeading))) patch.trustHeading = source.trustHeading
+  if (hasTrust && (!trustEyebrow || oldTrustEyebrows.has(trustEyebrow)))
+    patch.trustEyebrow = source.trustEyebrow
+  if (hasTrust && (!trustHeading || oldTrustHeadings.has(trustHeading)))
+    patch.trustHeading = source.trustHeading
 
   if (!Object.keys(patch).length) return next
   return { ...next, ...patch }
@@ -291,12 +311,15 @@ function alignCategory(
   const desired = copy.home.categories.items.map((item) => item.title)
   if (sameTitles(current, desired)) return block
   const old = new Set(oldCategoryTitles[locale])
-  const legacy = current.length > 0 && current.every((title) => old.has(title) || isInteriorServiceTitle(title))
+  const legacy =
+    current.length > 0 && current.every((title) => old.has(title) || isInteriorServiceTitle(title))
   const existingItems = Array.isArray(block.items) ? block.items : null
   if (!legacy || !existingItems) return block
   return {
     ...block,
-    items: copy.home.categories.items.map((item, index) => withId(existingItems[index], { title: item.title })),
+    items: copy.home.categories.items.map((item, index) =>
+      withId(existingItems[index], { title: item.title }),
+    ),
   }
 }
 
@@ -330,7 +353,10 @@ function alignJoineryBand(
   copy: ReturnType<typeof getMarketing>,
 ) {
   const accent = text(block.headingAccent)
-  const legacy = oldJoineryAccents.has(accent) || text(block.eyebrow) === 'In-house Capability' || text(block.eyebrow) === '自有能力'
+  const legacy =
+    oldJoineryAccents.has(accent) ||
+    text(block.eyebrow) === 'In-house Capability' ||
+    text(block.eyebrow) === '自有能力'
   if (!legacy) return alignPhrases(block, locale)
   const desired = copy.services.joinery
   return {
@@ -342,7 +368,10 @@ function alignJoineryBand(
   }
 }
 
-function alignPhrases(block: Record<string, unknown>, locale: ProcessLocale): Record<string, unknown> {
+function alignPhrases(
+  block: Record<string, unknown>,
+  locale: ProcessLocale,
+): Record<string, unknown> {
   let changed = false
   const next: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(block)) {

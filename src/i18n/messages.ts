@@ -21,7 +21,8 @@ const en = {
   legal: {
     privacy: {
       metaTitle: 'Privacy Policy',
-      metaDescription: 'Placeholder privacy page for Zillion Home. The full policy will replace this text.',
+      metaDescription:
+        'Placeholder privacy page for Zillion Home. The full policy will replace this text.',
       eyebrow: 'Legal',
       heading: 'Privacy Policy',
       intro: 'This is a placeholder page. It is not the final privacy policy.',
@@ -30,7 +31,8 @@ const en = {
     },
     terms: {
       metaTitle: 'Terms of Service',
-      metaDescription: 'Placeholder terms page for Zillion Home. The full terms will replace this text.',
+      metaDescription:
+        'Placeholder terms page for Zillion Home. The full terms will replace this text.',
       eyebrow: 'Legal',
       heading: 'Terms of Service',
       intro: 'This is a placeholder page. It is not the final terms of service.',
@@ -57,6 +59,7 @@ const en = {
     formUnavailable: 'The enquiry form is not available yet.',
     requiredField: 'Enter {label}.',
     chooseField: 'Choose {label}.',
+    chooseScopeType: 'Choose a project type to see the scope of work.',
     invalidField: 'Check {label}.',
     uploadLabel: 'Upload photos / drawings / documents',
     uploadHint: 'Click to upload or drop files here',
@@ -122,6 +125,8 @@ const en = {
     close: 'Close',
     type: 'Project type',
     allTypes: 'All types',
+    filter: 'Filter',
+    emptyProjects: 'No projects match these filters.',
     space: 'Space',
     allSpaces: 'All spaces',
     style: 'Style',
@@ -209,6 +214,7 @@ const zh: typeof en = {
     formUnavailable: '咨询表单暂时无法使用。',
     requiredField: '请填写{label}。',
     chooseField: '请选择{label}。',
+    chooseScopeType: '请先选择项目类型，再选择工作范围。',
     invalidField: '请检查{label}。',
     uploadLabel: '上传照片 / 图纸 / 文件',
     uploadHint: '点击上传文件或拖拽到此处',
@@ -271,6 +277,8 @@ const zh: typeof en = {
     close: '关闭',
     type: '项目类型',
     allTypes: '全部类型',
+    filter: '筛选',
+    emptyProjects: '没有符合这些筛选条件的项目。',
     space: '空间',
     allSpaces: '全部空间',
     style: '风格',

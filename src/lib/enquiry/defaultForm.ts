@@ -1,10 +1,16 @@
 import type { EnquiryIcon } from '@/lib/enquiry/icons'
 import { MAX_ENQUIRY_FILE_BYTES } from '@/lib/enquiry/options'
+import { scopeCatalog, type EnquiryProjectType } from '@/lib/enquiry/scopes'
 import type { PublicEnquiryField } from '@/lib/enquiry/validate'
 
 type LocaleCopy = { en: string; zh: string }
 
-type OptionCopy = { value: string; label: LocaleCopy; icon?: EnquiryIcon }
+type OptionCopy = {
+  value: string
+  label: LocaleCopy
+  icon?: EnquiryIcon
+  projectType?: EnquiryProjectType
+}
 
 type FieldCopy = {
   blockType: string
@@ -67,14 +73,11 @@ export const defaultEnquiryFormFields: FieldCopy[] = [
     blockType: 'checkboxGroup',
     name: 'scope',
     label: { en: 'Scope of work', zh: '工作范围' },
-    options: [
-      { value: 'full-joinery', label: { en: 'Full Joinery', zh: '全屋定制' } },
-      { value: 'kitchen', label: { en: 'Kitchen', zh: '厨房' } },
-      { value: 'wardrobe', label: { en: 'Wardrobe', zh: '衣柜' } },
-      { value: 'bathroom-vanity', label: { en: 'Bathroom Vanity', zh: '浴室柜' } },
-      { value: 'tv-unit', label: { en: 'TV Unit', zh: '电视柜' } },
-      { value: 'other', label: { en: 'Other', zh: '其他' } },
-    ],
+    options: scopeCatalog.map((item) => ({
+      value: item.value,
+      projectType: item.projectType,
+      label: { en: item.en, zh: item.zh },
+    })),
   },
   {
     blockType: 'select',
@@ -142,6 +145,7 @@ export function publicEnquiryFields(locale: 'en' | 'zh'): PublicEnquiryField[] {
       value: option.value,
       label: option.label[locale],
       ...(option.icon ? { icon: option.icon } : {}),
+      ...(option.projectType ? { projectType: option.projectType } : {}),
     })),
   }))
 }
@@ -159,6 +163,7 @@ export function payloadEnquiryFields(locale: 'en' | 'zh') {
               value: option.value,
               label: option.label[locale],
               ...(option.icon ? { icon: option.icon } : {}),
+              ...(option.projectType ? { projectType: option.projectType } : {}),
             })),
           }
         : {}),

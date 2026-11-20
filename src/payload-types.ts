@@ -681,6 +681,10 @@ export interface Form {
                   label: string;
                   value: string;
                   /**
+                   * When set, the public enquiry form shows this option only after that project type is selected. Leave empty to show it for every type.
+                   */
+                  projectType?: ('residential' | 'commercial' | 'joinery') | null;
+                  /**
                    * Line icon on the public card. Leave empty for no icon. A custom image replaces it.
                    */
                   icon?: ('house' | 'building' | 'layout') | null;
@@ -1072,7 +1076,7 @@ export interface Enquiry {
     | boolean
     | null;
   /**
-   * Copied from kitchen, wardrobe, and bathroom vanity when the visitor selects those scopes.
+   * Copied when the scope is a kitchen, wardrobe, or bathroom vanity, including kitchen cabinetry, wardrobes, and bathroom vanities.
    */
   spaces?: ('kitchen' | 'wardrobe' | 'bathroom-vanity')[] | null;
   /**
@@ -2587,6 +2591,7 @@ export interface FormsSelect<T extends boolean = true> {
                 | {
                     label?: T;
                     value?: T;
+                    projectType?: T;
                     icon?: T;
                     iconImage?: T;
                     id?: T;

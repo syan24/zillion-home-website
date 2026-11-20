@@ -14,6 +14,7 @@ import {
   enquiryResultStorageKey,
   MAX_ENQUIRY_FILES,
 } from '@/lib/enquiry/options'
+import { scopesForProjectType } from '@/lib/enquiry/scopes'
 import { enquiryFileIssue, incomingEnquiryPath, isEnquirySubmissionId } from '@/lib/enquiry/files'
 import {
   mapEnquiryAnswers,
@@ -169,11 +170,28 @@ export function EnquiryForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
   const [issues, setIssues] = useState<EnquiryIssue[]>([])
-  const storedReference = useSyncExternalStore(subscribeToEnquiryResult, readStoredReference, () => '')
+  const storedReference = useSyncExternalStore(
+    subscribeToEnquiryResult,
+    readStoredReference,
+    () => '',
+  )
   const storedName = useSyncExternalStore(subscribeToEnquiryResult, readStoredName, () => '')
 
   const setScalar = (name: string, value: string | boolean | string[]) => {
-    setValues((current) => ({ ...current, [name]: value }))
+    setValues((current) => {
+      const next = { ...current, [name]: value }
+      if (name !== 'projectType' || typeof value !== 'string') return next
+      const scopeField = fields.find(
+        (field) => field.name === 'scope' && field.blockType === 'checkboxGroup',
+      )
+      if (!scopeField) return next
+      const selected = Array.isArray(current.scope) ? current.scope : []
+      const allowed = new Set(
+        scopesForProjectType(scopeField.options || [], value).map((option) => option.value),
+      )
+      next.scope = selected.filter((item) => allowed.has(item))
+      return next
+    })
   }
 
   const addFiles = (name: string, list: FileList | File[], field: PublicEnquiryField) => {
@@ -182,7 +200,10 @@ export function EnquiryForm({
     const limit =
       typeof field.maxFileSize === 'number' && field.maxFileSize > 0 ? field.maxFileSize : undefined
     for (const file of list) {
-      const total = Object.values({ ...files, [name]: next }).reduce((sum, group) => sum + group.length, 0)
+      const total = Object.values({ ...files, [name]: next }).reduce(
+        (sum, group) => sum + group.length,
+        0,
+      )
       if (total >= MAX_ENQUIRY_FILES) {
         message = copy.fileCount
         break
@@ -223,7 +244,8 @@ export function EnquiryForm({
     })
     if (!validated.ok) {
       setIssues(validated.issues)
-      if (validated.issues.some((issue) => issue.code === 'files')) setFileMessage(copy.errors.files)
+      if (validated.issues.some((issue) => issue.code === 'files'))
+        setFileMessage(copy.errors.files)
       return
     }
 
@@ -245,7 +267,9 @@ export function EnquiryForm({
     }
 
     try {
-      const chosen = Object.entries(files).flatMap(([field, group]) => group.map((file) => ({ field, file })))
+      const chosen = Object.entries(files).flatMap(([field, group]) =>
+        group.map((file) => ({ field, file })),
+      )
       if (directUpload && chosen.length > 0) {
         const { upload } = await import('@vercel/blob/client')
         const blobs = []
@@ -253,7 +277,9 @@ export function EnquiryForm({
           const item = chosen[index]
           if (!item) continue
           setProgress(
-            copy.uploading.replace('{current}', String(index + 1)).replace('{total}', String(chosen.length)),
+            copy.uploading
+              .replace('{current}', String(index + 1))
+              .replace('{total}', String(chosen.length)),
           )
           const pathname = incomingEnquiryPath(item.file.name)
           if (!pathname) {
@@ -287,8 +313,7 @@ export function EnquiryForm({
         if (result.issues.some((issue) => issue.code === 'files')) setFileMessage(copy.errors.files)
         return
       }
-      const given =
-        typeof values.name === 'string' ? values.name.trim().split(/\s+/)[0] || '' : ''
+      const given = typeof values.name === 'string' ? values.name.trim().split(/\s+/)[0] || '' : ''
       storeEnquiryResult(result.submissionReference, given)
     } catch {
       setIssues([{ field: 'form', code: 'generic' }])
@@ -314,14 +339,19 @@ export function EnquiryForm({
             {copy.thanksName.replace('{name}', storedName)}
           </p>
         ) : null}
-        <h2 className="font-serif text-[clamp(40px,4.6vw,68px)] font-light leading-none">{copy.thanksTitle}</h2>
+        <h2 className="font-serif text-[clamp(40px,4.6vw,68px)] font-light leading-none">
+          {copy.thanksTitle}
+        </h2>
         <p className="max-w-lg text-base leading-8 text-foreground-soft">{copy.thanksBody}</p>
         <p className="text-sm text-muted-foreground">{copy.thanksTiming}</p>
         <p className="text-sm">
           {copy.referenceLabel} <span className="tracking-wide">{storedReference}</span>
         </p>
         <div className="flex flex-wrap gap-4 pt-2">
-          <Button asChild className="h-auto rounded-none px-9 py-5 text-[11px] uppercase tracking-[0.3em]">
+          <Button
+            asChild
+            className="h-auto rounded-none px-9 py-5 text-[11px] uppercase tracking-[0.3em]"
+          >
             <Link href="/projects">{copy.viewProjects}</Link>
           </Button>
           <Button
@@ -342,6 +372,7 @@ export function EnquiryForm({
   }
 
   const formIssues = issues.filter((issue) => issue.field === 'form')
+  const projectType = typeof values.projectType === 'string' ? values.projectType : ''
 
   return (
     <form className="flex flex-col gap-10" onSubmit={handleSubmit}>
@@ -358,29 +389,45 @@ export function EnquiryForm({
           key={row.map((field) => field.name || field.blockType).join('-')}
           className={row.length > 1 ? 'grid gap-9 sm:grid-cols-2 sm:gap-x-10' : undefined}
         >
-          {row.map((field) => (
-            <FieldControl
-              key={`${field.blockType}-${field.name || 'message'}`}
-              field={field}
-              copy={copy}
-              value={field.name ? values[field.name] : undefined}
-              files={field.name ? files[field.name] || [] : []}
-              issue={field.name ? issueFor(field.name) : undefined}
-              fileMessage={field.blockType === 'upload' ? fileMessage : null}
-              progress={field.blockType === 'upload' ? progress : null}
-              dragOver={dragOver === field.name}
-              onValue={(value) => field.name && setScalar(field.name, value)}
-              onFiles={(list) => field.name && addFiles(field.name, list, field)}
-              onRemoveFile={(index) =>
-                field.name &&
-                setFiles((current) => ({
-                  ...current,
-                  [field.name || '']: (current[field.name || ''] || []).filter((_, itemIndex) => itemIndex !== index),
-                }))
-              }
-              onDragOver={(active) => setDragOver(active && field.name ? field.name : null)}
-            />
-          ))}
+          {row.map((field) => {
+            const scopeOptions =
+              field.name === 'scope' && field.blockType === 'checkboxGroup'
+                ? field.options || []
+                : null
+            const visibleField = scopeOptions
+              ? { ...field, options: scopesForProjectType(scopeOptions, projectType) }
+              : field
+            const scopeHint =
+              scopeOptions?.some((option) => option.projectType) && !projectType
+                ? copy.chooseScopeType
+                : null
+            return (
+              <FieldControl
+                key={`${field.blockType}-${field.name || 'message'}`}
+                field={visibleField}
+                copy={copy}
+                hint={scopeHint}
+                value={field.name ? values[field.name] : undefined}
+                files={field.name ? files[field.name] || [] : []}
+                issue={field.name ? issueFor(field.name) : undefined}
+                fileMessage={field.blockType === 'upload' ? fileMessage : null}
+                progress={field.blockType === 'upload' ? progress : null}
+                dragOver={dragOver === field.name}
+                onValue={(value) => field.name && setScalar(field.name, value)}
+                onFiles={(list) => field.name && addFiles(field.name, list, field)}
+                onRemoveFile={(index) =>
+                  field.name &&
+                  setFiles((current) => ({
+                    ...current,
+                    [field.name || '']: (current[field.name || ''] || []).filter(
+                      (_, itemIndex) => itemIndex !== index,
+                    ),
+                  }))
+                }
+                onDragOver={(active) => setDragOver(active && field.name ? field.name : null)}
+              />
+            )
+          })}
         </div>
       ))}
 
@@ -404,6 +451,7 @@ export function EnquiryForm({
 function FieldControl({
   field,
   copy,
+  hint,
   value,
   files,
   issue,
@@ -417,6 +465,7 @@ function FieldControl({
 }: {
   field: PublicEnquiryField
   copy: EnquiryCopy
+  hint?: string | null
   value: string | boolean | string[] | undefined
   files: File[]
   issue?: EnquiryIssue
@@ -463,7 +512,11 @@ function FieldControl({
                   className="sr-only"
                   checked={checked}
                   onChange={() =>
-                    onValue(checked ? selected.filter((item) => item !== option.value) : [...selected, option.value])
+                    onValue(
+                      checked
+                        ? selected.filter((item) => item !== option.value)
+                        : [...selected, option.value],
+                    )
                   }
                 />
                 <OptionIcon icon={option.icon} iconUrl={option.iconUrl} inline />
@@ -472,6 +525,7 @@ function FieldControl({
             )
           })}
         </div>
+        {hint ? <p className="mt-3 text-sm text-muted-foreground">{hint}</p> : null}
         {error ? <p className="text-sm text-error mt-2">{error}</p> : null}
       </div>
     )
@@ -486,7 +540,12 @@ function FieldControl({
             {label}
             {field.required ? <span className="text-accent-tan"> *</span> : null}
           </p>
-          <div className={cn('grid gap-3', options.length === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2')}>
+          <div
+            className={cn(
+              'grid gap-3',
+              options.length === 3 ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2',
+            )}
+          >
             {options.map((option) => (
               <button
                 key={option.value}
@@ -511,7 +570,12 @@ function FieldControl({
     }
   }
 
-  if (field.blockType === 'select' || field.blockType === 'country' || field.blockType === 'state' || field.blockType === 'radio') {
+  if (
+    field.blockType === 'select' ||
+    field.blockType === 'country' ||
+    field.blockType === 'state' ||
+    field.blockType === 'radio'
+  ) {
     const options =
       field.blockType === 'country'
         ? countryOptions
@@ -604,7 +668,8 @@ function FieldControl({
                 className="flex items-center justify-between gap-3 text-sm border border-input rounded px-3 py-2"
               >
                 <span className="min-w-0 truncate">
-                  {file.name} <span className="text-muted-foreground">({formatBytes(file.size)})</span>
+                  {file.name}{' '}
+                  <span className="text-muted-foreground">({formatBytes(file.size)})</span>
                 </span>
                 <button
                   type="button"
@@ -617,7 +682,9 @@ function FieldControl({
             ))}
           </ul>
         ) : null}
-        {fileMessage || error ? <p className="text-sm text-error mt-2">{fileMessage || error}</p> : null}
+        {fileMessage || error ? (
+          <p className="text-sm text-error mt-2">{fileMessage || error}</p>
+        ) : null}
         {progress ? <p className="text-sm text-muted-foreground mt-2">{progress}</p> : null}
       </div>
     )
@@ -643,7 +710,13 @@ function FieldControl({
         <input
           id={name}
           type={field.blockType === 'date' ? 'date' : 'text'}
-          inputMode={field.blockType === 'email' ? 'email' : field.blockType === 'number' ? 'decimal' : undefined}
+          inputMode={
+            field.blockType === 'email'
+              ? 'email'
+              : field.blockType === 'number'
+                ? 'decimal'
+                : undefined
+          }
           autoComplete={autocompleteFor(name)}
           value={typeof value === 'string' ? value : ''}
           aria-invalid={Boolean(issue)}
@@ -672,11 +745,14 @@ function issueText(copy: EnquiryCopy, fields: PublicEnquiryField[], issue: Enqui
   if (issue.code === 'phone') return copy.errors.phone
   const field = fields.find((item) => item.name === issue.field)
   const label = field?.label || issue.field
-  if (issue.code === 'invalid' || issue.code === 'length') return copy.invalidField.replace('{label}', label)
+  if (issue.code === 'invalid' || issue.code === 'length')
+    return copy.invalidField.replace('{label}', label)
   if (
     issue.code === 'required' &&
     field &&
-    (field.blockType === 'radio' || field.blockType === 'select' || field.blockType === 'checkboxGroup')
+    (field.blockType === 'radio' ||
+      field.blockType === 'select' ||
+      field.blockType === 'checkboxGroup')
   ) {
     return copy.chooseField.replace('{label}', label)
   }

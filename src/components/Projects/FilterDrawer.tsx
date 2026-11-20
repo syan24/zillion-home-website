@@ -15,12 +15,14 @@ export function FilterDrawer({
   styles,
   spaces,
   projects,
+  view = 'project',
 }: {
   copy: Copy
   filters: ProjectFilters
   styles: PortfolioTerm[]
   spaces: PortfolioTerm[]
   projects: PortfolioProjectOption[]
+  view?: 'project' | 'room'
 }) {
   const [open, setOpen] = useState(false)
 
@@ -49,18 +51,35 @@ export function FilterDrawer({
             aria-label={copy.filters}
             className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-auto rounded-t-2xl bg-background p-6 shadow-xl"
           >
+            <input type="hidden" name="view" value={view} />
             <div className="mb-5 flex items-center justify-between">
               <h2 className="font-serif text-2xl">{copy.filters}</h2>
-              <button type="button" className="text-sm text-muted-foreground" onClick={() => setOpen(false)}>
+              <button
+                type="button"
+                className="text-sm text-muted-foreground"
+                onClick={() => setOpen(false)}
+              >
                 {copy.close}
               </button>
             </div>
-            <FilterFields copy={copy} filters={filters} styles={styles} spaces={spaces} projects={projects} />
+            <FilterFields
+              copy={copy}
+              filters={filters}
+              styles={styles}
+              spaces={spaces}
+              projects={projects}
+            />
             <div className="mt-6 flex gap-3">
-              <button type="submit" className="flex-1 rounded bg-primary px-4 py-3 text-sm text-primary-foreground">
+              <button
+                type="submit"
+                className="flex-1 rounded bg-primary px-4 py-3 text-sm text-primary-foreground"
+              >
                 {copy.apply}
               </button>
-              <Link href="/projects" className="flex-1 rounded border border-border px-4 py-3 text-center text-sm">
+              <Link
+                href={view === 'room' ? '/projects?view=room' : '/projects'}
+                className="flex-1 rounded border border-border px-4 py-3 text-center text-sm"
+              >
                 {copy.clear}
               </Link>
             </div>
@@ -77,21 +96,40 @@ export function DesktopProjectFilter({
   styles,
   spaces,
   projects,
+  view = 'project',
 }: {
   copy: Copy
   filters: ProjectFilters
   styles: PortfolioTerm[]
   spaces: PortfolioTerm[]
   projects: PortfolioProjectOption[]
+  view?: 'project' | 'room'
 }) {
   return (
-    <form action="/projects" method="get" className="hidden md:grid md:grid-cols-5 md:items-end md:gap-3">
-      <FilterFields copy={copy} filters={filters} styles={styles} spaces={spaces} projects={projects} />
+    <form
+      action="/projects"
+      method="get"
+      className="hidden md:grid md:grid-cols-5 md:items-end md:gap-3"
+    >
+      <input type="hidden" name="view" value={view} />
+      <FilterFields
+        copy={copy}
+        filters={filters}
+        styles={styles}
+        spaces={spaces}
+        projects={projects}
+      />
       <div className="flex gap-2">
-        <button type="submit" className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground">
+        <button
+          type="submit"
+          className="rounded bg-primary px-4 py-2 text-sm text-primary-foreground"
+        >
           {copy.apply}
         </button>
-        <Link href="/projects" className="rounded border border-border px-4 py-2 text-sm">
+        <Link
+          href={view === 'room' ? '/projects?view=room' : '/projects'}
+          className="rounded border border-border px-4 py-2 text-sm"
+        >
           {copy.clear}
         </Link>
       </div>

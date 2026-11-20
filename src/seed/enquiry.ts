@@ -34,8 +34,8 @@ export async function seedEnquiry(payload: Payload) {
       email: 'demo-enquiry@example.com',
       address: 'Kew, Victoria',
       projectType: 'residential',
-      scope: ['kitchen', 'wardrobe'],
-      spaces: ['kitchen', 'wardrobe'],
+      scope: ['full-house-renovation', 'kitchen-bathroom-renovation'],
+      spaces: [],
       notes:
         'Sample enquiry created by seed:demo so the admin list is not empty. Safe to delete. It has no attachment, so media repair is unchanged.',
       budgetRange: '100k-250k',
