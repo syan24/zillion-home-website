@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import { isSiteLocale } from '@/i18n/config'
+import { getMessages } from '@/i18n/messages'
 import {
   hasProjectFilters,
   imageMatchesTerm,
   parseProjectFilters,
   projectFilterHref,
+  toggleProjectType,
 } from '@/lib/projects/filters'
 import { publicProjectLocation } from '@/lib/projects/location'
 import {
@@ -49,6 +51,37 @@ describe('project filters', () => {
     expect(parseProjectFilters({ type: 'joinery' }).type).toBe('joinery')
     expect(parseProjectFilters({ type: 'interior' }).type).toBeUndefined()
     expect(hasProjectFilters({})).toBe(false)
+  })
+
+  it('mentions custom joinery in the gallery intro and clears a selected type chip', () => {
+    expect(getMessages('en').projects.intro).toBe(
+      'Explore our portfolio of residential, commercial, and custom joinery projects, or browse by room to find inspiration for your space.',
+    )
+    expect(getMessages('zh').projects.intro).toBe(
+      '浏览住宅、商业与定制木作项目，或按空间寻找灵感。',
+    )
+    expect(getMessages('en').projects).not.toHaveProperty('portfolioHeading')
+    expect(getMessages('zh').projects).not.toHaveProperty('portfolioHeading')
+
+    const selected = toggleProjectType({ style: 'modern' }, 'residential')
+    expect(selected).toEqual({
+      style: 'modern',
+      type: 'residential',
+      space: undefined,
+      project: undefined,
+    })
+    expect(projectFilterHref(selected, 'gallery')).toBe(
+      '/projects?type=residential&style=modern#gallery',
+    )
+    expect(toggleProjectType(selected, 'residential')).toEqual({
+      style: 'modern',
+      type: undefined,
+      space: undefined,
+      project: undefined,
+    })
+    expect(projectFilterHref(toggleProjectType(selected, 'residential'), 'gallery')).toBe(
+      '/projects?style=modern#gallery',
+    )
   })
 
   it('keeps a space filter on the image when the image has its own tag', () => {

@@ -1,8 +1,8 @@
 import type { Payload, TypedLocale } from 'payload'
 
-import { publicEnquiryFields } from '@/lib/enquiry/defaultForm'
 import { isEnquiryIcon } from '@/lib/enquiry/icons'
 import { isEnquiryProjectType } from '@/lib/enquiry/scopes'
+import { placeholderForLocale } from '@/lib/enquiry/selectCopy'
 import type { PublicEnquiryField } from '@/lib/enquiry/validate'
 
 export type PublicEnquiryForm = {
@@ -39,25 +39,6 @@ function mediaUrl(value: unknown): string | undefined {
   if (!value || typeof value !== 'object') return undefined
   const url = (value as { url?: unknown }).url
   return typeof url === 'string' && url ? url : undefined
-}
-
-/**
- * Form placeholders are not localized. Seeding Chinese after English stores the
- * Chinese string for both locales. When that happens, show the copy for the
- * page locale. A custom placeholder is left as written.
- */
-function placeholderForLocale(
-  name: string | undefined,
-  placeholder: string | undefined,
-  locale: 'en' | 'zh',
-) {
-  if (!name || !placeholder) return placeholder
-  const current = publicEnquiryFields(locale).find((field) => field.name === name)?.placeholder
-  const other = publicEnquiryFields(locale === 'en' ? 'zh' : 'en').find(
-    (field) => field.name === name,
-  )?.placeholder
-  if (current && other && placeholder === other) return current
-  return placeholder
 }
 
 function toPublicField(field: unknown, locale: 'en' | 'zh'): PublicEnquiryField[] {

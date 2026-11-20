@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@payload-config'
 
 import type { Form } from '@/payload-types'
+import { loadEnquiryForm } from '@/lib/enquiry/loadForm'
 import { scopeCatalog } from '@/lib/enquiry/scopes'
 import { seedEnquiryForm } from '@/seed/enquiryForm'
 
@@ -51,11 +52,18 @@ describe('enquiry scope seed alignment', () => {
         DELETE FROM forms_blocks_checkbox_group_options WHERE _parent_id = ${scope.id}
       `)
     }
-    const legacy = (form.fields || []).map((field) =>
-      field.blockType === 'checkboxGroup' && field.name === 'scope'
-        ? { ...field, options: legacyOptions }
-        : field,
-    )
+    const legacy = (form.fields || []).map((field) => {
+      if (field.blockType === 'checkboxGroup' && field.name === 'scope') {
+        return { ...field, options: legacyOptions }
+      }
+      if (field.blockType === 'select' && field.name === 'budget') {
+        return { ...field, placeholder: 'Select Approximate budget' }
+      }
+      if (field.blockType === 'select' && field.name === 'timeline') {
+        return { ...field, placeholder: 'Select Expected timeline' }
+      }
+      return field
+    })
     await payload.update({
       collection: 'forms',
       id: formID,
@@ -70,14 +78,28 @@ describe('enquiry scope seed alignment', () => {
       depth: 0,
       overrideAccess: true,
     })
-    const zhLegacy = (zh.fields || []).map((field) =>
-      field.blockType === 'checkboxGroup' && field.name === 'scope'
-        ? {
-            ...field,
-            options: (field.options || []).map((option) => ({ ...option, label: '旧选项' })),
-          }
-        : field,
-    )
+    const zhLegacy = (zh.fields || []).map((field) => {
+      if (field.blockType === 'checkboxGroup' && field.name === 'scope') {
+        return {
+          ...field,
+          options: (field.options || []).map((option) => ({ ...option, label: '旧选项' })),
+        }
+      }
+      if (field.blockType === 'select' && field.name === 'budget') {
+        return {
+          ...field,
+          label: 'Approximate budget',
+          placeholder: 'Select Approximate budget',
+          options: (field.options || []).map((option) =>
+            option.value === 'under-50k' ? { ...option, label: 'Under $50,000' } : option,
+          ),
+        }
+      }
+      if (field.blockType === 'select' && field.name === 'timeline') {
+        return { ...field, label: 'Expected timeline', placeholder: 'Select Expected timeline' }
+      }
+      return field
+    })
     await payload.update({
       collection: 'forms',
       id: formID,
@@ -116,7 +138,47 @@ describe('enquiry scope seed alignment', () => {
     )
     expect(
       scopeOptions(zh.fields).find((option) => option.value === 'new-home-construction')?.label,
-    ).toBe('新建住宅')
+    ).toBe('新房建造')
+    const budget = zh.fields?.find(
+      (field) => field.blockType === 'select' && field.name === 'budget',
+    )
+    const timeline = zh.fields?.find(
+      (field) => field.blockType === 'select' && field.name === 'timeline',
+    )
+    expect(budget && 'label' in budget ? budget.label : '').toBe('预计预算')
+    expect(budget && 'placeholder' in budget ? budget.placeholder : '').toBe('请选择预算范围')
+    expect(
+      budget && 'options' in budget
+        ? budget.options?.find((option) => option.value === 'under-50k')?.label
+        : '',
+    ).toBe('5 万澳元以下')
+    expect(timeline && 'label' in timeline ? timeline.label : '').toBe('期望时间')
+    expect(timeline && 'placeholder' in timeline ? timeline.placeholder : '').toBe(
+      '请选择预计开始时间',
+    )
+    const enBudget = en.fields?.find(
+      (field) => field.blockType === 'select' && field.name === 'budget',
+    )
+    expect(enBudget && 'label' in enBudget ? enBudget.label : '').toBe('Approximate budget')
+    expect(
+      enBudget && 'options' in enBudget
+        ? enBudget.options?.find((option) => option.value === 'under-50k')?.label
+        : '',
+    ).toBe('Under $50,000')
+    const zhForm = await loadEnquiryForm(payload, 'zh')
+    const enForm = await loadEnquiryForm(payload, 'en')
+    expect(zhForm?.fields.find((field) => field.name === 'budget')?.placeholder).toBe(
+      '请选择预算范围',
+    )
+    expect(zhForm?.fields.find((field) => field.name === 'timeline')?.placeholder).toBe(
+      '请选择预计开始时间',
+    )
+    expect(enForm?.fields.find((field) => field.name === 'budget')?.placeholder).toBe(
+      'Select budget range',
+    )
+    expect(enForm?.fields.find((field) => field.name === 'timeline')?.placeholder).toBe(
+      'Select expected start',
+    )
     expect(scopeOptions(zh.fields).some((option) => option.label === '旧选项')).toBe(false)
     const name = zh.fields?.find((field) => field.blockType === 'text' && field.name === 'name')
     expect(name && 'label' in name ? name.label : '').toBe('姓名')
