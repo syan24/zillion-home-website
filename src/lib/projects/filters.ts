@@ -46,12 +46,26 @@ export function hasProjectFilters(filters: ProjectFilters) {
   return Boolean(filters.type || filters.style || filters.space || filters.project)
 }
 
+/** Clicking the active project-type chip clears it. Other chips select that type. */
+export function toggleProjectType(filters: ProjectFilters, type: ProjectType): ProjectFilters {
+  return {
+    ...filters,
+    type: filters.type === type ? undefined : type,
+    space: undefined,
+    project: undefined,
+  }
+}
+
 /**
  * Style and space filters use the image's own tags.
  * Project tags apply only when the image has none of that kind,
  * so a kitchen filter does not also return that project's living and bedroom images.
  */
-export function imageMatchesTerm(imageIds: number[], projectIds: number[] | undefined, termId: number) {
+export function imageMatchesTerm(
+  imageIds: number[],
+  projectIds: number[] | undefined,
+  termId: number,
+) {
   if (imageIds.length > 0) return imageIds.includes(termId)
   return Boolean(projectIds?.includes(termId))
 }

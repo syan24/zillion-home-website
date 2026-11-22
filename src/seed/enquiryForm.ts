@@ -6,6 +6,7 @@ import {
   copyScopeIdentity,
   stampCatalogScopeLabels,
 } from '@/lib/enquiry/alignFormScopes'
+import { alignEnquirySelectFields } from '@/lib/enquiry/selectCopy'
 import { defaultProjectTypeIcons } from '@/lib/enquiry/icons'
 import {
   enquiryConfirmationText,
@@ -163,7 +164,8 @@ async function backfillProjectTypeIcons(payload: Payload, id: number) {
 }
 
 /**
- * Replaces the original joinery-only scope list with the three project-type lists.
+ * Replaces the original joinery-only scope list with the three project-type lists,
+ * and fills the default Chinese budget and timeline copy.
  * A form whose scope values are no longer that list, and are not the canonical list, is left as edited.
  */
 async function alignStoredEnquiryScopes(payload: Payload, id: number) {
@@ -182,7 +184,10 @@ async function alignStoredEnquiryScopes(payload: Payload, id: number) {
     overrideAccess: true,
   })
   const aligned = alignEnquiryScopeFields(en.fields, zh.fields)
-  if (!aligned.changed) {
+  const enFields = aligned.changed ? aligned.en : en.fields
+  const zhFields = aligned.changed ? aligned.zh : zh.fields
+  const selects = alignEnquirySelectFields(enFields, zhFields)
+  if (!aligned.changed && !selects.changed) {
     console.log('Enquiry scope options already current.')
     return
   }
@@ -200,21 +205,25 @@ async function alignStoredEnquiryScopes(payload: Payload, id: number) {
     }
   }
 
-  const updated = await payload.update({
-    collection: 'forms',
-    id,
-    locale: 'en',
-    overrideAccess: true,
-    data: { fields: aligned.en as NonNullable<Form['fields']> },
-  })
-  const withIdentity = copyScopeIdentity(updated.fields, mergeLocale(updated.fields, zh.fields))
-  const zhFields = stampCatalogScopeLabels(withIdentity, 'zh', aligned.replacedLegacy)
+  const updated = aligned.changed
+    ? await payload.update({
+        collection: 'forms',
+        id,
+        locale: 'en',
+        overrideAccess: true,
+        data: { fields: enFields as NonNullable<Form['fields']> },
+      })
+    : en
+  const zhSource = selects.changed ? selects.zh : zhFields
+  const withIdentity = copyScopeIdentity(updated.fields, mergeLocale(updated.fields, zhSource))
+  const stamped = stampCatalogScopeLabels(withIdentity, 'zh', aligned.replacedLegacy)
   await payload.update({
     collection: 'forms',
     id,
     locale: 'zh',
     overrideAccess: true,
-    data: { fields: zhFields as NonNullable<Form['fields']> },
+    data: { fields: stamped as NonNullable<Form['fields']> },
   })
-  console.log('Enquiry scope options updated for project type.')
+  if (aligned.changed) console.log('Enquiry scope options updated for project type.')
+  if (selects.changed) console.log('Enquiry budget and timeline copy updated.')
 }
