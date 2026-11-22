@@ -128,6 +128,8 @@ pnpm payload migrate && pnpm seed:demo:deploy && pnpm build
 
 `seed:demo:deploy` seeds only when `SEED_DEMO=true`. Any other value, including empty, skips the seed and the deploy continues. A failed seed fails the deploy. With `SEED_DEMO=true`, a missing Blob token also fails the deploy.
 
+Header and footer labels are cached with `unstable_cache` and no expiry. That cache survives a Vercel deploy, and the seed writes those globals with revalidation turned off. The cache key includes the deployment id, so the new deployment reads Postgres after this seed instead of the previous deployment’s header or footer. A seed that leaves an already-correct footer label unchanged still picks up that label, because the previous deployment’s cache entry is no longer used.
+
 One Production redeploy with `SEED_DEMO=true` and the Blob token re-uploads broken seed files, including `service-residential.jpg` and the Kew and Armadale portfolio images, without deleting pages or project records. After that deploy, `/api/media/file/<filename>` for those seed files should return 200. Do not treat the live site as fixed until that deploy has finished.
 
 If the Vercel project overrides the build command and does not call `pnpm ci` or `vercel-build`, add `pnpm seed:demo:deploy` after `pnpm payload migrate`.
