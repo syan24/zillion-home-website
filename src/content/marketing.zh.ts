@@ -164,7 +164,7 @@ export const servicesContentZh = {
       },
       {
         ...servicesContent.details.services[2],
-        title: '定制橱柜与木作',
+        title: '定制木作',
         subtitle: '',
         description:
           '按每个项目定制的橱柜，尺寸、布局、材料和饰面都可以调整，包括 2PAC 烤漆和层压板。适合单独的木作项目，也适合更大的翻新。',
@@ -186,7 +186,6 @@ export const servicesContentZh = {
     heading: '按订单制作，',
     headingAccent: '为您的空间而做。',
     body: '每个空间都不一样。我们的定制橱柜按项目来做，尺寸、布局、材料和饰面都可以调整，包括 2PAC 烤漆和层压板。从图纸到安装，我们会把细节协调好，既适合单独的木作项目，也适合更大的翻新。\n\n好的木作远在安装之前就开始了。把施工和橱柜放在一起考虑，细节从一开始就安排妥当。',
-    links: [{ label: '咨询定制木作 →', href: '/enquiry', variant: 'enquiry' as const }],
   },
   cta: {
     ...servicesContent.cta,
@@ -223,7 +222,7 @@ export const footerContentZh = {
   tagline: '从施工落地开始。',
   location: '墨尔本，维多利亚州',
   services: [
-    { label: '住宅施工', href: footerContent.services[0].href },
+    { label: '住宅施工与翻新', href: footerContent.services[0].href },
     { label: '商业装修', href: footerContent.services[1].href },
     { label: '定制木作', href: footerContent.services[2].href },
   ],

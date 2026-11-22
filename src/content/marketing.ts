@@ -301,7 +301,7 @@ export const servicesContent = {
       },
       {
         anchor: 'joinery',
-        title: 'Custom Joinery & Cabinetry',
+        title: 'Custom Joinery',
         subtitle: '',
         description:
           'Made-to-order cabinetry tailored to each project, with flexibility in dimensions, layouts, materials and finishes, including 2PAC painted and laminate options. It suits standalone joinery projects and larger renovations.',
@@ -315,7 +315,7 @@ export const servicesContent = {
         ],
         image: image(
           'serviceJoinery',
-          'Custom Joinery & Cabinetry',
+          'Custom Joinery',
           'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1000&q=80',
         ),
         enquireLabel: 'View Related Project',
@@ -336,7 +336,7 @@ export const servicesContent = {
     headingAccent: 'made for your space.',
     body: 'Every space is different. Our made-to-order cabinetry is tailored to each project, offering flexibility in dimensions, layouts, materials and finishes, including 2PAC painted and laminate options. From specifications to installation, we coordinate the details to suit both standalone joinery projects and larger renovations.\n\nGreat joinery starts long before installation. By considering construction and cabinetry together, we ensure the details are planned from the very beginning.',
     image: image('trustJoinery', 'Joinery workshop'),
-    links: [{ label: 'Enquire about Custom Joinery →', href: '/enquiry', variant: 'enquiry' as const }],
+    links: [] as { label: string; href: string; variant: 'enquiry' | 'outline' | 'default' }[],
   },
   cta: {
     tone: 'dark' as const,
@@ -376,7 +376,7 @@ export const footerContent = {
   tagline: 'Built from the ground up.',
   location: 'Melbourne, Victoria',
   services: [
-    { label: 'Residential Construction', href: '/services#residential' },
+    { label: 'Residential Construction & Renovation', href: '/services#residential' },
     { label: 'Commercial Fit-out', href: '/services#commercial' },
     { label: 'Custom Joinery', href: '/services#joinery' },
   ],

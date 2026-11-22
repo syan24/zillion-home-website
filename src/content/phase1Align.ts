@@ -67,6 +67,8 @@ const oldEnquireLabels = new Set([
 
 const oldJoineryAccents = new Set(['crafted in-house', '车间内完成'])
 
+const staleJoineryTitles = new Set(['Custom Joinery & Cabinetry', '定制橱柜与木作'])
+
 const phraseSwaps: Record<ProcessLocale, [string, string][]> = {
   en: [
     [
@@ -142,7 +144,63 @@ export function isLegacyEnquireLabel(label: string | null | undefined) {
   const value = (label || '').trim()
   if (!value) return false
   if (oldEnquireLabels.has(value)) return true
+  const bare = value.replace(/\s*→\s*$/, '').trim()
+  if (bare !== value && oldEnquireLabels.has(bare)) return true
   return /^enquire about\b/i.test(value)
+}
+
+function officialJoineryTitle(locale: ProcessLocale) {
+  return locale === 'zh' ? '定制木作' : 'Custom Joinery'
+}
+
+function enquiryPath(href: string) {
+  const trimmed = href.trim()
+  if (!trimmed) return ''
+  const withoutQuery = trimmed.split(/[?#]/)[0] || ''
+  if (/^https?:\/\//i.test(withoutQuery)) {
+    try {
+      return new URL(withoutQuery).pathname.replace(/\/$/, '') || '/'
+    } catch {
+      return withoutQuery
+    }
+  }
+  const path = withoutQuery.startsWith('/') ? withoutQuery : `/${withoutQuery}`
+  return path.replace(/\/$/, '') || '/'
+}
+
+function isEnquiryHref(href: string) {
+  const path = enquiryPath(href)
+  return path === '/enquiry' || path.startsWith('/enquiry/')
+}
+
+function isBandEnquiryLink(link: unknown) {
+  if (!isRecord(link)) return false
+  if (isEnquiryHref(text(link.href))) return true
+  return isLegacyEnquireLabel(text(link.label))
+}
+
+function stripEnquiryLinks(block: Record<string, unknown>) {
+  if (!Array.isArray(block.links) || block.links.length === 0) {
+    return { changed: false, block }
+  }
+  const links = block.links.filter((link) => !isBandEnquiryLink(link))
+  if (links.length === block.links.length) return { changed: false, block }
+  return { changed: true, block: { ...block, links } }
+}
+
+function withJoineryTitle(service: Record<string, unknown>, locale: ProcessLocale) {
+  const title = officialJoineryTitle(locale)
+  let changed = false
+  const next: Record<string, unknown> = { ...service }
+  if (staleJoineryTitles.has(text(service.title))) {
+    next.title = title
+    changed = true
+  }
+  if (staleJoineryTitles.has(text(service.imageAlt))) {
+    next.imageAlt = title
+    changed = true
+  }
+  return changed ? next : service
 }
 
 function swapPhrases(value: string, locale: ProcessLocale) {
@@ -333,7 +391,7 @@ function alignServiceDetails(block: Record<string, unknown>, locale: ProcessLoca
       changed = true
       return []
     }
-    const phrased = alignPhrases(service, locale)
+    const phrased = withJoineryTitle(alignPhrases(service, locale), locale)
     const label = text(phrased.enquireLabel)
     if (!label || isLegacyEnquireLabel(label)) {
       changed = true
@@ -352,15 +410,21 @@ function alignJoineryBand(
   locale: ProcessLocale,
   copy: ReturnType<typeof getMarketing>,
 ) {
-  const accent = text(block.headingAccent)
+  const stripped = stripEnquiryLinks(block)
+  const base = stripped.block
+  const accent = text(base.headingAccent)
   const legacy =
     oldJoineryAccents.has(accent) ||
-    text(block.eyebrow) === 'In-house Capability' ||
-    text(block.eyebrow) === '自有能力'
-  if (!legacy) return alignPhrases(block, locale)
+    text(base.eyebrow) === 'In-house Capability' ||
+    text(base.eyebrow) === '自有能力'
+  if (!legacy) {
+    const phrased = alignPhrases(base, locale)
+    if (!stripped.changed && phrased === base) return block
+    return phrased
+  }
   const desired = copy.services.joinery
   return {
-    ...block,
+    ...base,
     eyebrow: desired.eyebrow,
     heading: desired.heading,
     headingAccent: desired.headingAccent,
