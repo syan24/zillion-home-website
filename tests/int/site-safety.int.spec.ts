@@ -1,8 +1,13 @@
 /** @vitest-environment node */
+import fs from 'fs/promises'
+import path from 'path'
+
 import { getPayload, type Payload } from 'payload'
 import config from '@/payload.config'
 import { beforeAll, describe, expect, it } from 'vitest'
 
+import { GET } from '@/app/(swms)/swms/[token]/files/[accessToken]/route'
+import { swmsUploadsDir } from '@/collections/SWMSFiles'
 import { buildTextPdf } from '@/lib/swms/demoPdf'
 import {
   acknowledgementUnlocked,
@@ -207,6 +212,53 @@ describe('site safety records', () => {
     expect(reports.docs.map((doc) => doc.kind)).toEqual(['incident', 'hazard', 'toolbox', 'hazard'])
     expect(reports.docs[3]?.attachment).toBeTruthy()
     expect(reports.docs[0]?.description).toContain('incident')
+  })
+
+  it('serves a project SWMS PDF through the worker file route', async () => {
+    const previousToken = process.env.BLOB_READ_WRITE_TOKEN
+    delete process.env.BLOB_READ_WRITE_TOKEN
+    try {
+      const site = await buildSite(payload)
+      const accessToken = site.documents[0].accessToken
+      const response = await GET(new Request('http://localhost/swms/file'), {
+        params: Promise.resolve({ token: site.token, accessToken }),
+      })
+      expect(response.status).toBe(200)
+      expect(response.headers.get('content-type')).toBe('application/pdf')
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+      const body = Buffer.from(await response.arrayBuffer())
+      expect(body.subarray(0, 5).toString()).toBe('%PDF-')
+
+      const unknown = await GET(new Request('http://localhost/swms/file'), {
+        params: Promise.resolve({ token: site.token, accessToken: 'not-a-real-token-0000000000' }),
+      })
+      expect(unknown.status).toBe(404)
+      expect(await unknown.text()).toBe('Not found')
+
+      const found = await payload.find({
+        collection: 'swms-documents',
+        depth: 0,
+        limit: 1,
+        overrideAccess: true,
+        where: { accessToken: { equals: accessToken } },
+      })
+      const fileId = found.docs[0]?.file
+      const file = await payload.findByID({
+        collection: 'swms-files',
+        id: fileId as number,
+        depth: 0,
+        overrideAccess: true,
+      })
+      if (file.filename) await fs.rm(path.resolve(swmsUploadsDir, file.filename), { force: true })
+
+      const missing = await GET(new Request('http://localhost/swms/file'), {
+        params: Promise.resolve({ token: site.token, accessToken }),
+      })
+      expect(missing.status).toBe(404)
+    } finally {
+      if (previousToken === undefined) delete process.env.BLOB_READ_WRITE_TOKEN
+      else process.env.BLOB_READ_WRITE_TOKEN = previousToken
+    }
   })
 })
 

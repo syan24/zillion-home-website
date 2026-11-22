@@ -29,10 +29,12 @@ SWMS & Safety Documents lists every active file for the project and does not rec
 
 ## Seed
 
-`pnpm seed:demo` fills empty trade lists on the three demo projects and adds two placeholder PDFs to Rosebery Residence when those titles are missing. It does not replace an existing PDF, change a project that already has trades, or rewrite `ACK-DEMO-ROSEBERY`.
+`pnpm seed:demo` fills empty trade lists on the three demo projects and adds two placeholder PDFs to Rosebery Residence when those titles are missing. When a title already exists and its PDF can be opened, the seed leaves that document, its access token, and its file version alone. When the file row is still there but the bytes are not readable after a serverless deploy, it writes the placeholder PDF back onto that same file. Workers who already confirmed that version are not asked again. Attaching a new file, and therefore publishing the next file version, happens only when the document points at a file row that no longer exists. The seed does not change a project that already has trades, and it does not rewrite `ACK-DEMO-ROSEBERY` or any confirmation, attendance, or report row.
+
+Workers open those PDFs only through `/swms/[token]/files/[accessToken]`. With `BLOB_READ_WRITE_TOKEN`, the bytes are read from Vercel Blob (`prefix` and `_objectKey` on the file). Without the token, they are read from `swms-uploads/`. `/api/swms-files/file/...` stays authenticated.
 
 On a new database the demo worker (Demo Worker, `0400 111 222`) already has an induction for electrical work and still needs to confirm **SWMS - Working at heights** on the next sign-in. That is the new-file path, not a second induction.
 
 ## Migrate
 
-Production runs `pnpm payload migrate` before the demo seed. The Phase 3 migration adds the trade field, SWMS files, documents, confirmations, attendance, and site safety reports, and backfills name and phone keys on existing induction rows.
+Production runs `pnpm payload migrate` before the demo seed. The Phase 3 migration adds the trade field, SWMS files, documents, confirmations, attendance, and site safety reports, and backfills name and phone keys on existing induction rows. No new migration is required for the PDF read fix. A redeploy with `SEED_DEMO=true` and `BLOB_READ_WRITE_TOKEN` repairs a Rosebery demo PDF whose Blob object is missing, without changing `fileVersion` when the file row is still there.

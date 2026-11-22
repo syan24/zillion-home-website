@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
-import { buildTextPdf } from '@/lib/swms/demoPdf'
 import type { TradeValue } from '@/lib/swms/trades'
+import { ensureDemoSwmsDocument } from '@/seed/ensureSeedSwmsFile'
 import { seedSwmsAcknowledgement } from '@/seed/swmsAcknowledgement'
 
 const placeholderSections = [
@@ -44,7 +44,6 @@ const acknowledgementText =
   'Placeholder acknowledgement: I have read and understood this Safe Work Method Statement. I agree to follow the safe work practices described above. This text is not the client’s legal SWMS.'
 
 export async function seedSwms(payload: Payload) {
-
   const projects = [
     {
       title: 'Rosebery Residence',
@@ -167,8 +166,16 @@ async function seedDemoSwmsDocuments(payload: Payload, projectID: number) {
       sortOrder: 1,
       filename: 'swms-working-at-heights.pdf',
       pages: [
-        ['SWMS - Working at heights', 'Placeholder for the Phase 3 demo.', 'Page 1 of 2. Not a legal SWMS.'],
-        ['Keep reading to the bottom of this page.', 'Confirm only after the last line is visible.', 'End of SWMS - Working at heights.'],
+        [
+          'SWMS - Working at heights',
+          'Placeholder for the Phase 3 demo.',
+          'Page 1 of 2. Not a legal SWMS.',
+        ],
+        [
+          'Keep reading to the bottom of this page.',
+          'Confirm only after the last line is visible.',
+          'End of SWMS - Working at heights.',
+        ],
       ],
     },
     {
@@ -177,48 +184,18 @@ async function seedDemoSwmsDocuments(payload: Payload, projectID: number) {
       sortOrder: 2,
       filename: 'swms-interior-fit-out.pdf',
       pages: [
-        ['SWMS - Interior fit-out', 'Placeholder for the Phase 3 demo.', 'Page 1 of 2. Not a legal SWMS.'],
+        [
+          'SWMS - Interior fit-out',
+          'Placeholder for the Phase 3 demo.',
+          'Page 1 of 2. Not a legal SWMS.',
+        ],
         ['Review this second file after the first.', 'End of SWMS - Interior fit-out.'],
       ],
     },
   ]
 
   for (const document of documents) {
-    const existing = await payload.find({
-      collection: 'swms-documents',
-      depth: 0,
-      limit: 1,
-      overrideAccess: true,
-      where: {
-        and: [{ title: { equals: document.title } }, { project: { equals: projectID } }],
-      },
-    })
-    if (existing.docs[0]) continue
-
-    const pdf = buildTextPdf(document.pages)
-    const file = await payload.create({
-      collection: 'swms-files',
-      overrideAccess: true,
-      data: { alt: document.title },
-      file: {
-        data: pdf,
-        mimetype: 'application/pdf',
-        name: document.filename,
-        size: pdf.length,
-      },
-    })
-    await payload.create({
-      collection: 'swms-documents',
-      overrideAccess: true,
-      data: {
-        title: document.title,
-        project: projectID,
-        file: file.id,
-        trades: document.trades,
-        status: 'active',
-        sortOrder: document.sortOrder,
-      },
-    })
+    await ensureDemoSwmsDocument(payload, document, projectID)
   }
 }
 
@@ -286,4 +263,3 @@ async function findOrCreateProjectSWMS(
     },
   })
 }
-
