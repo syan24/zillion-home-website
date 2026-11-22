@@ -12,9 +12,14 @@ import { Pages } from './collections/Pages'
 import { ProjectImages } from './collections/ProjectImages'
 import { ProjectSWMS } from './collections/ProjectSWMS'
 import { Projects } from './collections/Projects'
+import { SiteAttendance } from './collections/SiteAttendance'
+import { SiteSafetyReports } from './collections/SiteSafetyReports'
 import { Spaces } from './collections/Spaces'
 import { Styles } from './collections/Styles'
 import { SWMSAcknowledgements } from './collections/SWMSAcknowledgements'
+import { SWMSDocumentConfirmations } from './collections/SWMSDocumentConfirmations'
+import { SWMSDocuments } from './collections/SWMSDocuments'
+import { SWMSFiles } from './collections/SWMSFiles'
 import { SWMSTemplates } from './collections/SWMSTemplates'
 import { SWMSVersions } from './collections/SWMSVersions'
 import { Users } from './collections/Users'
@@ -89,10 +94,15 @@ export default buildConfig({
     Styles,
     Spaces,
     ProjectImages,
+    SWMSFiles,
     SWMSTemplates,
     ProjectSWMS,
     SWMSVersions,
+    SWMSDocuments,
     SWMSAcknowledgements,
+    SWMSDocumentConfirmations,
+    SiteAttendance,
+    SiteSafetyReports,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
@@ -107,6 +117,9 @@ export default buildConfig({
         media: true,
         'enquiry-files': {
           prefix: 'enquiry-files/',
+        },
+        'swms-files': {
+          prefix: 'swms-files/',
         },
       },
       token: process.env.BLOB_READ_WRITE_TOKEN,

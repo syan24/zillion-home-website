@@ -2,7 +2,7 @@
 
 Status: Option A. Administrators filter SWMS acknowledgements in Payload Admin and download the current filtered list as CSV.
 
-This stage does not add a PDF record, Chinese copy on the worker flow, or a notification when a worker must sign again.
+Phase 3 adds the site safety menu, SWMS PDFs, and daily sign-in on the same worker link. See `docs/16-phase-3-site-safety.md`. This register still does not email a worker when a file changes.
 
 ## Where
 
@@ -35,9 +35,9 @@ The search box matches submission ref, worker name, company, phone, and trade. E
 
 Columns, in order:
 
-`submissionRef`, `signedAt`, `workerName`, `workerCompany`, `workerPhone`, `workerTrade`, `project`, `project SWMS`, `version`, `acknowledgement accepted`
+`submissionRef`, `signedAt`, `workerName`, `workerCompany`, `workerPhone`, `workerTrade`, `project`, `project SWMS`, `version`, `acknowledgement accepted`, `trades`, `swmsFileVersions`, `swmsConfirmedAt`
 
-`acknowledgement accepted` is `true` or `false`. `signedAt` is the stored UTC timestamp. `project` is the project name, `project SWMS` is the SWMS title, and `version` is the version label.
+`acknowledgement accepted` is `true` or `false`. `signedAt` is the stored UTC timestamp. `project` is the project name, `project SWMS` is the SWMS title, and `version` is the questionnaire version label. `trades` lists the trade groups chosen at induction. `swmsFileVersions` and `swmsConfirmedAt` are the PDF titles, file versions, and confirmation times captured with that signature. A later PDF version is a new row under SWMS confirmations and does not change this export row.
 
 Filename:
 
@@ -67,7 +67,7 @@ The date is the UTC date of the download. The request must be logged in. A logge
 2. Filter Project equals Rosebery Residence. Export CSV. The filename is `swms-register-rosebery-residence-{today}.csv`. The file includes Demo Worker and does not include acknowledgements from other projects.
 3. Clear filters. Filter Worker name contains `Demo Worker`, and Signed at from 15 Apr 2026 through 16 Apr 2026. Export again. The filename is `swms-register-filtered-{today}.csv` and the row is still Demo Worker.
 4. Open `ACK-DEMO-ROSEBERY`. Question responses lists each question from the signed version and the worker’s answer (Yes, No, Not applicable, or Accepted). It is not a JSON blob. The signature image is visible. There is no way to save a change or delete the row.
-5. Open `/swms`, choose Rosebery Residence, and confirm the worker form still shows the project, the SWMS questions, and the signature step.
+5. Open `/swms`, choose Rosebery Residence, and confirm the site safety menu shows the project name and address. Site Induction still asks the SWMS questions and takes a signature.
 6. In a private window, open `/api/swms-acknowledgements/export`. The response is 401 and not a CSV file.
 
 ## Assumptions

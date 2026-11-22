@@ -8,6 +8,7 @@ import * as migration_20261012_040649_enquiry_form_answers from './20261012_0406
 import * as migration_20261012_045448_enquiry_option_icons from './20261012_045448_enquiry_option_icons';
 import * as migration_20261119_095308_phase1_core_services from './20261119_095308_phase1_core_services';
 import * as migration_20261120_012154_phase2_enquiry_scope_project_type from './20261120_012154_phase2_enquiry_scope_project_type';
+import * as migration_20261122_074436_phase3_site_safety from './20261122_074436_phase3_site_safety';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20261120_012154_phase2_enquiry_scope_project_type.up,
     down: migration_20261120_012154_phase2_enquiry_scope_project_type.down,
-    name: '20261120_012154_phase2_enquiry_scope_project_type'
+    name: '20261120_012154_phase2_enquiry_scope_project_type',
+  },
+  {
+    up: migration_20261122_074436_phase3_site_safety.up,
+    down: migration_20261122_074436_phase3_site_safety.down,
+    name: '20261122_074436_phase3_site_safety'
   },
 ];

@@ -6,6 +6,7 @@ import {
 } from 'payload'
 
 import { relationID } from '@/lib/swms/relationID'
+import { tradeLabels } from '@/lib/swms/trades'
 import {
   displayText,
   filenameSource,
@@ -95,7 +96,9 @@ async function loadRows(
         projectSwms: true,
         signedAt: true,
         submissionRef: true,
+        swmsConfirmations: true,
         swmsVersion: true,
+        trades: true,
         workerCompany: true,
         workerName: true,
         workerPhone: true,
@@ -119,18 +122,39 @@ async function loadRows(
     labels(req, 'swms-versions', versionIds, 'versionLabel'),
   ])
 
-  return docs.map((doc) => ({
-    acknowledgementAccepted: doc.acknowledgementAccepted === true,
-    project: projects.get(relationID(doc.project) ?? -1) ?? '',
-    projectSwms: projectSwms.get(relationID(doc.projectSwms) ?? -1) ?? '',
-    signedAt: doc.signedAt || '',
-    submissionRef: doc.submissionRef || '',
-    version: versions.get(relationID(doc.swmsVersion) ?? -1) ?? '',
-    workerCompany: doc.workerCompany || '',
-    workerName: doc.workerName || '',
-    workerPhone: doc.workerPhone || '',
-    workerTrade: doc.workerTrade || '',
-  }))
+  return docs.map((doc) => {
+    const confirmed = confirmationCells(doc.swmsConfirmations)
+    return {
+      acknowledgementAccepted: doc.acknowledgementAccepted === true,
+      project: projects.get(relationID(doc.project) ?? -1) ?? '',
+      projectSwms: projectSwms.get(relationID(doc.projectSwms) ?? -1) ?? '',
+      signedAt: doc.signedAt || '',
+      submissionRef: doc.submissionRef || '',
+      swmsConfirmedAt: confirmed.confirmedAt,
+      swmsFileVersions: confirmed.versions,
+      trades: tradeLabels(Array.isArray(doc.trades) ? doc.trades : []),
+      version: versions.get(relationID(doc.swmsVersion) ?? -1) ?? '',
+      workerCompany: doc.workerCompany || '',
+      workerName: doc.workerName || '',
+      workerPhone: doc.workerPhone || '',
+      workerTrade: doc.workerTrade || '',
+    }
+  })
+}
+
+function confirmationCells(value: unknown): { versions: string; confirmedAt: string } {
+  if (!Array.isArray(value)) return { versions: '', confirmedAt: '' }
+  const versions: string[] = []
+  const times: string[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue
+    const record = item as { title?: unknown; versionLabel?: unknown; confirmedAt?: unknown }
+    const title = typeof record.title === 'string' ? record.title : ''
+    const version = typeof record.versionLabel === 'string' ? record.versionLabel : ''
+    if (title || version) versions.push(`${title} ${version}`.trim())
+    if (typeof record.confirmedAt === 'string' && record.confirmedAt) times.push(record.confirmedAt)
+  }
+  return { versions: versions.join('; '), confirmedAt: times.join('; ') }
 }
 
 async function labels(

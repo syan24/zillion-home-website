@@ -1,6 +1,8 @@
 import crypto from 'crypto'
 import type { CollectionConfig, FieldHook } from 'payload'
 
+import { workerNameKey, workerPhoneKey } from '../../lib/swms/identity'
+import { tradeSelectOptions } from '../../lib/swms/trades'
 import { authenticated } from '../../access/authenticated'
 import { exportSWMSRegister } from './exportRegister'
 import { rejectAcknowledgementDelete, rejectAcknowledgementUpdate } from './hooks/appendOnly'
@@ -52,7 +54,16 @@ export const SWMSAcknowledgements: CollectionConfig = {
     },
   ],
   hooks: {
-    beforeChange: [rejectAcknowledgementUpdate],
+    beforeChange: [
+      ({ data, operation }) => {
+        if (operation === 'create' && data) {
+          if (typeof data.workerName === 'string') data.workerNameKey = workerNameKey(data.workerName)
+          if (typeof data.workerPhone === 'string') data.workerPhoneKey = workerPhoneKey(data.workerPhone)
+        }
+        return data
+      },
+      rejectAcknowledgementUpdate,
+    ],
     beforeDelete: [rejectAcknowledgementDelete],
   },
   fields: [
@@ -149,9 +160,48 @@ export const SWMSAcknowledgements: CollectionConfig = {
           name: 'workerTrade',
           type: 'text',
           label: 'Trade / role',
-          admin: { width: '50%' },
+          admin: {
+            width: '50%',
+            description: 'English names of the trade groups selected at induction.',
+          },
         },
       ],
+    },
+    {
+      name: 'trades',
+      type: 'select',
+      hasMany: true,
+      label: 'Trade groups',
+      options: tradeSelectOptions,
+    },
+    {
+      name: 'workerNameKey',
+      type: 'text',
+      index: true,
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Normalised name used to recognise a returning worker.',
+      },
+    },
+    {
+      name: 'workerPhoneKey',
+      type: 'text',
+      index: true,
+      admin: {
+        readOnly: true,
+        position: 'sidebar',
+        description: 'Normalised phone used with the name. No staff ID or PIN is stored.',
+      },
+    },
+    {
+      name: 'swmsConfirmations',
+      type: 'json',
+      label: 'SWMS files confirmed at induction',
+      admin: {
+        description:
+          'Snapshot of the SWMS PDFs, file versions, and confirmation time captured with this signature. Later file versions are stored as new SWMS confirmations and do not change this row.',
+      },
     },
     {
       name: 'responses',

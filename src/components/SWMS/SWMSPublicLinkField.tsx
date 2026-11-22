@@ -41,6 +41,10 @@ export default function SWMSPublicLinkField() {
     <div style={{ display: 'grid', gap: '12px', maxWidth: '420px' }}>
       <div>
         <strong>Worker link</strong>
+        <p style={{ margin: '8px 0' }}>
+          Scanning this QR opens the project Site Safety Menu. The link stays the same when the
+          induction questions or SWMS PDFs change.
+        </p>
         <p style={{ wordBreak: 'break-all', margin: '8px 0' }}>{url}</p>
         <button
           type="button"
@@ -65,7 +69,7 @@ export default function SWMSPublicLinkField() {
       {qrSrc ? (
         // Data URL generated locally from the worker link.
         // eslint-disable-next-line @next/next/no-img-element
-        <img alt="QR code for the worker SWMS link" src={qrSrc} width={180} height={180} />
+        <img alt="QR code for the site safety menu" src={qrSrc} width={180} height={180} />
       ) : null}
     </div>
   )

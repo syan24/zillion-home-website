@@ -76,10 +76,15 @@ export interface Config {
     styles: Style;
     spaces: Space;
     'project-images': ProjectImage;
+    'swms-files': SwmsFile;
     'swms-templates': SwmsTemplate;
     'project-swms': ProjectSwm;
     'swms-versions': SwmsVersion;
+    'swms-documents': SwmsDocument;
     'swms-acknowledgements': SwmsAcknowledgement;
+    'swms-document-confirmations': SwmsDocumentConfirmation;
+    'site-attendance': SiteAttendance;
+    'site-safety-reports': SiteSafetyReport;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -108,10 +113,15 @@ export interface Config {
     styles: StylesSelect<false> | StylesSelect<true>;
     spaces: SpacesSelect<false> | SpacesSelect<true>;
     'project-images': ProjectImagesSelect<false> | ProjectImagesSelect<true>;
+    'swms-files': SwmsFilesSelect<false> | SwmsFilesSelect<true>;
     'swms-templates': SwmsTemplatesSelect<false> | SwmsTemplatesSelect<true>;
     'project-swms': ProjectSwmsSelect<false> | ProjectSwmsSelect<true>;
     'swms-versions': SwmsVersionsSelect<false> | SwmsVersionsSelect<true>;
+    'swms-documents': SwmsDocumentsSelect<false> | SwmsDocumentsSelect<true>;
     'swms-acknowledgements': SwmsAcknowledgementsSelect<false> | SwmsAcknowledgementsSelect<true>;
+    'swms-document-confirmations': SwmsDocumentConfirmationsSelect<false> | SwmsDocumentConfirmationsSelect<true>;
+    'site-attendance': SiteAttendanceSelect<false> | SiteAttendanceSelect<true>;
+    'site-safety-reports': SiteSafetyReportsSelect<false> | SiteSafetyReportsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -1167,6 +1177,21 @@ export interface Project {
    */
   address: string;
   /**
+   * Trades working on this job. Site induction only offers these groups and hides the rest. Interior Fit-out & Finishes is a SWMS trade, not a public service. Leave this empty until the job’s trades are known.
+   */
+  enabledTrades?:
+    | (
+        | 'siteworks-demolition'
+        | 'structural-concrete'
+        | 'roofing-external'
+        | 'plumbing-drainage'
+        | 'electrical-mechanical'
+        | 'internal-linings'
+        | 'interior-fitout'
+        | 'landscaping'
+      )[]
+    | null;
+  /**
    * Suburb or general location. Shown on the website when the full address is hidden.
    */
   suburb?: string | null;
@@ -1272,6 +1297,29 @@ export interface ProjectImage {
   createdAt: string;
 }
 /**
+ * PDFs and photos for site safety. Workers open them through the project QR link. They are not part of the public media library.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-files".
+ */
+export interface SwmsFile {
+  id: number;
+  alt?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
  * Reusable SWMS source content. Copy a template onto a Project SWMS, then adjust it.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1309,7 +1357,7 @@ export interface SwmsTemplate {
   createdAt: string;
 }
 /**
- * Save a draft, then set status to Active. Activation publishes an immutable version and keeps the same worker link.
+ * The worker QR opens this project’s Site Safety Menu. The questions below are the Site Induction questionnaire. Save a draft, then set status to Active. Activation publishes an immutable version and keeps the same worker link.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "project-swms".
@@ -1409,6 +1457,56 @@ export interface SwmsVersion {
   createdAt: string;
 }
 /**
+ * Upload one PDF per SWMS and choose the trades it applies to. Replacing the PDF publishes the next file version. Workers who already confirmed the previous file only review the new version.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-documents".
+ */
+export interface SwmsDocument {
+  id: number;
+  /**
+   * Shown to workers, for example “SWMS - Working at heights”.
+   */
+  title: string;
+  project: number | Project;
+  /**
+   * PDF only. Upload a new file to publish the next version.
+   */
+  file: number | SwmsFile;
+  /**
+   * Workers who select one of these trades must review this file.
+   */
+  trades: (
+    | 'siteworks-demolition'
+    | 'structural-concrete'
+    | 'roofing-external'
+    | 'plumbing-drainage'
+    | 'electrical-mechanical'
+    | 'internal-linings'
+    | 'interior-fitout'
+    | 'landscaping'
+  )[];
+  /**
+   * Archived files stay on past confirmations and are hidden from workers.
+   */
+  status: 'active' | 'archived';
+  /**
+   * Lower numbers are shown first. Workers confirm files in this order.
+   */
+  sortOrder?: number | null;
+  /**
+   * Increases when the PDF is replaced.
+   */
+  fileVersion?: number | null;
+  versionLabel?: string | null;
+  /**
+   * Unguessable token used to open this PDF from the project QR link.
+   */
+  accessToken?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Signed worker records. Filter by project, Project SWMS, version, worker name, or signed date, then export the current list as CSV. Records are append-only and stay on the SWMS version that was signed.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1430,7 +1528,42 @@ export interface SwmsAcknowledgement {
   workerName: string;
   workerCompany?: string | null;
   workerPhone?: string | null;
+  /**
+   * English names of the trade groups selected at induction.
+   */
   workerTrade?: string | null;
+  trades?:
+    | (
+        | 'siteworks-demolition'
+        | 'structural-concrete'
+        | 'roofing-external'
+        | 'plumbing-drainage'
+        | 'electrical-mechanical'
+        | 'internal-linings'
+        | 'interior-fitout'
+        | 'landscaping'
+      )[]
+    | null;
+  /**
+   * Normalised name used to recognise a returning worker.
+   */
+  workerNameKey?: string | null;
+  /**
+   * Normalised phone used with the name. No staff ID or PIN is stored.
+   */
+  workerPhoneKey?: string | null;
+  /**
+   * Snapshot of the SWMS PDFs, file versions, and confirmation time captured with this signature. Later file versions are stored as new SWMS confirmations and do not change this row.
+   */
+  swmsConfirmations?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Questions from the signed SWMS version and the answers the worker gave.
    */
@@ -1446,6 +1579,89 @@ export interface SwmsAcknowledgement {
   acknowledgementAccepted: boolean;
   signature: string;
   signedAt: string;
+  metadata?: {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Each time a worker confirms a SWMS PDF. A later file version is a new row. These records are append-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-document-confirmations".
+ */
+export interface SwmsDocumentConfirmation {
+  id: number;
+  project: number | Project;
+  document: number | SwmsDocument;
+  file: number | SwmsFile;
+  fileVersion: number;
+  versionLabel: string;
+  documentTitle: string;
+  trades?:
+    | (
+        | 'siteworks-demolition'
+        | 'structural-concrete'
+        | 'roofing-external'
+        | 'plumbing-drainage'
+        | 'electrical-mechanical'
+        | 'internal-linings'
+        | 'interior-fitout'
+        | 'landscaping'
+      )[]
+    | null;
+  workerName: string;
+  workerPhone: string;
+  workerNameKey: string;
+  workerPhoneKey: string;
+  confirmedAt: string;
+  source: 'induction' | 'reconfirm';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Daily sign-in and sign-out for a project. Workers are matched by name and phone. Records are append-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-attendance".
+ */
+export interface SiteAttendance {
+  id: number;
+  project: number | Project;
+  projectSwms: number | ProjectSwm;
+  workerName: string;
+  workerPhone: string;
+  workerNameKey: string;
+  workerPhoneKey: string;
+  direction: 'in' | 'out';
+  recordedAt: string;
+  metadata?: {
+    ipAddress?: string | null;
+    userAgent?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Incident reports, hazard identifications, and toolbox talks submitted from the site safety menu. Records are append-only.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-safety-reports".
+ */
+export interface SiteSafetyReport {
+  id: number;
+  kind: 'incident' | 'hazard' | 'toolbox';
+  summary: string;
+  project: number | Project;
+  workerName: string;
+  workerPhone: string;
+  workerNameKey: string;
+  workerPhoneKey: string;
+  occurredAt: string;
+  description: string;
+  attachment?: (number | null) | SwmsFile;
   metadata?: {
     ipAddress?: string | null;
     userAgent?: string | null;
@@ -1654,6 +1870,10 @@ export interface PayloadLockedDocument {
         value: number | ProjectImage;
       } | null)
     | ({
+        relationTo: 'swms-files';
+        value: number | SwmsFile;
+      } | null)
+    | ({
         relationTo: 'swms-templates';
         value: number | SwmsTemplate;
       } | null)
@@ -1666,8 +1886,24 @@ export interface PayloadLockedDocument {
         value: number | SwmsVersion;
       } | null)
     | ({
+        relationTo: 'swms-documents';
+        value: number | SwmsDocument;
+      } | null)
+    | ({
         relationTo: 'swms-acknowledgements';
         value: number | SwmsAcknowledgement;
+      } | null)
+    | ({
+        relationTo: 'swms-document-confirmations';
+        value: number | SwmsDocumentConfirmation;
+      } | null)
+    | ({
+        relationTo: 'site-attendance';
+        value: number | SiteAttendance;
+      } | null)
+    | ({
+        relationTo: 'site-safety-reports';
+        value: number | SiteSafetyReport;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2235,6 +2471,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   shortDescription?: T;
   description?: T;
   address?: T;
+  enabledTrades?: T;
   suburb?: T;
   showAddressPublicly?: T;
   featuredImage?: T;
@@ -2292,6 +2529,26 @@ export interface ProjectImagesSelect<T extends boolean = true> {
   allowDownload?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-files_select".
+ */
+export interface SwmsFilesSelect<T extends boolean = true> {
+  alt?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2387,6 +2644,23 @@ export interface SwmsVersionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-documents_select".
+ */
+export interface SwmsDocumentsSelect<T extends boolean = true> {
+  title?: T;
+  project?: T;
+  file?: T;
+  trades?: T;
+  status?: T;
+  sortOrder?: T;
+  fileVersion?: T;
+  versionLabel?: T;
+  accessToken?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "swms-acknowledgements_select".
  */
 export interface SwmsAcknowledgementsSelect<T extends boolean = true> {
@@ -2399,10 +2673,81 @@ export interface SwmsAcknowledgementsSelect<T extends boolean = true> {
   workerCompany?: T;
   workerPhone?: T;
   workerTrade?: T;
+  trades?: T;
+  workerNameKey?: T;
+  workerPhoneKey?: T;
+  swmsConfirmations?: T;
   responses?: T;
   acknowledgementAccepted?: T;
   signature?: T;
   signedAt?: T;
+  metadata?:
+    | T
+    | {
+        ipAddress?: T;
+        userAgent?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "swms-document-confirmations_select".
+ */
+export interface SwmsDocumentConfirmationsSelect<T extends boolean = true> {
+  project?: T;
+  document?: T;
+  file?: T;
+  fileVersion?: T;
+  versionLabel?: T;
+  documentTitle?: T;
+  trades?: T;
+  workerName?: T;
+  workerPhone?: T;
+  workerNameKey?: T;
+  workerPhoneKey?: T;
+  confirmedAt?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-attendance_select".
+ */
+export interface SiteAttendanceSelect<T extends boolean = true> {
+  project?: T;
+  projectSwms?: T;
+  workerName?: T;
+  workerPhone?: T;
+  workerNameKey?: T;
+  workerPhoneKey?: T;
+  direction?: T;
+  recordedAt?: T;
+  metadata?:
+    | T
+    | {
+        ipAddress?: T;
+        userAgent?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-safety-reports_select".
+ */
+export interface SiteSafetyReportsSelect<T extends boolean = true> {
+  kind?: T;
+  summary?: T;
+  project?: T;
+  workerName?: T;
+  workerPhone?: T;
+  workerNameKey?: T;
+  workerPhoneKey?: T;
+  occurredAt?: T;
+  description?: T;
+  attachment?: T;
   metadata?:
     | T
     | {

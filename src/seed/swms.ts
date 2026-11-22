@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { buildTextPdf } from '@/lib/swms/demoPdf'
+import type { TradeValue } from '@/lib/swms/trades'
 import { seedSwmsAcknowledgement } from '@/seed/swmsAcknowledgement'
 
 const placeholderSections = [
@@ -49,18 +51,21 @@ export async function seedSwms(payload: Payload) {
       address: '12 Smith Street, Rosebery NSW 2018',
       suburb: 'Rosebery',
       summary: 'Demo project for the SWMS worker flow.',
+      trades: ['electrical-mechanical', 'interior-fitout', 'internal-linings'] as TradeValue[],
     },
     {
       title: 'Linfield House',
       address: '8 Highfield Rd, Linfield NSW 2070',
       suburb: 'Linfield',
       summary: 'Demo project for the SWMS project list.',
+      trades: ['structural-concrete', 'plumbing-drainage'] as TradeValue[],
     },
     {
       title: 'Marrickville Duplex',
       address: '2 Ocean St, Marrickville NSW 2020',
       suburb: 'Marrickville',
       summary: 'Demo project for the SWMS project list.',
+      trades: ['siteworks-demolition', 'roofing-external'] as TradeValue[],
     },
   ]
 
@@ -84,6 +89,9 @@ export async function seedSwms(payload: Payload) {
     links.push(`${project.title}: ${baseUrl}/swms/${swms.publicToken}`)
   }
 
+  const rosebery = projectDocs[0]
+  if (rosebery) await seedDemoSwmsDocuments(payload, rosebery.id)
+
   await seedSwmsAcknowledgement(payload)
   console.log('SWMS seed ready.')
   console.log(links.join('\n'))
@@ -102,7 +110,7 @@ function question(text: string, type: 'yes-no' | 'yes-no-na' | 'acknowledgement'
 
 async function findOrCreateProject(
   payload: Payload,
-  data: { title: string; address: string; suburb: string; summary: string },
+  data: { title: string; address: string; suburb: string; summary: string; trades: TradeValue[] },
 ) {
   const existing = await payload.find({
     collection: 'projects',
@@ -110,20 +118,108 @@ async function findOrCreateProject(
     overrideAccess: true,
     where: { title: { equals: data.title } },
   })
-  if (existing.docs[0]) return existing.docs[0]
+  const current = existing.docs[0]
+  if (current) return ensureDemoTrades(payload, current.id, current.enabledTrades, data.trades)
 
   return payload.create({
     collection: 'projects',
     overrideAccess: true,
     draft: false,
+    context: { disableRevalidate: true },
     data: {
-      ...data,
+      title: data.title,
+      address: data.address,
+      suburb: data.suburb,
+      summary: data.summary,
+      enabledTrades: data.trades,
       type: 'residential',
       projectStatus: 'active',
       showAddressPublicly: false,
       _status: 'published',
     },
   })
+}
+
+async function ensureDemoTrades(
+  payload: Payload,
+  id: number,
+  current: unknown,
+  trades: TradeValue[],
+) {
+  if (Array.isArray(current) && current.length > 0) {
+    return payload.findByID({ collection: 'projects', id, overrideAccess: true, draft: false })
+  }
+  return payload.update({
+    collection: 'projects',
+    id,
+    overrideAccess: true,
+    draft: false,
+    context: { disableRevalidate: true },
+    data: { enabledTrades: trades },
+  })
+}
+
+async function seedDemoSwmsDocuments(payload: Payload, projectID: number) {
+  const documents = [
+    {
+      title: 'SWMS - Working at heights',
+      trades: ['electrical-mechanical'] as TradeValue[],
+      sortOrder: 1,
+      filename: 'swms-working-at-heights.pdf',
+      pages: [
+        ['SWMS - Working at heights', 'Placeholder for the Phase 3 demo.', 'Page 1 of 2. Not a legal SWMS.'],
+        ['Keep reading to the bottom of this page.', 'Confirm only after the last line is visible.', 'End of SWMS - Working at heights.'],
+      ],
+    },
+    {
+      title: 'SWMS - Interior fit-out',
+      trades: ['interior-fitout'] as TradeValue[],
+      sortOrder: 2,
+      filename: 'swms-interior-fit-out.pdf',
+      pages: [
+        ['SWMS - Interior fit-out', 'Placeholder for the Phase 3 demo.', 'Page 1 of 2. Not a legal SWMS.'],
+        ['Review this second file after the first.', 'End of SWMS - Interior fit-out.'],
+      ],
+    },
+  ]
+
+  for (const document of documents) {
+    const existing = await payload.find({
+      collection: 'swms-documents',
+      depth: 0,
+      limit: 1,
+      overrideAccess: true,
+      where: {
+        and: [{ title: { equals: document.title } }, { project: { equals: projectID } }],
+      },
+    })
+    if (existing.docs[0]) continue
+
+    const pdf = buildTextPdf(document.pages)
+    const file = await payload.create({
+      collection: 'swms-files',
+      overrideAccess: true,
+      data: { alt: document.title },
+      file: {
+        data: pdf,
+        mimetype: 'application/pdf',
+        name: document.filename,
+        size: pdf.length,
+      },
+    })
+    await payload.create({
+      collection: 'swms-documents',
+      overrideAccess: true,
+      data: {
+        title: document.title,
+        project: projectID,
+        file: file.id,
+        trades: document.trades,
+        status: 'active',
+        sortOrder: document.sortOrder,
+      },
+    })
+  }
 }
 
 async function findOrCreateTemplate(payload: Payload) {
