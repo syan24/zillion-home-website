@@ -53,10 +53,10 @@ export default async function SWMSCompletePage({ params, searchParams }: Args) {
   return (
     <div className="space-y-5 rounded-lg border border-border bg-white p-5">
       <p className="text-xs tracking-[0.16em] uppercase text-muted-foreground">Submitted</p>
-      <h1 className="font-serif text-4xl">SWMS signed</h1>
+      <h1 className="font-serif text-4xl">Induction signed</h1>
       <p className="text-sm leading-relaxed">
-        The acknowledgement is stored against this project and SWMS version. You can close this
-        page.
+        The induction, trade selection, and SWMS confirmation are stored against this project. You
+        are signed in for this visit. 入场培训已保存，本次已签到。
       </p>
       <dl className="space-y-3 text-sm">
         <div>
@@ -82,6 +82,12 @@ export default async function SWMSCompletePage({ params, searchParams }: Args) {
           <dt className="text-muted-foreground">Name</dt>
           <dd>{record.workerName}</dd>
         </div>
+        {tradeList(record).length > 0 ? (
+          <div>
+            <dt className="text-muted-foreground">Trades</dt>
+            <dd>{tradeList(record).join(', ')}</dd>
+          </div>
+        ) : null}
       </dl>
       {record.signature?.startsWith('data:image/') ? (
         // The worker's own signature, loaded for this unguessable reference.
@@ -92,11 +98,18 @@ export default async function SWMSCompletePage({ params, searchParams }: Args) {
           className="w-full rounded-md border border-border bg-white"
         />
       ) : null}
-      <Link href="/swms" className="inline-flex text-sm underline">
-        Back to project list
+      <Link href={`/swms/${token}`} className="inline-flex text-sm underline">
+        Back to site safety menu 返回现场安全菜单
       </Link>
     </div>
   )
+}
+
+function tradeList(record: { trades?: unknown; workerTrade?: string | null }): string[] {
+  if (Array.isArray(record.trades) && record.trades.length > 0) {
+    return record.trades.filter((trade): trade is string => typeof trade === 'string')
+  }
+  return record.workerTrade ? [record.workerTrade] : []
 }
 
 function formatSignedAt(value: string): string {

@@ -24,7 +24,7 @@ export const ProjectSWMS: CollectionConfig = {
     defaultColumns: ['title', 'project', 'status', 'updatedAt'],
     group: 'SWMS',
     description:
-      'Save a draft, then set status to Active. Activation publishes an immutable version and keeps the same worker link.',
+      'The worker QR opens this project’s Site Safety Menu. The questions below are the Site Induction questionnaire. Save a draft, then set status to Active. Activation publishes an immutable version and keeps the same worker link.',
   },
   access: {
     create: authenticated,

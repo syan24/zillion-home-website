@@ -23,7 +23,7 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: 'SWMS | Zillion Home',
-  description: 'Read and sign the project Safe Work Method Statement.',
+  description: 'Site safety menu for project induction, SWMS review, and daily sign-in.',
   robots: {
     index: false,
     follow: false,

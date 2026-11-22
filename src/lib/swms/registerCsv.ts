@@ -9,6 +9,9 @@ export const REGISTER_CSV_HEADERS = [
   'project SWMS',
   'version',
   'acknowledgement accepted',
+  'trades',
+  'swmsFileVersions',
+  'swmsConfirmedAt',
 ] as const
 
 export type RegisterCsvRow = {
@@ -17,6 +20,9 @@ export type RegisterCsvRow = {
   projectSwms: string
   signedAt: string
   submissionRef: string
+  swmsConfirmedAt: string
+  swmsFileVersions: string
+  trades: string
   version: string
   workerCompany: string
   workerName: string
@@ -78,6 +84,9 @@ export function toRegisterCsv(rows: RegisterCsvRow[]): string {
         csvCell(row.projectSwms),
         csvCell(row.version),
         row.acknowledgementAccepted ? 'true' : 'false',
+        csvCell(row.trades),
+        csvCell(row.swmsFileVersions),
+        csvCell(row.swmsConfirmedAt),
       ].join(','),
     )
   }

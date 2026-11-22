@@ -54,7 +54,7 @@ export function ProjectPicker({ projects }: ProjectPickerProps) {
                   {project.projectAddress}
                 </span>
                 <span className="mt-2 block text-xs tracking-wide text-accent-foreground/70 uppercase">
-                  {project.swmsTitle}
+                  Site safety menu · {project.swmsTitle}
                 </span>
               </Link>
             </li>

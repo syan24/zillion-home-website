@@ -13,6 +13,9 @@ public/media/
 # Enquiry attachments when BLOB_READ_WRITE_TOKEN is unset
 enquiry-uploads/
 
+# SWMS PDFs and site-safety photos when BLOB_READ_WRITE_TOKEN is unset
+swms-uploads/
+
 public/robots.txt
 public/sitemap*.xml
 

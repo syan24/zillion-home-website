@@ -111,7 +111,8 @@ export async function seedSwmsAcknowledgement(payload: Payload) {
       workerCompany: 'Demo Electrical',
       workerName: 'Demo Worker',
       workerPhone: '0400 111 222',
-      workerTrade: 'Electrician',
+      workerTrade: 'Electrical & Mechanical Services',
+      trades: ['electrical-mechanical'],
     },
   })
 

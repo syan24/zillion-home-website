@@ -21,8 +21,8 @@ export default async function SWMSEntryPage() {
         </p>
         <h1 className="mt-2 font-serif text-4xl">SWMS</h1>
         <p className="mt-3 text-sm leading-relaxed text-foreground-soft">
-          Scan the project QR code, or choose an active project below. Project name and address come
-          from the project record. Workers do not type an address.
+          Scan the project QR code, or choose an active project below. The link opens that
+          project’s site safety menu. Project name and address come from the project record.
         </p>
       </div>
       <ProjectPicker projects={projects} />

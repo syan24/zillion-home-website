@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { slugField } from 'payload'
 
 import { projectTypeOptions } from '../../lib/projects/types'
+import { tradeSelectOptions } from '../../lib/swms/trades'
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { revalidatePortfolio } from '../../hooks/revalidatePortfolio'
@@ -75,6 +76,20 @@ export const Projects: CollectionConfig = {
       admin: {
         description:
           'Full site address. Workers see this on the SWMS flow. The public website shows it only when the checkbox below is on.',
+      },
+    },
+    {
+      name: 'enabledTrades',
+      type: 'select',
+      hasMany: true,
+      label: 'Site induction trades',
+      options: tradeSelectOptions,
+      access: {
+        read: ({ req }) => Boolean(req.user),
+      },
+      admin: {
+        description:
+          'Trades working on this job. Site induction only offers these groups and hides the rest. Interior Fit-out & Finishes is a SWMS trade, not a public service. Leave this empty until the job’s trades are known.',
       },
     },
     {

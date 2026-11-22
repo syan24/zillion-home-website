@@ -1,3 +1,4 @@
+/** @vitest-environment node */
 import { getPayload, type Payload, type PayloadRequest, type Where } from 'payload'
 import config from '@/payload.config'
 import { exportSWMSRegister } from '@/collections/SWMSAcknowledgements/exportRegister'
@@ -40,16 +41,19 @@ describe('SWMS register CSV helpers', () => {
         workerName: 'Demo "Alex" Worker',
         workerPhone: '0400 111 222',
         workerTrade: 'Electrician',
+        trades: 'Electrical & Mechanical Services',
+        swmsFileVersions: 'SWMS - Working at heights v1',
+        swmsConfirmedAt: '2026-04-15T01:30:00.000Z',
       },
     ])
 
     const [header, row] = csv.trim().split('\r\n')
     expect(header).toBe(
-      'submissionRef,signedAt,workerName,workerCompany,workerPhone,workerTrade,project,project SWMS,version,acknowledgement accepted',
+      'submissionRef,signedAt,workerName,workerCompany,workerPhone,workerTrade,project,project SWMS,version,acknowledgement accepted,trades,swmsFileVersions,swmsConfirmedAt',
     )
     expect(row).toContain('"Demo ""Alex"" Worker"')
     expect(row).toContain('"Demo, Electrical"')
-    expect(row?.endsWith(',true')).toBe(true)
+    expect(row).toContain(',true,Electrical & Mechanical Services,SWMS - Working at heights v1,2026-04-15T01:30:00.000Z')
   })
 
   it('names a single-project file and otherwise uses filtered', () => {
@@ -254,7 +258,7 @@ describe('SWMS register export', () => {
     const csv = await response.text()
     const lines = csv.trim().split('\r\n')
     expect(lines[0]).toBe(
-      'submissionRef,signedAt,workerName,workerCompany,workerPhone,workerTrade,project,project SWMS,version,acknowledgement accepted',
+      'submissionRef,signedAt,workerName,workerCompany,workerPhone,workerTrade,project,project SWMS,version,acknowledgement accepted,trades,swmsFileVersions,swmsConfirmedAt',
     )
     expect(lines).toHaveLength(2)
     expect(csv).toContain(alpha.submissionRef)
