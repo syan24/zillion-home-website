@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { getMarketing } from '@/content/getMarketing'
-import { alignHeaderNav, withoutInteriorLinks } from '@/content/navMenu'
+import { alignFooterServiceLabels, alignHeaderNav, withoutInteriorLinks } from '@/content/navMenu'
 import { alignPhase1Layout } from '@/content/phase1Align'
 import { relatedProjectHref } from '@/lib/projects/types'
 
@@ -216,6 +216,133 @@ describe('phase 1 layout alignment', () => {
     expect(kept.changed).toBe(false)
     expect((kept.layout as { description: string }[])[0]?.description).toBe(zh)
   })
+
+  it('uses the official joinery name and drops only the joinery-band enquiry link', () => {
+    const english = getMarketing('en')
+    const chinese = getMarketing('zh')
+    expect(english.services.details.services.map((service) => service.title)).toEqual([
+      'Residential Construction & Renovation',
+      'Commercial Fit-out',
+      'Custom Joinery',
+    ])
+    expect(chinese.services.details.services[2].title).toBe('定制木作')
+    expect(english.services.joinery.links).toEqual([])
+    expect(chinese.services.joinery.links).toEqual([])
+    expect(english.services.joinery.headingAccent).toBe('made for your space.')
+    expect(english.services.joinery.body).toContain('made-to-order cabinetry')
+    expect(chinese.services.joinery.body).toContain('好的木作远在安装之前就开始了')
+    expect(english.services.cta.links[0]?.label).toBe('Start an Enquiry →')
+    expect(chinese.services.cta.links[0]?.label).toBe('开始咨询 →')
+    expect(english.footer.services).toEqual([
+      { label: 'Residential Construction & Renovation', href: '/services#residential' },
+      { label: 'Commercial Fit-out', href: '/services#commercial' },
+      { label: 'Custom Joinery', href: '/services#joinery' },
+    ])
+    expect(chinese.footer.services.map((item) => item.label)).toEqual([
+      '住宅施工与翻新',
+      '商业装修',
+      '定制木作',
+    ])
+    expect(english.footer.company.map((item) => item.label)).toContain('Enquiry')
+
+    const body = 'Client kept this joinery paragraph.'
+    const layout = [
+      {
+        blockType: 'serviceDetails',
+        services: [
+          {
+            anchor: 'residential',
+            title: 'Residential Construction & Renovation',
+            description: 'Leave this residential paragraph.',
+            enquireLabel: 'View Related Project',
+          },
+          {
+            anchor: 'joinery',
+            title: 'Custom Joinery & Cabinetry',
+            imageAlt: 'Custom Joinery & Cabinetry',
+            description: body,
+            enquireLabel: 'View Related Project',
+          },
+        ],
+      },
+      {
+        blockType: 'splitFeature',
+        variant: 'darkCopy',
+        eyebrow: 'made for your space',
+        heading: 'Made to order,',
+        headingAccent: 'made for your space.',
+        body: 'Every space is different. Our made-to-order cabinetry stays.',
+        links: [
+          { id: 'enq', label: 'Enquire about Custom Joinery →', href: '/enquiry', variant: 'enquiry' },
+          {
+            id: 'keep',
+            label: 'See the workshop',
+            href: '/projects?view=project&type=joinery',
+            variant: 'outline',
+          },
+        ],
+      },
+      {
+        blockType: 'ctaBand',
+        links: [{ label: 'Start an Enquiry →', href: '/enquiry', variant: 'enquiry' }],
+      },
+    ]
+    const aligned = alignPhase1Layout(layout, 'en', 'services')
+    expect(aligned.changed).toBe(true)
+    const details = (
+      aligned.layout as {
+        services?: { title: string; imageAlt?: string; description: string; enquireLabel: string }[]
+        links?: { id?: string; label: string; href: string }[]
+        body?: string
+      }[]
+    )[0]
+    expect(details.services?.map((service) => service.title)).toEqual([
+      'Residential Construction & Renovation',
+      'Custom Joinery',
+    ])
+    expect(details.services?.[1].imageAlt).toBe('Custom Joinery')
+    expect(details.services?.[1].description).toBe(body)
+    expect(details.services?.[0].description).toBe('Leave this residential paragraph.')
+    expect(details.services?.[1].enquireLabel).toBe('View Related Project')
+    const band = (aligned.layout as { body?: string; links?: { id?: string; href: string }[] }[])[1]
+    expect(band.body).toBe('Every space is different. Our made-to-order cabinetry stays.')
+    expect(band.links?.map((link) => link.id)).toEqual(['keep'])
+    const cta = (aligned.layout as { links?: { label: string; href: string }[] }[])[2]
+    expect(cta.links).toEqual([{ label: 'Start an Enquiry →', href: '/enquiry', variant: 'enquiry' }])
+
+    const again = alignPhase1Layout(aligned.layout, 'en', 'services')
+    expect(again.changed).toBe(false)
+
+    const zhLayout = [
+      {
+        blockType: 'serviceDetails',
+        services: [
+          {
+            anchor: 'joinery',
+            title: '定制橱柜与木作',
+            description: '客户改过的木作说明。',
+            enquireLabel: '查看相关项目',
+          },
+        ],
+      },
+      {
+        blockType: 'splitFeature',
+        variant: 'darkCopy',
+        heading: '按订单制作，',
+        headingAccent: '为您的空间而做。',
+        body: '好的木作远在安装之前就开始了。',
+        links: [{ label: '咨询定制木作 →', href: '/enquiry', variant: 'enquiry' }],
+      },
+    ]
+    const zhAligned = alignPhase1Layout(zhLayout, 'zh', 'services')
+    const zhDetails = (zhAligned.layout as { services?: { title: string; description: string }[] }[])[0]
+    expect(zhDetails.services?.[0].title).toBe('定制木作')
+    expect(zhDetails.services?.[0].description).toBe('客户改过的木作说明。')
+    const zhBand = (zhAligned.layout as { body?: string; links?: unknown[] }[])[1]
+    expect(zhBand.body).toBe('好的木作远在安装之前就开始了。')
+    expect(zhBand.links).toEqual([])
+    expect(alignPhase1Layout(zhAligned.layout, 'zh', 'services').changed).toBe(false)
+  })
 })
 
 describe('header dropdown migration', () => {
@@ -253,6 +380,45 @@ describe('header dropdown migration', () => {
       { link: { type: 'custom' as const, url: '/journal', label: 'Journal' } },
     ]
     expect(alignHeaderNav(items, 'en').changed).toBe(false)
+  })
+
+  it('lengthens only the short residential footer label', () => {
+    const aligned = alignFooterServiceLabels(
+      [
+        { id: 'r', link: { type: 'custom', url: '/services#residential', label: 'Residential Construction' } },
+        { id: 'c', link: { type: 'custom', url: '/services#commercial', label: 'Commercial Fit-out' } },
+        { id: 'j', link: { type: 'custom', url: '/services#joinery', label: 'Custom Joinery' } },
+      ],
+      'en',
+    )
+    expect(aligned.changed).toBe(true)
+    expect(aligned.items.map((item) => item.link.label)).toEqual([
+      'Residential Construction & Renovation',
+      'Commercial Fit-out',
+      'Custom Joinery',
+    ])
+    expect(aligned.items[0].id).toBe('r')
+    expect(aligned.items[0].link.url).toBe('/services#residential')
+    expect(alignFooterServiceLabels(aligned.items, 'en').changed).toBe(false)
+
+    const custom = alignFooterServiceLabels(
+      [{ link: { url: '/services#residential', label: 'Homes we build' } }],
+      'en',
+    )
+    expect(custom.changed).toBe(false)
+    expect(custom.items[0].link.label).toBe('Homes we build')
+
+    const zh = alignFooterServiceLabels(
+      [
+        { link: { url: '/services#residential', label: '住宅施工' } },
+        { link: { url: '/services#commercial', label: '商业装修' } },
+        { link: { url: '/services#joinery', label: '定制木作' } },
+      ],
+      'zh',
+    )
+    expect(zh.items.map((item) => item.link?.label)).toEqual(['住宅施工与翻新', '商业装修', '定制木作'])
+    expect(zh.items[0].link?.url).toBe('/services#residential')
+    expect(alignFooterServiceLabels(zh.items, 'zh').changed).toBe(false)
   })
 
   it('removes an interior footer link', () => {

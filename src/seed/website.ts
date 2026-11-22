@@ -8,7 +8,7 @@ import {
   type ImageRef,
   type MarketingImageKey,
 } from '@/content/marketing'
-import { alignHeaderNav, asNavItems, withoutInteriorLinks } from '@/content/navMenu'
+import { alignFooterServiceLabels, alignHeaderNav, asNavItems, withoutInteriorLinks } from '@/content/navMenu'
 import { alignPhase1Layout } from '@/content/phase1Align'
 import { ensureSeedMedia } from '@/seed/ensureSeedMedia'
 import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
@@ -494,8 +494,9 @@ async function alignHeroTypography(payload: Payload, id: number, draft: boolean,
 
 /**
  * Rewrites known pre-feedback blocks (process, capabilities cards, category bar,
- * services, joinery, in-house sentences). The Home briefs block is left as stored
- * so an edited Home 01 is not overwritten.
+ * services, joinery, in-house sentences). It also renames a Services joinery title
+ * that is still the longer name, and removes an enquiry link on the joinery band.
+ * The Home briefs block is left as stored so an edited Home 01 is not overwritten.
  */
 async function alignPhase1Page(
   payload: Payload,
@@ -685,8 +686,9 @@ async function seedGlobals(payload: Payload) {
   if (!footer.location) footerData.location = english.footer.location
   if (!footer.serviceLinks?.length) footerData.serviceLinks = english.footer.services.map(navLink)
   else {
-    const aligned = withoutInteriorLinks(footer.serviceLinks)
-    if (aligned.changed) footerData.serviceLinks = aligned.items
+    const cleaned = withoutInteriorLinks(footer.serviceLinks)
+    const labeled = alignFooterServiceLabels(cleaned.items, 'en')
+    if (cleaned.changed || labeled.changed) footerData.serviceLinks = labeled.items
   }
   if (!footer.navItems?.length) footerData.navItems = english.footer.company.map(navLink)
 
@@ -751,8 +753,10 @@ async function fillFooterLocale(
   if (!footer.tagline) data.tagline = copy.tagline
   if (!footer.location) data.location = copy.location
   const serviceLinks = localizeNav(footer.serviceLinks, copy.services)
+  const labeledServices = alignFooterServiceLabels(serviceLinks ?? footer.serviceLinks, 'zh')
   const navItems = localizeNav(footer.navItems, copy.company)
-  if (serviceLinks) data.serviceLinks = serviceLinks
+  if (labeledServices.changed) data.serviceLinks = labeledServices.items
+  else if (serviceLinks) data.serviceLinks = serviceLinks
   if (navItems) data.navItems = navItems
   if (!Object.keys(data).length) return 'footer: zh kept'
 

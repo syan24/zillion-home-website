@@ -101,3 +101,46 @@ export function withoutInteriorLinks<T extends { link?: { url?: string | null } 
   const next = items.filter((item) => !isInteriorHref(item.link?.url))
   return { changed: next.length !== items.length, items: next }
 }
+
+const footerServiceLabelSwaps: Record<'en' | 'zh', { href: string; from: string; to: string }[]> = {
+  en: [
+    {
+      href: '/services#residential',
+      from: 'Residential Construction',
+      to: 'Residential Construction & Renovation',
+    },
+  ],
+  zh: [
+    {
+      href: '/services#residential',
+      from: '住宅施工',
+      to: '住宅施工与翻新',
+    },
+  ],
+}
+
+function sameServiceHref(left: string, right: string) {
+  return left.trim().replace(/\/$/, '') === right.trim().replace(/\/$/, '')
+}
+
+/**
+ * Lengthens a footer service label that is still the short residential name.
+ * Any other label, including a custom one on the same href, is left in place.
+ * The href is not changed.
+ */
+export function alignFooterServiceLabels<
+  T extends { link?: { url?: string | null; label?: string | null } | null },
+>(items: T[] | null | undefined, locale: 'en' | 'zh') {
+  const source = items || []
+  const swaps = footerServiceLabelSwaps[locale]
+  let changed = false
+  const next = source.map((item) => {
+    const href = item.link?.url || ''
+    const label = (item.link?.label || '').trim()
+    const swap = swaps.find((entry) => sameServiceHref(href, entry.href) && label === entry.from)
+    if (!swap || !item.link) return item
+    changed = true
+    return { ...item, link: { ...item.link, label: swap.to } }
+  })
+  return { changed, items: changed ? next : source }
+}

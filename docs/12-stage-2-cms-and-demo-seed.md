@@ -15,7 +15,7 @@ Until that seed exists, Home, About and Services still render the previous hardc
 | Services | Pages → Services | Intro, service sections with anchors, process, joinery feature, CTA |
 | Header navigation | Globals → Header | Primary links can include dropdown children. Our Services holds Residential, Commercial, and Custom Joinery. The beige **Start an Enquiry** button stays in code and always goes to `/enquiry` |
 | Footer | Globals → Footer | Blurb, tagline, location, service links, company links |
-| Images | Media, then the upload field on the hero or block | Replace the file in Media, or choose a different image on the block |
+| Images | Media, then the upload field on the hero or block | Replace the file in Media, or choose a different image on the block. Home 02 (“What makes us different”) still uses `feature-interior.jpg` and `trust-qualified.jpg`; those files are also used on Home 01 and About. No other seed photo shows drawings or an early design conversation, so the seed leaves them. Replace either card in Pages → Home |
 
 Marketing blocks (group **Marketing** in the layout editor):
 
