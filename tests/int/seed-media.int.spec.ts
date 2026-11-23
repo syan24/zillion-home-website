@@ -128,15 +128,15 @@ describe('seed media repair', () => {
     ).toBe('https://store1.public.blob.vercel-storage.com/media/abc/service-commercial.jpg')
   })
 
-  it('keeps a reachable admin replacement except the homepage hero', () => {
+  it('keeps a reachable admin replacement, including the homepage hero', () => {
     expect(assessSeedMedia({ ...healthy, filesize: 50 }).repair).toBe(false)
     expect(
       assessSeedMedia({
         ...healthy,
         filename: 'hero-house.jpg',
         filesize: 50,
-      }).reason,
-    ).toBe('hero-house.jpg size differs from the seed asset')
+      }).repair,
+    ).toBe(false)
   })
 
   it('keeps a local file that matches and re-uploads when the disk file is gone', () => {
@@ -217,6 +217,7 @@ describe('seed media repair', () => {
     process.env.NEXT_PUBLIC_SERVER_URL = ''
     process.env.VERCEL_URL = ''
     process.env.VERCEL_PROJECT_PRODUCTION_URL = ''
+    fs.rmSync(path.resolve('public/media', filename), { force: true })
 
     await expect(
       ensureSeedMedia(payload, { alt: 'Residential construction', filePath, filename }),

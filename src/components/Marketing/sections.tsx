@@ -1,7 +1,6 @@
 import React, { Fragment } from 'react'
 import Link from 'next/link'
 
-import { isLegacyEnquireLabel } from '@/content/phase1Align'
 import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { Button } from '@/components/ui/button'
 import { relatedProjectHrefForAnchor } from '@/lib/projects/types'
@@ -122,12 +121,8 @@ function homeAccent(headline?: string | null) {
 }
 
 function flowingTitle(heading?: string | null, accent?: string | null) {
-  let lead = (heading || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
-  let mark = (accent || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
-  if (lead === 'Building with' && /^care and precision\.?$/i.test(mark)) {
-    lead = 'Building with care & precision.'
-    mark = 'care'
-  }
+  const lead = (heading || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
+  const mark = (accent || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
   if (mark && lead.toLowerCase().includes(mark.toLowerCase())) return goldPhrase(lead, mark)
   if (lead && mark) return goldPhrase(`${lead} ${mark}`, mark)
   return goldPhrase(lead)
@@ -191,7 +186,7 @@ export function HomeHero({
   links?: MarketingLink[] | null
 }) {
   const badges = [badgePrimary, badgeSecondary, badgeMuted].filter(Boolean)
-  const extraLinks = (links || []).filter((link) => link.href !== '/enquiry')
+  const extraLinks = links || []
 
   return (
     <section className={cn(photoHeroFrame, homeHeroMin)}>
@@ -254,9 +249,7 @@ export function ServiceCards({
     image?: MarketingImage | null
   }[] | null
 }) {
-  const visible = (cards || []).filter(
-    (card) => !card.href?.includes('#interior') && !/interior fit-out|室内装修|室内交付/i.test(card.title || ''),
-  )
+  const visible = cards || []
   if (variant === 'pair') {
     return (
       <section id="difference" className="bg-background-warm py-[clamp(96px,10vw,150px)]">
@@ -791,9 +784,7 @@ export function CategoryBar({
           <p className={cn(display, 'text-[clamp(36px,4.4vw,68px)] leading-[1.12]')}>{lines(heading, true)}</p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[11px] uppercase tracking-[0.26em] text-muted-foreground">
-          {(items || [])
-            .filter((item) => !/interior fit-out|室内装修|室内交付/i.test(item.title || ''))
-            .map((item, index) => (
+          {(items || []).map((item, index) => (
             <Fragment key={item.title || index}>
               {index > 0 && <span aria-hidden>·</span>}
               <span>{item.title}</span>
@@ -870,7 +861,6 @@ export function CtaBand({
 export function ServiceDetails({
   services,
   featuresLabel = 'What we deliver',
-  relatedLabel = 'View Related Project',
 }: {
   services?: {
     anchor?: string | null
@@ -882,11 +872,8 @@ export function ServiceDetails({
     enquireLabel?: string | null
   }[] | null
   featuresLabel?: string
-  relatedLabel?: string
 }) {
-  const list = (services || []).filter(
-    (service) => service.anchor !== 'interior' && !/interior fit-out|室内装修|室内交付/i.test(service.title || ''),
-  )
+  const list = services || []
   return (
     <div className={cn(wrap, 'flex flex-col gap-[clamp(96px,11vw,170px)] py-[clamp(80px,10vw,150px)]')}>
       {list.length > 0 && (
@@ -936,7 +923,7 @@ export function ServiceDetails({
                 </ul>
               </div>
             )}
-            <ServiceAction anchor={service.anchor} label={service.enquireLabel} relatedLabel={relatedLabel} />
+            <ServiceAction anchor={service.anchor} label={service.enquireLabel} />
           </div>
         </section>
       ))}
@@ -947,18 +934,15 @@ export function ServiceDetails({
 function ServiceAction({
   anchor,
   label,
-  relatedLabel,
 }: {
   anchor?: string | null
   label?: string | null
-  relatedLabel: string
 }) {
-  const href = relatedProjectHrefForAnchor(anchor)
-  if (!href && !label) return null
-  const text = href && (!label || isLegacyEnquireLabel(label)) ? relatedLabel : label
+  const text = (label || '').trim()
+  if (!text) return null
   return (
     <Link
-      href={href || '/enquiry'}
+      href={relatedProjectHrefForAnchor(anchor) || '/enquiry'}
       className="self-start border-b border-current pb-1.5 text-[11px] uppercase tracking-[0.28em]"
     >
       {text}

@@ -9,6 +9,8 @@ import * as migration_20261012_045448_enquiry_option_icons from './20261012_0454
 import * as migration_20261119_095308_phase1_core_services from './20261119_095308_phase1_core_services';
 import * as migration_20261120_012154_phase2_enquiry_scope_project_type from './20261120_012154_phase2_enquiry_scope_project_type';
 import * as migration_20261122_074436_phase3_site_safety from './20261122_074436_phase3_site_safety';
+import * as migration_20261123_150000_editor_content_schema from './20261123_150000_editor_content_schema';
+import * as migration_20261123_150100_editor_content_baseline from './20261123_150100_editor_content_baseline';
 
 export const migrations = [
   {
@@ -64,6 +66,16 @@ export const migrations = [
   {
     up: migration_20261122_074436_phase3_site_safety.up,
     down: migration_20261122_074436_phase3_site_safety.down,
-    name: '20261122_074436_phase3_site_safety'
+    name: '20261122_074436_phase3_site_safety',
+  },
+  {
+    up: migration_20261123_150000_editor_content_schema.up,
+    down: migration_20261123_150000_editor_content_schema.down,
+    name: '20261123_150000_editor_content_schema',
+  },
+  {
+    up: migration_20261123_150100_editor_content_baseline.up,
+    down: migration_20261123_150100_editor_content_baseline.down,
+    name: '20261123_150100_editor_content_baseline',
   },
 ];

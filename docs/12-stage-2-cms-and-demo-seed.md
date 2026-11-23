@@ -80,11 +80,11 @@ The homepage hero uses a dusk architectural photograph with a dark left-to-right
 `pnpm seed:demo` is idempotent for pages and records:
 
 - creates published Home, About and Services pages only when that slug does not already exist
-- fills Header and Footer fields that are still empty
+- fills Header and Footer only when `contentSeeded` is still false (the first empty seed). A later empty field is left empty
 - runs the existing SWMS demo (Rosebery Residence, Linfield House, Marrickville Duplex)
 - uploads stock images from `src/seed/assets` (marketing images and portfolio images)
 
-Running it again does **not** overwrite pages, project records, project-image rows, or SWMS records an admin has changed, apart from the Phase 1 alignment in `docs/03-assumptions.md` (G3). That pass never rewrites the Home briefs block. To re-seed a whole page from the current defaults, delete that page in admin and run `pnpm seed:demo` again.
+Running it again does **not** overwrite pages, navigation, footer copy, project records, project-image rows, enquiry form fields, or SWMS records an admin has changed. Migration `20261123_150100_editor_content_baseline` is the one-off that still rewrites known pre-feedback sentences. Its down migration restores the placeholder column and seed-lock columns only; it does not put the old sentences back. To re-seed a whole page from the current defaults, delete that page in admin and run `pnpm seed:demo` again. Rolling back the schema migration and reapplying it does not repeat the content correction, because that is a separate migration name.
 
 ### Media files
 
@@ -96,7 +96,7 @@ A Media row whose filename already exists is not treated as success by itself. T
 - the token is set and the Vercel Blob API does not have the object (the check is `head` with `BLOB_READ_WRITE_TOKEN`, on the Blob URL stored on the Media document, or on the `prefix` / `_objectKey` / filename path that `/api/media/file/<filename>` reads)
 - `GET /api/media/file/<filename>` on this deployment’s server URL returns 404 and Blob does not already have the object
 
-The same Media id is kept, so pages and project images do not need to be deleted. A file is left alone when it is actually healthy: non-zero size, a usable URL, and the bytes are reachable. The same filesize as the seed asset plus a working URL is enough. `hero-house.jpg` is still replaced when the stored size differs from the seed asset, even if the current file answers.
+The same Media id is kept, so pages and project images do not need to be deleted. A file is left alone when it is actually healthy: non-zero size, a usable URL, and the bytes are reachable. A different filesize is kept for every seed filename, including `hero-house.jpg`, when that file answers. Missing or 404 files are re-uploaded onto the same row.
 
 An anonymous GET of the public Blob CDN is not used as proof. That URL can keep serving a cached 404 immediately after a successful upload. The file route itself asks the Blob API with the token, and the seed does the same.
 

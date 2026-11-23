@@ -211,6 +211,42 @@ function swapPhrases(value: string, locale: ProcessLocale) {
   return next
 }
 
+/**
+ * One-off: Chinese fields that still contain the old English sentences
+ * receive the matching Chinese sentence. Custom wording is left as stored.
+ */
+export function replaceLeakedEnglishPhrases(value: unknown): { changed: boolean; value: unknown } {
+  if (typeof value === 'string') {
+    let next = value
+    for (let index = 0; index < phraseSwaps.en.length; index++) {
+      const from = phraseSwaps.en[index]?.[0]
+      const to = phraseSwaps.zh[index]?.[1]
+      if (from && to && next.includes(from)) next = next.split(from).join(to)
+    }
+    return next === value ? { changed: false, value } : { changed: true, value: next }
+  }
+  if (Array.isArray(value)) {
+    let changed = false
+    const next = value.map((item) => {
+      const result = replaceLeakedEnglishPhrases(item)
+      changed = changed || result.changed
+      return result.value
+    })
+    return { changed, value: changed ? next : value }
+  }
+  if (isRecord(value)) {
+    let changed = false
+    const next: Record<string, unknown> = {}
+    for (const [key, child] of Object.entries(value)) {
+      const result = replaceLeakedEnglishPhrases(child)
+      changed = changed || result.changed
+      next[key] = result.value
+    }
+    return { changed, value: changed ? next : value }
+  }
+  return { changed: false, value }
+}
+
 function withId(current: unknown, fields: Record<string, unknown>) {
   const id =
     isRecord(current) && (typeof current.id === 'string' || typeof current.id === 'number')

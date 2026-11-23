@@ -9,7 +9,7 @@ import type { Header as HeaderType } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { Button } from '@/components/ui/button'
-import { alignHeaderNav, asNavItems, navHref, type NavItemRecord } from '@/content/navMenu'
+import { asNavItems, navHref, type NavItemRecord } from '@/content/navMenu'
 import { cn } from '@/utilities/ui'
 import type { SiteLocale } from '@/i18n/config'
 import { getMessages } from '@/i18n/messages'
@@ -53,9 +53,10 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
   const pathname = usePathname()
   const cmsNavItems = asNavItems(data?.navItems)
   const cmsSecondaryItems = asNavItems(data?.secondaryNavItems)
-  const usingCms = cmsNavItems.length > 0 || cmsSecondaryItems.length > 0
-  const navItems = usingCms ? alignHeaderNav(cmsNavItems, locale).items : defaultPrimary(locale)
-  const secondaryItems = usingCms ? cmsSecondaryItems : defaultSecondary(locale)
+  const seeded = Boolean(data?.contentSeeded)
+  const navItems = cmsNavItems.length > 0 ? cmsNavItems : seeded ? [] : defaultPrimary(locale)
+  const secondaryItems =
+    cmsSecondaryItems.length > 0 ? cmsSecondaryItems : seeded ? [] : defaultSecondary(locale)
 
   const active = (href: string) => {
     const path = href.split('#')[0] || '/'

@@ -191,7 +191,6 @@ export async function ServiceDetailsBlock(props: {
   return (
     <ServiceDetails
       featuresLabel={locale === 'zh' ? '交付内容' : 'What we deliver'}
-      relatedLabel={locale === 'zh' ? '查看相关项目' : 'View Related Project'}
       services={(props.services || []).map((service) => ({
         ...service,
         image: placed(service.image, service.imageAlt),

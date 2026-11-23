@@ -4,7 +4,7 @@ Status: Stage 3 portfolio, plus the public English / 中文 switch.
 
 ## Homepage hero
 
-The Home hero uses the Media item `hero-house.jpg`: a dusk architectural photograph with a dark left-to-right overlay and light text. `pnpm seed:demo` replaces that file when the stored size differs, including on a Home page an admin has already edited, as long as the hero still points at this media item. A different image chosen on the hero is left alone. If `hero-house.jpg` is still the media item but the file 404s or is missing from Vercel Blob, the same row is re-uploaded. See `docs/12-stage-2-cms-and-demo-seed.md`.
+The Home hero uses whichever Media item is selected on the page. The seeded default is `hero-house.jpg`. `pnpm seed:demo` does not replace that file when an editor has uploaded a different size that still serves. A 404 or missing Blob object is re-uploaded onto the same row. See `docs/12-stage-2-cms-and-demo-seed.md`.
 
 ## Locale
 

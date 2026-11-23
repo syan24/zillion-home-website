@@ -132,10 +132,6 @@ export function assessSeedMedia(probe: SeedMediaProbe): { repair: boolean; reaso
     return { repair: true, reason: 'public file returned 404' }
   }
 
-  if (probe.filename === 'hero-house.jpg' && filesize !== probe.seedBytes) {
-    return { repair: true, reason: 'hero-house.jpg size differs from the seed asset' }
-  }
-
   if (!probe.blobRequired) {
     if (probe.publicFile === 'ok' || probe.localFileExists) {
       return {

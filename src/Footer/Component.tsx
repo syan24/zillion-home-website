@@ -3,7 +3,6 @@ import Link from 'next/link'
 import React from 'react'
 
 import { getMarketing } from '@/content/getMarketing'
-import { isInteriorHref } from '@/content/navMenu'
 import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
 import { getLocale } from '@/i18n/getLocale'
@@ -14,11 +13,12 @@ export async function Footer() {
   const copy = getMessages(locale)
   const footerContent = getMarketing(locale).footer
   const footerData = await getCachedGlobal('footer', 1, locale)()
+  const seeded = Boolean(footerData?.contentSeeded)
   const navItems = footerData?.navItems ?? []
-  const serviceLinks = (footerData?.serviceLinks ?? []).filter((item) => !isInteriorHref(item.link?.url))
-  const blurb = footerData?.blurb || footerContent.blurb
-  const tagline = footerData?.tagline || footerContent.tagline
-  const location = footerData?.location || footerContent.location
+  const serviceLinks = footerData?.serviceLinks ?? []
+  const blurb = seeded ? footerData?.blurb || '' : footerData?.blurb || footerContent.blurb
+  const tagline = seeded ? footerData?.tagline || '' : footerData?.tagline || footerContent.tagline
+  const location = seeded ? footerData?.location || '' : footerData?.location || footerContent.location
   const legal = [
     { name: copy.footer.privacy, href: '/privacy' },
     { name: copy.footer.terms, href: '/terms' },
@@ -43,7 +43,9 @@ export async function Footer() {
             <h3 className={columnLabel}>{copy.footer.services}</h3>
             {serviceLinks.length > 0
               ? serviceLinks.map(({ link }, i) => <CMSLink key={i} {...link} className={itemClass} />)
-              : footerContent.services.map((item) => (
+              : seeded
+                ? null
+                : footerContent.services.map((item) => (
                   <Link key={item.href} href={item.href} className={itemClass}>
                     {item.label}
                   </Link>
@@ -54,7 +56,9 @@ export async function Footer() {
             <h3 className={columnLabel}>{copy.footer.company}</h3>
             {navItems.length > 0
               ? navItems.map(({ link }, i) => <CMSLink key={i} {...link} className={itemClass} />)
-              : footerContent.company.map((item) => (
+              : seeded
+                ? null
+                : footerContent.company.map((item) => (
                   <Link key={item.href} href={item.href} className={itemClass}>
                     {item.label}
                   </Link>

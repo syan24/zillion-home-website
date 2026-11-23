@@ -6,8 +6,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import config from '@payload-config'
 
 import type { Form } from '@/payload-types'
+import { payloadEnquiryFields } from '@/lib/enquiry/defaultForm'
 import { loadEnquiryForm } from '@/lib/enquiry/loadForm'
 import { scopeCatalog } from '@/lib/enquiry/scopes'
+import { applyEditorBaseline } from '@/seed/editorBaseline'
 import { seedEnquiryForm } from '@/seed/enquiryForm'
 
 let payload: Payload
@@ -40,8 +42,19 @@ describe('enquiry scope seed alignment', () => {
       overrideAccess: true,
       where: { enquiryForm: { equals: true } },
     })
-    const form = found.docs[0]
-    if (!form) throw new Error('Enquiry form is missing. Run pnpm seed:demo first.')
+    let form = found.docs[0]
+    if (!form) {
+      await seedEnquiryForm(payload)
+      const created = await payload.find({
+        collection: 'forms',
+        depth: 0,
+        limit: 1,
+        overrideAccess: true,
+        where: { enquiryForm: { equals: true } },
+      })
+      form = created.docs[0]
+    }
+    if (!form) throw new Error('Enquiry form is missing.')
     formID = form.id
 
     const scope = form.fields?.find(
@@ -52,7 +65,7 @@ describe('enquiry scope seed alignment', () => {
         DELETE FROM forms_blocks_checkbox_group_options WHERE _parent_id = ${scope.id}
       `)
     }
-    const legacy = (form.fields || []).map((field) => {
+    const legacy = (payloadEnquiryFields('en') as NonNullable<Form['fields']>).map((field) => {
       if (field.blockType === 'checkboxGroup' && field.name === 'scope') {
         return { ...field, options: legacyOptions }
       }
@@ -64,21 +77,15 @@ describe('enquiry scope seed alignment', () => {
       }
       return field
     })
-    await payload.update({
+    const enSaved = await payload.update({
       collection: 'forms',
       id: formID,
       locale: 'en',
       overrideAccess: true,
       data: { fields: legacy as NonNullable<Form['fields']> },
     })
-    const zh = await payload.findByID({
-      collection: 'forms',
-      id: formID,
-      locale: 'zh',
-      depth: 0,
-      overrideAccess: true,
-    })
-    const zhLegacy = (zh.fields || []).map((field) => {
+    const zhLegacy = (enSaved.fields || []).map((field) => {
+      if (field.blockType === 'text' && field.name === 'name') return { ...field, label: '姓名' }
       if (field.blockType === 'checkboxGroup' && field.name === 'scope') {
         return {
           ...field,
@@ -111,11 +118,39 @@ describe('enquiry scope seed alignment', () => {
 
   afterAll(async () => {
     if (!payload || !formID) return
-    await seedEnquiryForm(payload)
+    const en = await payload.update({
+      collection: 'forms',
+      id: formID,
+      locale: 'en',
+      overrideAccess: true,
+      data: { fields: payloadEnquiryFields('en') as NonNullable<Form['fields']> },
+    })
+    const { mergeLocale } = await import('@/seed/localeCopy')
+    await payload.update({
+      collection: 'forms',
+      id: formID,
+      locale: 'zh',
+      overrideAccess: true,
+      data: {
+        fields: mergeLocale(en.fields, payloadEnquiryFields('zh')) as NonNullable<Form['fields']>,
+      },
+    })
   })
 
-  it('replaces the stored joinery-only options and keeps other Chinese labels', async () => {
+  it('leaves editor scope fields on seed and applies the old list only from the one-off baseline', async () => {
     await seedEnquiryForm(payload)
+    const seeded = await payload.findByID({
+      collection: 'forms',
+      id: formID,
+      locale: 'en',
+      depth: 0,
+      overrideAccess: true,
+    })
+    expect(scopeOptions(seeded.fields).map((option) => option.value)).toEqual(
+      legacyOptions.map((option) => option.value),
+    )
+
+    await applyEditorBaseline(payload)
     const en = await payload.findByID({
       collection: 'forms',
       id: formID,
@@ -183,6 +218,25 @@ describe('enquiry scope seed alignment', () => {
     const name = zh.fields?.find((field) => field.blockType === 'text' && field.name === 'name')
     expect(name && 'label' in name ? name.label : '').toBe('姓名')
 
+    const edited = (en.fields || []).map((field) => {
+      if (field.blockType !== 'checkboxGroup' || field.name !== 'scope') return field
+      return {
+        ...field,
+        options: (field.options || []).map((option) =>
+          option.value === 'kitchen-cabinetry'
+            ? { ...option, label: 'Editor kitchen', projectType: 'residential' as const }
+            : option,
+        ),
+      }
+    })
+    await payload.update({
+      collection: 'forms',
+      id: formID,
+      locale: 'en',
+      overrideAccess: true,
+      data: { fields: edited },
+    })
+    await seedEnquiryForm(payload)
     await seedEnquiryForm(payload)
     const again = await payload.findByID({
       collection: 'forms',
@@ -191,8 +245,8 @@ describe('enquiry scope seed alignment', () => {
       depth: 0,
       overrideAccess: true,
     })
-    expect(scopeOptions(again.fields).map((option) => option.value)).toEqual(
-      scopeCatalog.map((item) => item.value),
-    )
+    const kitchen = scopeOptions(again.fields).find((option) => option.value === 'kitchen-cabinetry')
+    expect(kitchen?.label).toBe('Editor kitchen')
+    expect(kitchen?.projectType).toBe('residential')
   })
 })

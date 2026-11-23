@@ -3080,6 +3080,10 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Header {
   id: number;
+  /**
+   * Set when the first seed fills an empty header. Later seeds do not refill fields an editor cleared.
+   */
+  contentSeeded?: boolean | null;
   navItems?:
     | {
         link: {
@@ -3141,6 +3145,10 @@ export interface Header {
 export interface Footer {
   id: number;
   /**
+   * Set when the first seed fills an empty footer. Later seeds do not refill fields an editor cleared.
+   */
+  contentSeeded?: boolean | null;
+  /**
    * Short company description under the logo.
    */
   blurb?: string | null;
@@ -3184,6 +3192,7 @@ export interface Footer {
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
+  contentSeeded?: T;
   navItems?:
     | T
     | {
@@ -3235,6 +3244,7 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
+  contentSeeded?: T;
   blurb?: T;
   tagline?: T;
   location?: T;
