@@ -339,11 +339,6 @@ async function alignCanvasLayout(payload: Payload, id: number, draft: boolean, i
           imageAlt: typeof block.imageAlt === 'string' && block.imageAlt ? block.imageAlt : 'Finished interior',
         }
       }
-      // The canvas enquire band is a dark photo. Only the original light demo band is flipped.
-      if (block.blockType === 'ctaBand' && block.tone === 'light') {
-        changed = true
-        return { ...block, tone: 'dark' }
-      }
       return block
     })
   }

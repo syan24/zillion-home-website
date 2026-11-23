@@ -54,6 +54,8 @@ const oldTrustHeadings = new Set([
   '看得见的工艺，感受得到的把握。',
 ])
 
+const oldCapabilityHeadings = new Set(['Our capabilities', 'Our Capabilities', '我们的能力'])
+
 const oldEnquireLabels = new Set([
   'Enquire about Residential',
   'Enquire about Commercial',
@@ -272,7 +274,11 @@ export function alignPhase1Layout(
   let changed = false
   let next = layout.flatMap((block) => {
     if (!isRecord(block)) return [block]
-    if (slug === 'about' && block.blockType === 'capabilityList') {
+    if (
+      slug === 'about' &&
+      block.blockType === 'capabilityList' &&
+      oldCapabilityHeadings.has(text(block.heading))
+    ) {
       changed = true
       return []
     }
