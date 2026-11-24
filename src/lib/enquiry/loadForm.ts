@@ -18,6 +18,7 @@ export async function loadEnquiryForm(
     depth: 1,
     limit: 1,
     locale,
+    fallbackLocale: false,
     overrideAccess: true,
     sort: 'createdAt',
     where: { enquiryForm: { equals: true } },
