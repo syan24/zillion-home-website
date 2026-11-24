@@ -1,12 +1,21 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SiteSafetyMenu } from '@/components/SWMS/SiteSafetyMenu'
+import { SWMSWizard } from '@/components/SWMS/SWMSWizard'
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}))
 import { readWorkerIdentity, writeWorkerIdentity } from '@/lib/swms/workerSession'
 import { SwmsReviewDialog } from '@/components/SWMS/SwmsReviewDialog'
 import type { WorkerSWMS } from '@/lib/swms/loadWorkerSWMS'
 import { SITE_SAFETY_MENU } from '@/lib/swms/siteSafety'
+
+afterEach(() => {
+  cleanup()
+})
 
 const swms: WorkerSWMS = {
   token: 'project-token-0123456789abcd',
@@ -37,11 +46,21 @@ describe('site safety menu landing', () => {
   it('shows the project and the six menu items after a QR landing', () => {
     render(<SiteSafetyMenu swms={swms} />)
     expect(screen.getByRole('heading', { name: 'Rosebery Residence' })).toBeTruthy()
+    expect(screen.getByText(/Construction Works SWMS/)).toBeTruthy()
+    expect(screen.getByText(/v1\.0/)).toBeTruthy()
     expect(screen.getByText('12 Smith Street, Rosebery NSW 2018')).toBeTruthy()
     for (const item of SITE_SAFETY_MENU) {
       const link = screen.getByRole('link', { name: new RegExp(item.en) })
       expect(link.getAttribute('href')).toBe(`/swms/${swms.token}/${item.slug}`)
     }
+  })
+})
+
+describe('site induction trades', () => {
+  it('shows the supervisor message when Admin has no trades enabled', () => {
+    render(<SWMSWizard swms={{ ...swms, enabledTrades: [] }} />)
+    expect(screen.getByText(/no trades enabled yet/i)).toBeTruthy()
+    expect(screen.queryByRole('checkbox')).toBeNull()
   })
 })
 

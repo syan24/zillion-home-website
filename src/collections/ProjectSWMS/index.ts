@@ -9,6 +9,7 @@ import {
   publishActiveVersion,
   requireContentWhenActive,
 } from './hooks/publishActiveVersion'
+import { revalidateSwmsToken } from '../../hooks/revalidateSwms'
 
 const generatePublicToken: FieldHook = ({ operation, value }) => {
   if (operation === 'create' && (typeof value !== 'string' || value.trim() === '')) {
@@ -34,7 +35,7 @@ export const ProjectSWMS: CollectionConfig = {
   },
   hooks: {
     beforeChange: [lockPublicToken, copyTemplateOnCreate, requireContentWhenActive],
-    afterChange: [publishActiveVersion],
+    afterChange: [publishActiveVersion, revalidateSwmsToken],
   },
   fields: [
     {

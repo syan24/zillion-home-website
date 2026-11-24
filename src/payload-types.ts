@@ -1197,7 +1197,7 @@ export interface Project {
    */
   address: string;
   /**
-   * Trades working on this job. Site induction only offers these groups and hides the rest. Interior Fit-out & Finishes is a SWMS trade, not a public service. Leave this empty until the job’s trades are known.
+   * Trades working on this job. Site induction only offers these groups and hides the rest. Interior Fit-out & Finishes is a SWMS trade, not a public service. Leave this empty until the job’s trades are known. Publish the project for workers to see a change.
    */
   enabledTrades?:
     | (
@@ -1211,6 +1211,10 @@ export interface Project {
         | 'landscaping'
       )[]
     | null;
+  /**
+   * Stable id for the three demo projects. A later seed uses it so a renamed project is not created again.
+   */
+  demoKey?: string | null;
   /**
    * Suburb or general location. Shown on the website when the full address is hidden.
    */
@@ -1523,6 +1527,10 @@ export interface SwmsDocument {
    * Unguessable token used to open this PDF from the project QR link.
    */
   accessToken?: string | null;
+  /**
+   * Stable id for a demo PDF. A later seed uses it so renaming this document does not create a second file.
+   */
+  seedKey?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2497,6 +2505,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   description?: T;
   address?: T;
   enabledTrades?: T;
+  demoKey?: T;
   suburb?: T;
   showAddressPublicly?: T;
   featuredImage?: T;
@@ -2681,6 +2690,7 @@ export interface SwmsDocumentsSelect<T extends boolean = true> {
   fileVersion?: T;
   versionLabel?: T;
   accessToken?: T;
+  seedKey?: T;
   updatedAt?: T;
   createdAt?: T;
 }

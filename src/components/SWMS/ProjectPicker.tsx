@@ -50,6 +50,9 @@ export function ProjectPicker({ projects }: ProjectPickerProps) {
                 className="block rounded-lg border border-border bg-white px-4 py-4 transition-colors hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 <span className="block font-medium">{project.projectName}</span>
+                {project.projectNameZh && project.projectNameZh !== project.projectName ? (
+                  <span className="mt-1 block text-sm text-muted-foreground">{project.projectNameZh}</span>
+                ) : null}
                 <span className="mt-1 block text-sm text-muted-foreground">
                   {project.projectAddress}
                 </span>

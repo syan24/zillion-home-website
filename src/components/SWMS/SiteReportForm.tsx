@@ -55,6 +55,9 @@ export function SiteReportForm({ swms, kind }: { swms: WorkerSWMS; kind: ReportK
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {swms.projectName}
+          {swms.projectNameZh && swms.projectNameZh !== swms.projectName ? (
+            <span className="mt-1 block">{swms.projectNameZh}</span>
+          ) : null}
           <span className="mt-1 block">{swms.projectAddress}</span>
         </p>
       </div>

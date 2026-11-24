@@ -14,6 +14,7 @@ import * as migration_20261123_150100_editor_content_baseline from './20261123_1
 import * as migration_20261124_004753_editorial_fields_schema from './20261124_004753_editorial_fields_schema';
 import * as migration_20261124_004800_editorial_fields_backfill from './20261124_004800_editorial_fields_backfill';
 import * as migration_20261124_090000_enquiry_locale_leak from './20261124_090000_enquiry_locale_leak';
+import * as migration_20261124_130000_swms_seed_keys from './20261124_130000_swms_seed_keys';
 
 export const migrations = [
   {
@@ -95,5 +96,10 @@ export const migrations = [
     up: migration_20261124_090000_enquiry_locale_leak.up,
     down: migration_20261124_090000_enquiry_locale_leak.down,
     name: '20261124_090000_enquiry_locale_leak',
+  },
+  {
+    up: migration_20261124_130000_swms_seed_keys.up,
+    down: migration_20261124_130000_swms_seed_keys.down,
+    name: '20261124_130000_swms_seed_keys',
   },
 ];

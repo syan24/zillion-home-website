@@ -5,6 +5,8 @@ import { loadActiveSwms } from '@/lib/swms/loadWorkerSWMS'
 import { readSwmsFile } from '@/lib/swms/readSwmsFile'
 import { relationID } from '@/lib/swms/relationID'
 
+export const dynamic = 'force-dynamic'
+
 const ACCESS_TOKEN = /^[A-Za-z0-9_-]{20,200}$/
 
 type Args = {

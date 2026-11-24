@@ -8,6 +8,8 @@ import type { TradeValue } from '@/lib/swms/trades'
 const seedContext = { disableRevalidate: true }
 
 export type DemoSwmsDocument = {
+  /** Stable id so a renamed demo document is not created again. */
+  seedKey?: string
   title: string
   trades: TradeValue[]
   sortOrder: number
@@ -28,16 +30,7 @@ export async function ensureDemoSwmsDocument(
   projectID: number,
 ): Promise<void> {
   const pdf = buildTextPdf(document.pages)
-  const existing = await payload.find({
-    collection: 'swms-documents',
-    depth: 0,
-    limit: 1,
-    overrideAccess: true,
-    where: {
-      and: [{ title: { equals: document.title } }, { project: { equals: projectID } }],
-    },
-  })
-  const current = existing.docs[0]
+  let current = await findDemoDocument(payload, document, projectID)
   if (!current) {
     const file = await createSwmsFile(payload, document, pdf)
     await assertSwmsFileReadable(payload, file.id, document.filename)
@@ -52,10 +45,21 @@ export async function ensureDemoSwmsDocument(
         trades: document.trades,
         status: 'active',
         sortOrder: document.sortOrder,
+        ...(document.seedKey ? { seedKey: document.seedKey } : {}),
       },
     })
     console.log(`swms ${document.title}: created`)
     return
+  }
+
+  if (document.seedKey && current.seedKey !== document.seedKey) {
+    current = await payload.update({
+      collection: 'swms-documents',
+      id: current.id,
+      overrideAccess: true,
+      context: seedContext,
+      data: { seedKey: document.seedKey },
+    })
   }
 
   const fileID = relationID(current.file)
@@ -77,7 +81,9 @@ export async function ensureDemoSwmsDocument(
   }
 
   if (await fileIsReadable(file)) {
-    console.log(`swms ${document.title}: kept (file is readable, fileVersion unchanged)`)
+    console.log(
+      `swms ${current.title || document.title}: kept (file is readable, fileVersion unchanged)`,
+    )
     return
   }
 
@@ -87,13 +93,39 @@ export async function ensureDemoSwmsDocument(
     overrideAccess: true,
     context: seedContext,
     overwriteExistingFiles: true,
-    data: { alt: document.title },
+    data: { alt: current.title || document.title },
     file: pdfUpload(document, pdf),
   })
   await assertSwmsFileReadable(payload, updated.id, document.filename)
   console.log(
-    `swms ${document.title}: re-uploaded the placeholder PDF onto file ${fileID} (fileVersion unchanged)`,
+    `swms ${current.title || document.title}: re-uploaded the placeholder PDF onto file ${fileID} (fileVersion unchanged)`,
   )
+}
+
+async function findDemoDocument(payload: Payload, document: DemoSwmsDocument, projectID: number) {
+  if (document.seedKey) {
+    const byKey = await payload.find({
+      collection: 'swms-documents',
+      depth: 0,
+      limit: 1,
+      overrideAccess: true,
+      where: {
+        and: [{ seedKey: { equals: document.seedKey } }, { project: { equals: projectID } }],
+      },
+    })
+    if (byKey.docs[0]) return byKey.docs[0]
+  }
+
+  const byTitle = await payload.find({
+    collection: 'swms-documents',
+    depth: 0,
+    limit: 1,
+    overrideAccess: true,
+    where: {
+      and: [{ title: { equals: document.title } }, { project: { equals: projectID } }],
+    },
+  })
+  return byTitle.docs[0] ?? null
 }
 
 function pdfUpload(document: DemoSwmsDocument, pdf: Buffer) {

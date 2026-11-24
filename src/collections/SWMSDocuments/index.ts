@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { authenticated } from '../../access/authenticated'
 import { tradeSelectOptions } from '../../lib/swms/trades'
+import { revalidateDeletedSwmsDocument, revalidateSwmsDocument } from '../../hooks/revalidateSwms'
 import { prepareSwmsDocument } from './hooks/prepareSwmsDocument'
 
 export const SWMSDocuments: CollectionConfig = {
@@ -25,6 +26,8 @@ export const SWMSDocuments: CollectionConfig = {
   },
   hooks: {
     beforeChange: [prepareSwmsDocument],
+    afterChange: [revalidateSwmsDocument],
+    afterDelete: [revalidateDeletedSwmsDocument],
   },
   fields: [
     {
@@ -111,6 +114,22 @@ export const SWMSDocuments: CollectionConfig = {
         readOnly: true,
         position: 'sidebar',
         description: 'Unguessable token used to open this PDF from the project QR link.',
+      },
+    },
+    {
+      name: 'seedKey',
+      type: 'text',
+      unique: true,
+      index: true,
+      label: 'Demo seed key',
+      access: {
+        read: ({ req }) => Boolean(req.user),
+      },
+      admin: {
+        hidden: true,
+        readOnly: true,
+        description:
+          'Stable id for a demo PDF. A later seed uses it so renaming this document does not create a second file.',
       },
     },
   ],

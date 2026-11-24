@@ -26,6 +26,10 @@ export function SiteSafetyMenu({ swms }: { swms: WorkerSWMS }) {
         </p>
         <h1 className="mt-3 font-serif text-3xl">{swms.projectName}</h1>
         {chineseName ? <p className="mt-1 text-sm text-muted-foreground">{chineseName}</p> : null}
+        <p className="mt-3 text-sm">
+          {swms.title}
+          <span className="text-muted-foreground"> · {swms.versionLabel}</span>
+        </p>
         <p className="mt-3 flex items-start gap-2 text-sm">
           <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <span>{swms.projectAddress}</span>
