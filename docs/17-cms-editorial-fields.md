@@ -62,3 +62,7 @@ These stay in `src/i18n/messages.ts`. They are controls and status text, not the
 - Project controls: Filters, Apply, Clear, Close, All types, All spaces, All styles, All projects, empty states, image count, lightbox, copy link, back, and related projects
 
 The submit button uses the form’s Submit button label. An empty label leaves the button blank. “Submitting…” stays in the dictionary because it is status text.
+
+## Site safety
+
+Worker SWMS content is a separate Admin surface from the marketing pages above. The paths, the values workers read, and the labels that stay in code are in `docs/16-phase-3-site-safety.md`. Saving a project, a Project SWMS, or a SWMS document refreshes `/swms` and that project’s worker pages. An empty Site induction trades list stays empty, and induction does not start.

@@ -152,6 +152,10 @@ export function SWMSWizard({ swms }: { swms: WorkerSWMS }) {
   return (
     <div className="space-y-6">
       <BackToMenu token={swms.token} />
+      <p className="text-sm">
+        {swms.title}
+        <span className="text-muted-foreground"> · {swms.versionLabel}</span>
+      </p>
       <ol className="grid grid-cols-4 gap-2" aria-label="Site induction progress">
         {PROGRESS.map((item, index) => {
           const active = index === progressIndex

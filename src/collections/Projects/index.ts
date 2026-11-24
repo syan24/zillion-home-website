@@ -6,6 +6,7 @@ import { tradeSelectOptions } from '../../lib/swms/trades'
 import { authenticated } from '../../access/authenticated'
 import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { revalidatePortfolio } from '../../hooks/revalidatePortfolio'
+import { revalidateProjectSwms } from '../../hooks/revalidateSwms'
 import { addProjectGalleryEndpoint } from './addGalleryImages'
 import { attachProjectGalleryBatch, stashProjectGalleryBatch } from './attachGalleryBatch'
 
@@ -89,7 +90,23 @@ export const Projects: CollectionConfig = {
       },
       admin: {
         description:
-          'Trades working on this job. Site induction only offers these groups and hides the rest. Interior Fit-out & Finishes is a SWMS trade, not a public service. Leave this empty until the job’s trades are known.',
+          'Trades working on this job. Site induction only offers these groups and hides the rest. Interior Fit-out & Finishes is a SWMS trade, not a public service. Leave this empty until the job’s trades are known. Publish the project for workers to see a change.',
+      },
+    },
+    {
+      name: 'demoKey',
+      type: 'text',
+      unique: true,
+      index: true,
+      label: 'Demo seed key',
+      access: {
+        read: ({ req }) => Boolean(req.user),
+      },
+      admin: {
+        hidden: true,
+        readOnly: true,
+        description:
+          'Stable id for the three demo projects. A later seed uses it so a renamed project is not created again.',
       },
     },
     {
@@ -206,7 +223,7 @@ export const Projects: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [stashProjectGalleryBatch],
-    afterChange: [attachProjectGalleryBatch, revalidatePortfolio],
+    afterChange: [attachProjectGalleryBatch, revalidatePortfolio, revalidateProjectSwms],
   },
   versions: {
     drafts: true,

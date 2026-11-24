@@ -59,6 +59,13 @@ export function SignInOutForm({ swms }: { swms: WorkerSWMS }) {
           <Bilingual en="Sign-in / Out" zh="签到 / 签退" />
         </p>
         <h1 className="mt-2 font-serif text-3xl">{swms.projectName}</h1>
+        {swms.projectNameZh && swms.projectNameZh !== swms.projectName ? (
+          <p className="mt-1 text-sm text-muted-foreground">{swms.projectNameZh}</p>
+        ) : null}
+        <p className="mt-2 text-sm">
+          {swms.title}
+          <span className="text-muted-foreground"> · {swms.versionLabel}</span>
+        </p>
         <p className="mt-2 text-sm text-muted-foreground">{swms.projectAddress}</p>
       </div>
       <label className="block space-y-2">

@@ -9,6 +9,28 @@ export const demoAcknowledgementClientId = '00000000-0000-4000-8000-0000000000a7
 const demoProjectTitle = 'Rosebery Residence'
 const demoSwmsTitle = 'Construction Works SWMS'
 
+async function findRoseberyProject(payload: Payload) {
+  const byKey = await payload.find({
+    collection: 'projects',
+    depth: 0,
+    draft: false,
+    limit: 1,
+    overrideAccess: true,
+    where: { demoKey: { equals: 'rosebery-residence' } },
+  })
+  if (byKey.docs[0]) return byKey.docs[0]
+
+  const byTitle = await payload.find({
+    collection: 'projects',
+    depth: 0,
+    draft: false,
+    limit: 1,
+    overrideAccess: true,
+    where: { title: { equals: demoProjectTitle } },
+  })
+  return byTitle.docs[0] ?? null
+}
+
 function demoSignatureDataUrl(): string {
   const file = path.resolve(process.cwd(), 'src/seed/demo-signature.png')
   try {
@@ -19,7 +41,10 @@ function demoSignatureDataUrl(): string {
   }
 }
 
-export async function seedSwmsAcknowledgement(payload: Payload) {
+export async function seedSwmsAcknowledgement(
+  payload: Payload,
+  options?: { createIfMissing?: boolean },
+) {
   const existing = await payload.find({
     collection: 'swms-acknowledgements',
     depth: 0,
@@ -37,15 +62,13 @@ export async function seedSwmsAcknowledgement(payload: Payload) {
     console.log('Demo SWMS acknowledgement already exists.')
     return existing.docs[0]
   }
+  if (options?.createIfMissing === false) {
+    console.log('Demo SWMS acknowledgement left removed.')
+    return null
+  }
 
-  const project = await payload.find({
-    collection: 'projects',
-    depth: 0,
-    limit: 1,
-    overrideAccess: true,
-    where: { title: { equals: demoProjectTitle } },
-  })
-  const projectID = project.docs[0]?.id
+  const project = await findRoseberyProject(payload)
+  const projectID = project?.id
   if (!projectID) {
     throw new Error(`Demo SWMS acknowledgement needs project “${demoProjectTitle}”.`)
   }
@@ -53,13 +76,15 @@ export async function seedSwmsAcknowledgement(payload: Payload) {
   const swms = await payload.find({
     collection: 'project-swms',
     depth: 0,
-    limit: 1,
+    limit: 5,
     overrideAccess: true,
-    where: {
-      and: [{ title: { equals: demoSwmsTitle } }, { project: { equals: projectID } }],
-    },
+    where: { project: { equals: projectID } },
   })
-  const projectSwmsID = swms.docs[0]?.id
+  const projectSwms =
+    swms.docs.find((doc) => doc.title === demoSwmsTitle) ||
+    swms.docs.find((doc) => doc.status === 'active') ||
+    swms.docs[0]
+  const projectSwmsID = projectSwms?.id
   if (!projectSwmsID) {
     throw new Error(`Demo SWMS acknowledgement needs “${demoSwmsTitle}”.`)
   }
@@ -71,10 +96,7 @@ export async function seedSwmsAcknowledgement(payload: Payload) {
     overrideAccess: true,
     sort: '-createdAt',
     where: {
-      and: [
-        { projectSwms: { equals: projectSwmsID } },
-        { status: { equals: 'published' } },
-      ],
+      and: [{ projectSwms: { equals: projectSwmsID } }, { status: { equals: 'published' } }],
     },
   })
   const versionID = version.docs[0]?.id

@@ -27,6 +27,13 @@ export default async function DocumentsPage({ params }: Args) {
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {swms.projectName}
+          {swms.projectNameZh && swms.projectNameZh !== swms.projectName ? (
+            <span className="mt-1 block">{swms.projectNameZh}</span>
+          ) : null}
+          <span className="mt-1 block">
+            {swms.title}
+            <span> · {swms.versionLabel}</span>
+          </span>
           <span className="mt-1 block">{swms.projectAddress}</span>
         </p>
         <p className="mt-3 text-sm text-muted-foreground">

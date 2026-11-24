@@ -21,6 +21,8 @@ const cormorant = Cormorant_Garamond({
   display: 'swap',
 })
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'SWMS | Zillion Home',
   description: 'Site safety menu for project induction, SWMS review, and daily sign-in.',

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 
 import configPromise from '@payload-config'
+import { displayText } from '@/lib/swms/registerCsv'
 import { relationID } from '@/lib/swms/relationID'
+import { tradeLabel } from '@/lib/swms/trades'
 import { getPayload } from 'payload'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -45,7 +47,7 @@ export default async function SWMSCompletePage({ params, searchParams }: Args) {
   if (!record || !tokenMatches) notFound()
 
   const project = record.project
-  const projectName = project && typeof project === 'object' ? project.title : 'Project'
+  const projectName = project && typeof project === 'object' ? displayText(project.title) || 'Project' : 'Project'
   const projectAddress = project && typeof project === 'object' ? project.address : ''
   const version = record.swmsVersion
   const versionLabel = version && typeof version === 'object' ? version.versionLabel : ''
@@ -107,7 +109,9 @@ export default async function SWMSCompletePage({ params, searchParams }: Args) {
 
 function tradeList(record: { trades?: unknown; workerTrade?: string | null }): string[] {
   if (Array.isArray(record.trades) && record.trades.length > 0) {
-    return record.trades.filter((trade): trade is string => typeof trade === 'string')
+    return record.trades
+      .filter((trade): trade is string => typeof trade === 'string')
+      .map((trade) => tradeLabel(trade, 'en'))
   }
   return record.workerTrade ? [record.workerTrade] : []
 }
