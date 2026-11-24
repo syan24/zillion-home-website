@@ -74,7 +74,6 @@ export async function FallbackServices() {
       <PageIntro {...content.intro} image={stock(content.intro.image)} />
       <ServiceDetails
         featuresLabel={locale === 'zh' ? '交付内容' : 'What we deliver'}
-        relatedLabel={locale === 'zh' ? '查看相关项目' : 'View Related Project'}
         services={content.details.services.map((service) => ({
           ...service,
           features: service.features.map((text) => ({ text })),

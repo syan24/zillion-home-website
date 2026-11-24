@@ -27,11 +27,6 @@ function catalogOptions(locale: Locale) {
   }))
 }
 
-/** Previous catalog wording. Replaced on the default list; a different label is kept. */
-const retiredCatalogLabels: Record<string, Partial<Record<Locale, readonly string[]>>> = {
-  'new-home-construction': { zh: ['新建住宅'] },
-}
-
 function labelFor(
   item: (typeof scopeCatalog)[number],
   locale: Locale,
@@ -42,7 +37,6 @@ function labelFor(
   const label = typeof current === 'string' ? current.trim() : ''
   if (force || !label) return canonical
   if (locale === 'zh' && label === item.en) return item.zh
-  if (retiredCatalogLabels[item.value]?.[locale]?.includes(label)) return canonical
   return label
 }
 
@@ -61,7 +55,10 @@ export function stampCatalogScopeLabels(fields: unknown, locale: Locale, force: 
       const item = scopeCatalog.find((entry) => entry.value === option.value)
       if (!item) return option
       const label = labelFor(item, locale, option.label, force)
-      const projectType: EnquiryProjectType = item.projectType
+      const projectType: EnquiryProjectType =
+        typeof option.projectType === 'string' && option.projectType
+          ? (option.projectType as EnquiryProjectType)
+          : item.projectType
       if (option.label === label && option.projectType === projectType) return option
       optionsChanged = true
       return { ...option, label, projectType }

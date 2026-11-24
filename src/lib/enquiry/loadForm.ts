@@ -2,7 +2,6 @@ import type { Payload, TypedLocale } from 'payload'
 
 import { isEnquiryIcon } from '@/lib/enquiry/icons'
 import { isEnquiryProjectType } from '@/lib/enquiry/scopes'
-import { placeholderForLocale } from '@/lib/enquiry/selectCopy'
 import type { PublicEnquiryField } from '@/lib/enquiry/validate'
 
 export type PublicEnquiryForm = {
@@ -26,9 +25,7 @@ export async function loadEnquiryForm(
   const form = found.docs[0]
   if (!form) return null
 
-  const fields = Array.isArray(form.fields)
-    ? form.fields.flatMap((field) => toPublicField(field, locale === 'zh' ? 'zh' : 'en'))
-    : []
+  const fields = Array.isArray(form.fields) ? form.fields.flatMap((field) => toPublicField(field)) : []
   return {
     submitButtonLabel: typeof form.submitButtonLabel === 'string' ? form.submitButtonLabel : '',
     fields,
@@ -41,7 +38,7 @@ function mediaUrl(value: unknown): string | undefined {
   return typeof url === 'string' && url ? url : undefined
 }
 
-function toPublicField(field: unknown, locale: 'en' | 'zh'): PublicEnquiryField[] {
+function toPublicField(field: unknown): PublicEnquiryField[] {
   if (!field || typeof field !== 'object') return []
   const block = field as Record<string, unknown>
   const blockType = typeof block.blockType === 'string' ? block.blockType : ''
@@ -84,11 +81,7 @@ function toPublicField(field: unknown, locale: 'en' | 'zh'): PublicEnquiryField[
       name: typeof block.name === 'string' ? block.name : undefined,
       label: typeof block.label === 'string' ? block.label : undefined,
       required: block.required === true,
-      placeholder: placeholderForLocale(
-        typeof block.name === 'string' ? block.name : undefined,
-        typeof block.placeholder === 'string' ? block.placeholder : undefined,
-        locale,
-      ),
+      placeholder: typeof block.placeholder === 'string' ? block.placeholder : undefined,
       width: typeof block.width === 'number' ? block.width : undefined,
       options,
       multiple: typeof block.multiple === 'boolean' ? block.multiple : undefined,

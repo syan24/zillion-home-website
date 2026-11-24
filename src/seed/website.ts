@@ -9,7 +9,7 @@ import {
   type MarketingImageKey,
 } from '@/content/marketing'
 import { alignFooterServiceLabels, alignHeaderNav, asNavItems, withoutInteriorLinks } from '@/content/navMenu'
-import { alignPhase1Layout } from '@/content/phase1Align'
+import { alignPhase1Layout, replaceLeakedEnglishPhrases } from '@/content/phase1Align'
 import { ensureSeedMedia } from '@/seed/ensureSeedMedia'
 import { mergeLocale, stripLegacyBilingualCopy } from '@/seed/localeCopy'
 
@@ -339,11 +339,6 @@ async function alignCanvasLayout(payload: Payload, id: number, draft: boolean, i
           imageAlt: typeof block.imageAlt === 'string' && block.imageAlt ? block.imageAlt : 'Finished interior',
         }
       }
-      // The canvas enquire band is a dark photo. Only the original light demo band is flipped.
-      if (block.blockType === 'ctaBand' && block.tone === 'light') {
-        changed = true
-        return { ...block, tone: 'dark' }
-      }
       return block
     })
   }
@@ -515,11 +510,12 @@ async function alignPhase1Page(
     overrideAccess: true,
   })
   if (!Array.isArray(saved.layout) || typeof saved.slug !== 'string') return null
-  const aligned = alignPhase1Layout(saved.layout, locale, saved.slug, {
+  const leaked = locale === 'zh' ? replaceLeakedEnglishPhrases(saved.layout) : { changed: false, value: saved.layout }
+  const aligned = alignPhase1Layout(leaked.value, locale, saved.slug, {
     idea: ids.featureInterior,
     plans: ids.trustQualified,
   })
-  if (!aligned.changed) return null
+  if (!aligned.changed && !leaked.changed) return null
 
   await payload.update({
     collection: 'pages',
@@ -528,7 +524,7 @@ async function alignPhase1Page(
     locale,
     overrideAccess: true,
     context: seedContext,
-    data: { layout: aligned.layout as never },
+    data: { layout: (aligned.changed ? aligned.layout : leaked.value) as never },
   })
   return `page ${saved.slug}: phase 1 copy aligned (${locale})`
 }
@@ -556,44 +552,10 @@ async function seedPages(payload: Payload, ids: MediaIds) {
       id = created.id
       summary.push(`page ${page.slug}: created`)
     } else {
-      const saved = await payload.findByID({
-        collection: 'pages',
-        id,
-        depth: 0,
-        draft,
-        locale: 'en',
-        fallbackLocale: false,
-        overrideAccess: true,
-      })
-      const stripped = stripLegacyBilingualCopy(saved)
-      if (stripped.changed && isRecord(stripped.value)) {
-        const value = stripped.value
-        await payload.update({
-          collection: 'pages',
-          id,
-          draft,
-          locale: 'en',
-          overrideAccess: true,
-          context: seedContext,
-          data: {
-            hero: value.hero as Record<string, unknown>,
-            layout: value.layout as never,
-          },
-        })
-        summary.push(`page ${page.slug}: cleared mixed-language subtitles`)
-      } else {
-        summary.push(`page ${page.slug}: english kept`)
-      }
+      summary.push(`page ${page.slug}: english kept`)
     }
 
-    const aligned = id ? await alignCanvasLayout(payload, id, draft, ids) : null
-    if (aligned) summary.push(aligned)
-    const heroAligned = id ? await alignHeroTypography(payload, id, draft, 'en') : null
-    if (heroAligned) summary.push(heroAligned)
-    const phaseAligned = id ? await alignPhase1Page(payload, id, draft, 'en', ids) : null
-    if (phaseAligned) summary.push(phaseAligned)
-
-    if (!zhPage) continue
+    if (!zhPage || !id) continue
 
     const zhSaved = await payload.findByID({
       collection: 'pages',
@@ -606,10 +568,7 @@ async function seedPages(payload: Payload, ids: MediaIds) {
     })
 
     if (zhSaved.title) {
-      const zhHero = await alignHeroTypography(payload, id, draft, 'zh')
-      summary.push(zhHero || `page ${page.slug}: zh kept`)
-      const zhPhase = await alignPhase1Page(payload, id, draft, 'zh', ids)
-      if (zhPhase) summary.push(zhPhase)
+      summary.push(`page ${page.slug}: zh kept`)
       continue
     }
 
@@ -652,21 +611,12 @@ async function seedGlobals(payload: Payload) {
   const english = getMarketing('en')
   const chinese = getMarketing('zh')
   const header = await payload.findGlobal({ slug: 'header', overrideAccess: true, locale: 'en' })
-  const headerData: Record<string, unknown> = {}
-
-  if (!header.navItems?.length) {
-    headerData.navItems = english.header.primary.map(navLink)
-  } else {
-    const aligned = alignHeaderNav(asNavItems(header.navItems), 'en')
-    if (aligned.changed) headerData.navItems = aligned.items
-  }
-  if (!header.secondaryNavItems?.length) {
-    headerData.secondaryNavItems = english.header.secondary.map(navLink)
-  } else {
-    const aligned = withoutInteriorLinks(header.secondaryNavItems)
-    if (aligned.changed) headerData.secondaryNavItems = aligned.items
-  }
-  if (Object.keys(headerData).length) {
+  if (!header.contentSeeded) {
+    const headerData: Record<string, unknown> = { contentSeeded: true }
+    if (!header.navItems?.length) headerData.navItems = english.header.primary.map(navLink)
+    if (!header.secondaryNavItems?.length) {
+      headerData.secondaryNavItems = english.header.secondary.map(navLink)
+    }
     await payload.updateGlobal({
       slug: 'header',
       overrideAccess: true,
@@ -674,25 +624,20 @@ async function seedGlobals(payload: Payload) {
       context: seedContext,
       data: headerData,
     })
-    summary.push(header.navItems?.length ? 'header: services grouped' : 'header: filled empty navigation')
+    summary.push('header: initial navigation filled')
+    summary.push(await fillHeaderLocale(payload, chinese.header))
   } else {
     summary.push('header: english kept')
   }
 
   const footer = await payload.findGlobal({ slug: 'footer', overrideAccess: true, locale: 'en' })
-  const footerData: Record<string, unknown> = {}
-  if (!footer.blurb) footerData.blurb = english.footer.blurb
-  if (!footer.tagline) footerData.tagline = english.footer.tagline
-  if (!footer.location) footerData.location = english.footer.location
-  if (!footer.serviceLinks?.length) footerData.serviceLinks = english.footer.services.map(navLink)
-  else {
-    const cleaned = withoutInteriorLinks(footer.serviceLinks)
-    const labeled = alignFooterServiceLabels(cleaned.items, 'en')
-    if (cleaned.changed || labeled.changed) footerData.serviceLinks = labeled.items
-  }
-  if (!footer.navItems?.length) footerData.navItems = english.footer.company.map(navLink)
-
-  if (Object.keys(footerData).length) {
+  if (!footer.contentSeeded) {
+    const footerData: Record<string, unknown> = { contentSeeded: true }
+    if (!footer.blurb) footerData.blurb = english.footer.blurb
+    if (!footer.tagline) footerData.tagline = english.footer.tagline
+    if (!footer.location) footerData.location = english.footer.location
+    if (!footer.serviceLinks?.length) footerData.serviceLinks = english.footer.services.map(navLink)
+    if (!footer.navItems?.length) footerData.navItems = english.footer.company.map(navLink)
     await payload.updateGlobal({
       slug: 'footer',
       overrideAccess: true,
@@ -700,13 +645,11 @@ async function seedGlobals(payload: Payload) {
       context: seedContext,
       data: footerData,
     })
-    summary.push('footer: filled empty fields')
+    summary.push('footer: initial fields filled')
+    summary.push(await fillFooterLocale(payload, chinese.footer))
   } else {
     summary.push('footer: english kept')
   }
-
-  summary.push(await fillHeaderLocale(payload, chinese.header))
-  summary.push(await fillFooterLocale(payload, chinese.footer))
 
   return summary
 }
@@ -753,10 +696,8 @@ async function fillFooterLocale(
   if (!footer.tagline) data.tagline = copy.tagline
   if (!footer.location) data.location = copy.location
   const serviceLinks = localizeNav(footer.serviceLinks, copy.services)
-  const labeledServices = alignFooterServiceLabels(serviceLinks ?? footer.serviceLinks, 'zh')
   const navItems = localizeNav(footer.navItems, copy.company)
-  if (labeledServices.changed) data.serviceLinks = labeledServices.items
-  else if (serviceLinks) data.serviceLinks = serviceLinks
+  if (serviceLinks) data.serviceLinks = serviceLinks
   if (navItems) data.navItems = navItems
   if (!Object.keys(data).length) return 'footer: zh kept'
 
@@ -835,6 +776,142 @@ function localizeNav(items: StoredNavItem[] | null | undefined, translations: Na
     }
   })
   return changed ? next : null
+}
+
+/**
+ * One-off correction for data saved before editor content was left alone.
+ * Safe to run again: already-corrected copy and custom labels do not match
+ * the old sentences, and an edited Home 01 block is never rewritten.
+ * Fresh databases have no pages yet, so this does not insert the baseline.
+ * `seedWebsite` does that once, then sets `contentSeeded` so later deploys
+ * do not refill fields an editor cleared.
+ */
+export async function applyWebsiteBaseline(payload: Payload) {
+  const summary: string[] = []
+  const ids = {} as MediaIds
+  for (const key of ['featureInterior', 'trustQualified', 'serviceInterior'] as const) {
+    const image = marketingImages[key]
+    const found = await payload.find({
+      collection: 'media',
+      depth: 0,
+      limit: 1,
+      overrideAccess: true,
+      where: { filename: { equals: image.file } },
+    })
+    if (found.docs[0]) ids[key] = found.docs[0].id
+  }
+
+  for (const slug of ['home', 'about', 'services']) {
+    const existing = await findPage(payload, slug)
+    if (!existing) continue
+    const { id, draft } = existing
+    const saved = await payload.findByID({
+      collection: 'pages',
+      id,
+      depth: 0,
+      draft,
+      locale: 'en',
+      fallbackLocale: false,
+      overrideAccess: true,
+    })
+    const stripped = stripLegacyBilingualCopy(saved)
+    if (stripped.changed && isRecord(stripped.value)) {
+      const value = stripped.value
+      await payload.update({
+        collection: 'pages',
+        id,
+        draft,
+        locale: 'en',
+        overrideAccess: true,
+        context: seedContext,
+        data: {
+          hero: value.hero as Record<string, unknown>,
+          layout: value.layout as never,
+        },
+      })
+      summary.push(`page ${slug}: cleared mixed-language subtitles`)
+    }
+    const canvas = await alignCanvasLayout(payload, id, draft, ids)
+    if (canvas) summary.push(canvas)
+    for (const locale of ['en', 'zh'] as const) {
+      const hero = await alignHeroTypography(payload, id, draft, locale)
+      if (hero) summary.push(hero)
+      const phase = await alignPhase1Page(payload, id, draft, locale, ids)
+      if (phase) summary.push(phase)
+    }
+  }
+
+  const header = await payload.findGlobal({ slug: 'header', overrideAccess: true, locale: 'en' })
+  const headerHasContent = Boolean(header.navItems?.length || header.secondaryNavItems?.length)
+  if (headerHasContent) {
+    const headerData: Record<string, unknown> = {}
+    if (header.navItems?.length) {
+      const aligned = alignHeaderNav(asNavItems(header.navItems), 'en')
+      if (aligned.changed) headerData.navItems = aligned.items
+    }
+    if (header.secondaryNavItems?.length) {
+      const cleaned = withoutInteriorLinks(header.secondaryNavItems)
+      if (cleaned.changed) headerData.secondaryNavItems = cleaned.items
+    }
+    if (!header.contentSeeded) headerData.contentSeeded = true
+    if (Object.keys(headerData).length) {
+      await payload.updateGlobal({
+        slug: 'header',
+        overrideAccess: true,
+        locale: 'en',
+        context: seedContext,
+        data: headerData,
+      })
+      summary.push('header: baseline locked')
+    }
+    summary.push(await fillHeaderLocale(payload, getMarketing('zh').header))
+  }
+
+  const footer = await payload.findGlobal({ slug: 'footer', overrideAccess: true, locale: 'en' })
+  const footerHasContent = Boolean(
+    footer.blurb || footer.tagline || footer.location || footer.serviceLinks?.length || footer.navItems?.length,
+  )
+  if (footerHasContent) {
+    const footerData: Record<string, unknown> = {}
+    if (footer.serviceLinks?.length) {
+      const cleaned = withoutInteriorLinks(footer.serviceLinks)
+      const labeled = alignFooterServiceLabels(cleaned.items, 'en')
+      if (cleaned.changed || labeled.changed) footerData.serviceLinks = labeled.items
+    }
+    const zhFooter = await payload.findGlobal({
+      slug: 'footer',
+      overrideAccess: true,
+      locale: 'zh' as TypedLocale,
+      fallbackLocale: false,
+    })
+    if (zhFooter.serviceLinks?.length) {
+      const labeledZh = alignFooterServiceLabels(zhFooter.serviceLinks, 'zh')
+      if (labeledZh.changed) {
+        await payload.updateGlobal({
+          slug: 'footer',
+          overrideAccess: true,
+          locale: 'zh' as TypedLocale,
+          context: seedContext,
+          data: { serviceLinks: labeledZh.items },
+        })
+      }
+    }
+    if (!footer.contentSeeded) footerData.contentSeeded = true
+    if (Object.keys(footerData).length) {
+      await payload.updateGlobal({
+        slug: 'footer',
+        overrideAccess: true,
+        locale: 'en',
+        context: seedContext,
+        data: footerData,
+      })
+      summary.push('footer: baseline locked')
+    }
+    summary.push(await fillFooterLocale(payload, getMarketing('zh').footer))
+  }
+
+  if (summary.length) console.log(summary.join('\n'))
+  return summary
 }
 
 export async function seedWebsite(payload: Payload) {

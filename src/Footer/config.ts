@@ -10,6 +10,18 @@ export const Footer: GlobalConfig = {
   },
   fields: [
     {
+      name: 'contentSeeded',
+      type: 'checkbox',
+      label: 'Initial footer saved',
+      defaultValue: false,
+      admin: {
+        hidden: true,
+        readOnly: true,
+        description:
+          'Set when the first seed fills an empty footer. Later seeds do not refill fields an editor cleared.',
+      },
+    },
+    {
       name: 'blurb',
       type: 'textarea',
       localized: true,

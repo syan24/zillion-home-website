@@ -127,15 +127,19 @@ describe('phase 1 layout alignment', () => {
         body: 'We are builders. Our in-house joinery capability means we can handle everything from structural work to the finest cabinetry details — all under one roof.\n\nThe rest stays.',
       },
       { blockType: 'capabilityList', heading: 'Our capabilities' },
+      { blockType: 'capabilityList', heading: 'Workshop notes the editor added' },
       { blockType: 'proseSection', body: 'A note the client already rewrote.' },
     ]
     const aligned = alignPhase1Layout(layout, 'en', 'about')
-    expect(aligned.layout).toHaveLength(2)
+    expect(aligned.layout).toHaveLength(3)
+    expect((aligned.layout as { heading?: string }[])[1]?.heading).toBe(
+      'Workshop notes the editor added',
+    )
     const prose = (aligned.layout as { body: string }[])[0]
     expect(prose.body).toContain('Custom joinery is coordinated with the construction work')
     expect(prose.body).not.toMatch(/in-house/i)
     expect(prose.body).toContain('The rest stays.')
-    expect((aligned.layout as { body: string }[])[1].body).toBe(
+    expect((aligned.layout as { body?: string }[])[2]?.body).toBe(
       'A note the client already rewrote.',
     )
   })

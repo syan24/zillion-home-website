@@ -139,11 +139,23 @@ export function alignEnquirySelectFields(
 
   const enList = Array.isArray(enFields) ? enFields : []
   let changed = false
+  const en = enList.map((field) => {
+    if (!isRecord(field) || field.blockType !== 'select' || typeof field.name !== 'string') return field
+    if (!isSelectName(field.name)) return field
+    const catalog = catalogField(field.name)
+    const stored = typeof field.placeholder === 'string' ? field.placeholder.trim() : ''
+    const nextPlaceholder = catalog?.placeholder?.en
+    if (!nextPlaceholder || !stalePlaceholders[field.name].includes(stored) || stored === nextPlaceholder) {
+      return field
+    }
+    changed = true
+    return { ...field, placeholder: nextPlaceholder }
+  })
   const zh = zhFields.map((field) => {
     if (!isRecord(field) || field.blockType !== 'select' || typeof field.name !== 'string')
       return field
     if (!isSelectName(field.name)) return field
-    const enField = enList.find(
+    const enField = en.find(
       (entry) => isRecord(entry) && entry.blockType === 'select' && entry.name === field.name,
     )
     const next = alignSelectField(isRecord(enField) ? enField : undefined, field, field.name)
@@ -151,5 +163,5 @@ export function alignEnquirySelectFields(
     return next
   })
 
-  return { changed, en: enFields, zh: changed ? zh : zhFields }
+  return { changed, en: changed ? en : enFields, zh: changed ? zh : zhFields }
 }

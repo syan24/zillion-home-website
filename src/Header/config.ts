@@ -10,6 +10,18 @@ export const Header: GlobalConfig = {
   },
   fields: [
     {
+      name: 'contentSeeded',
+      type: 'checkbox',
+      label: 'Initial navigation saved',
+      defaultValue: false,
+      admin: {
+        hidden: true,
+        readOnly: true,
+        description:
+          'Set when the first seed fills an empty header. Later seeds do not refill fields an editor cleared.',
+      },
+    },
+    {
       name: 'navItems',
       type: 'array',
       fields: [

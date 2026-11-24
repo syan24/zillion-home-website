@@ -2,7 +2,7 @@ import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import type { FieldsConfig } from '@payloadcms/plugin-form-builder/types'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
-import { Plugin } from 'payload'
+import { Plugin, type Block, type Field } from 'payload'
 import { revalidateRedirects } from '@/hooks/revalidateRedirects'
 import { rejectEnquiryFormSubmission } from '@/lib/enquiry/rejectFormSubmission'
 import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
@@ -102,4 +102,47 @@ export const plugins: Plugin[] = [
       },
     },
   }),
+  localizeFormPlaceholders,
 ]
+
+function localizePlaceholderField(field: Field): Field {
+  if ('name' in field && field.name === 'placeholder' && (field.type === 'text' || field.type === 'textarea')) {
+    return { ...field, localized: true }
+  }
+  if (field.type === 'blocks') {
+    return {
+      ...field,
+      blocks: field.blocks.map((block) =>
+        typeof block === 'string'
+          ? block
+          : { ...block, fields: block.fields.map((child) => localizePlaceholderField(child)) },
+      ) as Block[],
+    }
+  }
+  if ('fields' in field && Array.isArray(field.fields)) {
+    return { ...field, fields: field.fields.map((child) => localizePlaceholderField(child)) }
+  }
+  if (field.type === 'tabs') {
+    return {
+      ...field,
+      tabs: field.tabs.map((tab) =>
+        'fields' in tab ? { ...tab, fields: tab.fields.map((child) => localizePlaceholderField(child)) } : tab,
+      ),
+    }
+  }
+  return field
+}
+
+/** Select placeholders are one string per locale, read back as the editor saved them. */
+function localizeFormPlaceholders(config: Parameters<Plugin>[0]): ReturnType<Plugin> {
+  return {
+  ...config,
+  collections: (config.collections || []).map((collection) => {
+    if (collection.slug !== 'forms' || !collection.fields) return collection
+    return {
+      ...collection,
+      fields: collection.fields.map((field) => localizePlaceholderField(field)),
+    }
+  }),
+  }
+}

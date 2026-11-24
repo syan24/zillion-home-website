@@ -34,8 +34,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev',
+    // Production server. `next dev` on this app loads Payload hooks through Node ESM
+    // and fails to resolve `next/cache`. `next start` serves the compiled build.
+    command: 'pnpm start',
     reuseExistingServer: true,
+    timeout: 180_000,
     url: 'http://localhost:3000',
   },
 })
