@@ -13,7 +13,7 @@ This file records decisions we may need to make because the client brief is inte
 
 **[ASSUMPTION]** Payload localisation is enabled for public copy: page title, hero and marketing-block text, SEO title and description, header and footer labels, project public text, and style/space names. Addresses, slugs, statuses, and SWMS evidence are not localised.
 
-**[ASSUMPTION]** If a Chinese CMS field is empty, Payload falls back to English for that field. Chrome strings (navigation button, footer headings, enquiry form, project library) are complete in both languages and do not mix.
+**[ASSUMPTION]** Header and footer still fall back to English when a Chinese field is empty. Pages, the Projects page global, and the Enquiry page global render the saved locale only: an empty Chinese field stays empty. See `docs/17-cms-editorial-fields.md`.
 
 **[ASSUMPTION]** The SWMS worker flow stays English. It does not use the marketing header or the locale cookie.
 
@@ -233,6 +233,9 @@ Public header and footer HTML is read through `unstable_cache` (`global_header`,
 
 ### G9. Unreadable demo SWMS PDFs are repaired in place
 **[ASSUMPTION]** A Rosebery demo SWMS document whose title already exists is not proof that a worker can open the PDF. Payload stores `/api/swms-files/file/<filename>` and, when `BLOB_READ_WRITE_TOKEN` is set, the bytes live in Vercel Blob under the `swms-files` prefix plus `_objectKey`. The serverless disk does not keep the build-time copy. `pnpm seed:demo` and `pnpm seed:demo:deploy` leave the document, its access token, and its `fileVersion` alone when those bytes can be read. When the file row is still there but the bytes are not, the seed writes the placeholder PDF back onto that same file id. Workers who already confirmed that version are not asked to confirm again. Signed induction, confirmation, attendance, and report rows are not rewritten. If the document points at a file row that no longer exists, the seed attaches a new PDF and the document hook publishes the next file version, because the previous bytes cannot be recovered. A readable replacement is kept. Local `pnpm seed:demo` without the Blob token still stores the PDF under `swms-uploads/`. Workers keep using `/swms/[token]/files/[accessToken]`. `/api/swms-files/file/...` stays authenticated.
+
+### G10. Projects, enquiry chrome, and CTA copy are CMS fields
+**[ASSUMPTION]** The public wording and photos listed in `docs/17-cms-editorial-fields.md` are edited in Admin. `seedEditorial` copies the wording that was already on the site into those fields once, when the Projects page global is not yet marked seeded and a Home page exists. A later deploy does not put a cleared eyebrow, image, feature label, enquiry button, or project-type chip back. A database that has no pages yet (a migration before the first seed) does not set that mark, so the first seed can still fill the fields. Notification recipients are a separate authenticated global. `RESEND_API_KEY` and SMTP passwords stay in the environment.
 
 ### G4. Icons stay in code
 **[ASSUMPTION]** Process-step icons and the category-bar icons are chosen by item order. Admins edit the labels. Adding a sixth item reuses the last icon.

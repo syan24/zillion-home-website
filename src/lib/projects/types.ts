@@ -24,11 +24,24 @@ export function relatedProjectHrefForAnchor(anchor: string | null | undefined) {
   return null
 }
 
-export function projectTypeLabel(
+export type ProjectTypeChoice = {
+  value?: string | null
+  label?: string | null
+  active?: boolean | null
+}
+
+/** Chips and filters follow the saved order and hide types an editor turned off. */
+export function visibleProjectTypes(types: ProjectTypeChoice[] | null | undefined) {
+  return (types || []).flatMap((item) => {
+    if (item.active === false || !isProjectType(item.value) || !item.label) return []
+    return [{ value: item.value, label: item.label }]
+  })
+}
+
+/** Saved label for a project, including a type whose chip is hidden. */
+export function labelForProjectType(
   type: string | null | undefined,
-  copy: { residential: string; commercial: string; joinery: string },
+  types: ProjectTypeChoice[] | null | undefined,
 ) {
-  if (type === 'commercial') return copy.commercial
-  if (type === 'joinery') return copy.joinery
-  return copy.residential
+  return (types || []).find((item) => item.value === type && item.label)?.label || ''
 }

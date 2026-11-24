@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button'
 import { getLocale } from '@/i18n/getLocale'
 import { getMessages } from '@/i18n/messages'
 import { projectFilterHref } from '@/lib/projects/filters'
-import { projectTypeLabel } from '@/lib/projects/types'
+import { labelForProjectType } from '@/lib/projects/types'
 import { loadProjectDetail } from '@/lib/projects/loadPortfolio'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 
 type Args = {
   params: Promise<{ slug: string }>
@@ -31,6 +32,7 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
 export default async function ProjectDetailPage({ params, searchParams }: Args) {
   const locale = await getLocale()
   const copy = getMessages(locale).projects
+  const editorial = await getCachedGlobal('projects-page', 0, locale, false)()
   const { slug } = await params
   const query = await searchParams
   const imageParam = Array.isArray(query.image) ? query.image[0] : query.image
@@ -39,7 +41,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Args) 
   if (!detail) notFound()
 
   const { project, images, related } = detail
-  const typeLabel = projectTypeLabel(project.type, copy)
+  const typeLabel = labelForProjectType(project.type, editorial?.types)
 
   return (
     <main className="min-h-screen bg-background">
@@ -66,9 +68,11 @@ export default async function ProjectDetailPage({ params, searchParams }: Args) 
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <CopyLinkButton path={`/projects/${project.slug}`} label={copy.copyLink} copiedLabel={copy.copied} />
-            <Button asChild variant="enquiry">
-              <Link href="/enquiry">{copy.enquire}</Link>
-            </Button>
+            {editorial?.enquireLabel && editorial.enquireUrl ? (
+              <Button asChild variant="enquiry">
+                <Link href={editorial.enquireUrl}>{editorial.enquireLabel}</Link>
+              </Button>
+            ) : null}
           </div>
         </div>
       </section>
@@ -100,7 +104,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Args) 
                   <PlaceholderImage src={item.src || undefined} alt={item.alt} aspectRatio="4/3" />
                   <div className="p-4">
                     <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">
-                      {projectTypeLabel(item.type, copy)}
+                      {labelForProjectType(item.type, editorial?.types)}
                     </p>
                     <h3 className="mt-1 font-serif text-2xl">{item.title}</h3>
                     {item.location && <p className="text-sm text-muted-foreground">{item.location}</p>}

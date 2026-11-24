@@ -55,7 +55,16 @@ export const hero: Field = localizeCopyField({
       type: 'textarea',
       admin: {
         condition: (_, siblingData) => siblingData?.type === 'builder',
-        description: 'Wraps on its own. In the default headline, the word “ground” is shown in gold italic.',
+        description: 'Wraps on its own.',
+      },
+    },
+    {
+      name: 'headlineAccent',
+      type: 'text',
+      label: 'Headline accent',
+      admin: {
+        condition: (_, siblingData) => siblingData?.type === 'builder',
+        description: 'Words from the headline shown in gold italic. Leave empty for no accent.',
       },
     },
     {

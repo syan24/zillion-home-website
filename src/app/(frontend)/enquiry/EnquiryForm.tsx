@@ -440,7 +440,7 @@ export function EnquiryForm({
             className="h-auto rounded-none px-11 py-5 text-[11px] uppercase tracking-[0.3em] hover:bg-accent-tan"
             disabled={isSubmitting}
           >
-            {isSubmitting ? progress || copy.submitting : form.submitButtonLabel || copy.submit}
+            {isSubmitting ? progress || copy.submitting : form.submitButtonLabel}
           </Button>
         </div>
       </div>
@@ -595,7 +595,7 @@ function FieldControl({
           onChange={(event) => onValue(event.target.value)}
           className={cn(fieldClass, 'appearance-none', issue && 'border-error')}
         >
-          <option value="">{field.placeholder || label}</option>
+          <option value="">{field.placeholder || ''}</option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -656,7 +656,7 @@ function FieldControl({
                 event.target.value = ''
               }}
             />
-            <p className="font-serif text-[22px]">{label || copy.uploadLabel}</p>
+            <p className="font-serif text-[22px]">{label}</p>
             <p className="mt-2 text-xs tracking-wide text-muted-foreground">{copy.uploadTypes}</p>
           </label>
         </div>

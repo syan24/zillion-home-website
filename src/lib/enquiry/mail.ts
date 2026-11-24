@@ -1,14 +1,6 @@
 import nodemailer from 'nodemailer'
 
-import {
-  budgetOptions,
-  enquiryLocaleOptions,
-  labelFor,
-  projectTypeOptions,
-  scopeOptions,
-  spaceOptions,
-  timelineOptions,
-} from '@/lib/enquiry/options'
+import { enquiryLocaleOptions, labelFor } from '@/lib/enquiry/options'
 import type { ValidEnquiry } from '@/lib/enquiry/validate'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -32,20 +24,50 @@ export type EnquiryMailResult = {
   detail: string
 }
 
+export type EnquiryNotifySettings = {
+  to?: string | null
+  from?: string | null
+}
+
+/** Saved form option labels for the submission locale. Unknown values stay as stored codes. */
+export type EnquiryLabelMap = Record<string, string>
+
+export function labelsFromFormFields(fields: unknown): EnquiryLabelMap {
+  const labels: EnquiryLabelMap = {}
+  if (!Array.isArray(fields)) return labels
+  for (const field of fields) {
+    if (!field || typeof field !== 'object') continue
+    const options = (field as { options?: unknown }).options
+    if (!Array.isArray(options)) continue
+    for (const option of options) {
+      if (!option || typeof option !== 'object') continue
+      const value = (option as { value?: unknown }).value
+      const label = (option as { label?: unknown }).label
+      if (typeof value === 'string' && value && typeof label === 'string' && label.trim()) {
+        labels[value] = label.trim()
+      }
+    }
+  }
+  return labels
+}
+
 export function resolveEnquiryMail(
   env: Record<string, string | undefined> = process.env,
+  settings?: EnquiryNotifySettings,
 ): EnquiryMailPlan {
-  const to = splitEmails(env.ENQUIRY_NOTIFY_TO)
-  const from = (env.ENQUIRY_NOTIFY_FROM || '').trim()
+  const savedTo = (settings?.to || '').trim()
+  const savedFrom = (settings?.from || '').trim()
+  const to = splitEmails(savedTo || env.ENQUIRY_NOTIFY_TO)
+  const from = (savedFrom || env.ENQUIRY_NOTIFY_FROM || '').trim()
 
   if (to.length === 0) {
-    return { mode: 'skip', detail: 'Skipped: ENQUIRY_NOTIFY_TO is not set.' }
+    return { mode: 'skip', detail: 'Skipped: no notification recipient is set.' }
   }
   if (to.some((address) => !EMAIL_PATTERN.test(address))) {
     return { mode: 'skip', detail: 'Skipped: ENQUIRY_NOTIFY_TO has an invalid email address.' }
   }
   if (!from || !fromAddress(from)) {
-    return { mode: 'skip', detail: 'Skipped: ENQUIRY_NOTIFY_FROM is not set.' }
+    return { mode: 'skip', detail: 'Skipped: no notification from address is set.' }
   }
 
   const resendKey = (env.RESEND_API_KEY || '').trim()
@@ -92,8 +114,10 @@ export async function sendEnquiryNotification(input: {
   attachmentNames: string[]
   adminURL: string
   env?: Record<string, string | undefined>
+  labels?: EnquiryLabelMap
+  notify?: EnquiryNotifySettings
 }): Promise<EnquiryMailResult> {
-  const plan = resolveEnquiryMail(input.env)
+  const plan = resolveEnquiryMail(input.env, input.notify)
   if (plan.mode === 'skip') return { status: 'skipped', detail: plan.detail }
 
   const subject = `New enquiry ${input.submissionReference}: ${input.enquiry.name}`
@@ -152,25 +176,31 @@ export async function sendEnquiryNotification(input: {
   }
 }
 
+function named(labels: EnquiryLabelMap | undefined, value: string | null | undefined) {
+  if (!value) return ''
+  return labels?.[value] || value
+}
+
 function enquiryText(input: {
   enquiry: ValidEnquiry
   locale: 'en' | 'zh'
   submissionReference: string
   attachmentNames: string[]
   adminURL: string
+  labels?: EnquiryLabelMap
 }): string {
-  const { enquiry } = input
+  const { enquiry, labels } = input
   const lines = [
     `Reference: ${input.submissionReference}`,
     `Name: ${enquiry.name}`,
     `Phone: ${enquiry.phone || '—'}`,
     `Email: ${enquiry.email}`,
     `Address: ${enquiry.address}`,
-    `Project type: ${labelFor(projectTypeOptions, enquiry.projectType)}`,
-    `Scope: ${enquiry.scope.map((value) => labelFor(scopeOptions, value)).join(', ') || '—'}`,
-    `Spaces: ${enquiry.spaces.map((value) => labelFor(spaceOptions, value)).join(', ') || '—'}`,
-    `Budget: ${labelFor(budgetOptions, enquiry.budgetRange) || '—'}`,
-    `Expected start: ${labelFor(timelineOptions, enquiry.expectedStart) || '—'}`,
+    `Project type: ${named(labels, enquiry.projectType)}`,
+    `Scope: ${enquiry.scope.map((value) => named(labels, value)).join(', ') || '—'}`,
+    `Spaces: ${enquiry.spaces.map((value) => named(labels, value)).join(', ') || '—'}`,
+    `Budget: ${named(labels, enquiry.budgetRange) || '—'}`,
+    `Expected start: ${named(labels, enquiry.expectedStart) || '—'}`,
     `Locale: ${labelFor(enquiryLocaleOptions, input.locale)}`,
     '',
     enquiry.notes || 'No project description.',
@@ -188,8 +218,9 @@ function enquiryHtml(input: {
   submissionReference: string
   attachmentNames: string[]
   adminURL: string
+  labels?: EnquiryLabelMap
 }): string {
-  const { enquiry } = input
+  const { enquiry, labels } = input
   const row = (label: string, value: string) =>
     `<tr><th align="left" style="padding:4px 12px 4px 0;">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`
   return [
@@ -200,11 +231,11 @@ function enquiryHtml(input: {
     row('Phone', enquiry.phone || '—'),
     row('Email', enquiry.email),
     row('Address', enquiry.address),
-    row('Project type', labelFor(projectTypeOptions, enquiry.projectType)),
-    row('Scope', enquiry.scope.map((value) => labelFor(scopeOptions, value)).join(', ') || '—'),
-    row('Spaces', enquiry.spaces.map((value) => labelFor(spaceOptions, value)).join(', ') || '—'),
-    row('Budget', labelFor(budgetOptions, enquiry.budgetRange) || '—'),
-    row('Expected start', labelFor(timelineOptions, enquiry.expectedStart) || '—'),
+    row('Project type', named(labels, enquiry.projectType)),
+    row('Scope', enquiry.scope.map((value) => named(labels, value)).join(', ') || '—'),
+    row('Spaces', enquiry.spaces.map((value) => named(labels, value)).join(', ') || '—'),
+    row('Budget', named(labels, enquiry.budgetRange) || '—'),
+    row('Expected start', named(labels, enquiry.expectedStart) || '—'),
     row('Locale', labelFor(enquiryLocaleOptions, input.locale) || 'English'),
     '</table>',
     `<p>${escapeHtml(enquiry.notes || 'No project description.').replace(/\n/g, '<br>')}</p>`,

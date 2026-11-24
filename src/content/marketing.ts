@@ -72,6 +72,7 @@ export const homeContent = {
   hero: {
     eyebrow: 'Builders & Joiners · Est. Melbourne',
     headline: 'Built from the ground up.',
+    headlineAccent: 'ground',
     description:
       'Residential construction, renovation, commercial fit-out and custom joinery — delivered by one team, with precision and care.',
     image: image('heroHouse', 'Modern house at dusk'),
@@ -183,6 +184,7 @@ export const homeContent = {
   },
   cta: {
     tone: 'dark' as const,
+    eyebrow: 'Begin a project',
     heading: 'Ready to start your project?',
     body: "Tell us about your vision and we'll help bring it to life with quality construction, precision joinery and professional project delivery.",
     links: [enquiryLink],
@@ -233,6 +235,7 @@ export const aboutContent = {
   },
   cta: {
     tone: 'dark' as const,
+    eyebrow: 'Begin a project',
     heading: "Let's build something together",
     body: "Ready to start your project? Get in touch and tell us about your vision. We'll provide guidance and help you take the next steps.",
     links: [
@@ -256,6 +259,7 @@ export const servicesContent = {
     image: image('serviceInterior', 'Interior fit-out'),
   },
   details: {
+    featuresLabel: 'What we deliver',
     services: [
       {
         anchor: 'residential',
@@ -340,6 +344,7 @@ export const servicesContent = {
   },
   cta: {
     tone: 'dark' as const,
+    eyebrow: 'Begin a project',
     heading: 'Ready to discuss your project?',
     body: "Tell us about your requirements and we'll help you understand how we can bring your vision to life.",
     links: [enquiryLink],

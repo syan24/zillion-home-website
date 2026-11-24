@@ -14,6 +14,7 @@ async function getGlobal<T extends Global>(
   slug: T,
   depth = 0,
   locale: SiteLocale = 'en',
+  fallbackLocale: false | TypedLocale = 'en',
 ): Promise<DataFromGlobalSlug<T> | null> {
   try {
     const payload = await getPayload({ config: configPromise })
@@ -22,7 +23,7 @@ async function getGlobal<T extends Global>(
       slug,
       depth,
       locale: locale as TypedLocale,
-      fallbackLocale: 'en',
+      fallbackLocale,
     })
 
     return global
@@ -35,10 +36,15 @@ async function getGlobal<T extends Global>(
  * Returns an unstable_cache function mapped with the cache tag for the slug.
  * The key includes the Vercel deployment id. See `globalCacheKey`.
  */
-export const getCachedGlobal = <T extends Global>(slug: T, depth = 0, locale: SiteLocale = 'en') =>
+export const getCachedGlobal = <T extends Global>(
+  slug: T,
+  depth = 0,
+  locale: SiteLocale = 'en',
+  fallbackLocale: false | TypedLocale = 'en',
+) =>
   unstable_cache(
-    async () => getGlobal<T>(slug, depth, locale),
-    globalCacheKey(slug, depth, locale),
+    async () => getGlobal<T>(slug, depth, locale, fallbackLocale),
+    [...globalCacheKey(slug, depth, locale), fallbackLocale === false ? 'strict' : fallbackLocale],
     {
       tags: [`global_${slug}`],
     },

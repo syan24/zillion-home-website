@@ -16,7 +16,7 @@ export const queryPageBySlug = cache(async ({ slug }: { slug: string }) => {
       draft,
       limit: 1,
       locale: locale as TypedLocale,
-      fallbackLocale: 'en',
+      fallbackLocale: false,
       pagination: false,
       overrideAccess: draft,
       where: {

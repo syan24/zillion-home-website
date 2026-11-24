@@ -73,7 +73,7 @@ export async function FallbackServices() {
     <main className="min-h-screen">
       <PageIntro {...content.intro} image={stock(content.intro.image)} />
       <ServiceDetails
-        featuresLabel={locale === 'zh' ? '交付内容' : 'What we deliver'}
+        featuresLabel={content.details.featuresLabel}
         services={content.details.services.map((service) => ({
           ...service,
           features: service.features.map((text) => ({ text })),

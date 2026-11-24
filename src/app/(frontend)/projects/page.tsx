@@ -9,17 +9,18 @@ import { PlaceholderImage } from '@/components/PlaceholderImage'
 import { Button } from '@/components/ui/button'
 import { getLocale } from '@/i18n/getLocale'
 import { getMessages } from '@/i18n/messages'
+import { resolveMedia } from '@/components/Marketing/media'
 import {
   hasProjectFilters,
   parseProjectFilters,
   projectFilterHref,
-  roomSlugs,
   toggleProjectType,
   type ProjectFilters,
 } from '@/lib/projects/filters'
 import { loadPortfolio } from '@/lib/projects/loadPortfolio'
 import { galleryMode } from '@/lib/projects/projectCards'
-import { projectTypeLabel } from '@/lib/projects/types'
+import { labelForProjectType, visibleProjectTypes } from '@/lib/projects/types'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 
 type Args = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -39,28 +40,29 @@ function countLabel(copy: { imageCount: string; imageCountOne: string }, count: 
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const copy = getMessages(await getLocale()).projects
-  return { title: copy.metaTitle, description: copy.metaDescription }
+  const locale = await getLocale()
+  const page = await getCachedGlobal('projects-page', 0, locale, false)()
+  return {
+    title: page?.metaTitle || undefined,
+    description: page?.metaDescription || undefined,
+  }
 }
 
 export default async function ProjectsPage({ searchParams }: Args) {
   const locale = await getLocale()
   const copy = getMessages(locale).projects
+  const editorial = await getCachedGlobal('projects-page', 1, locale, false)()
+  const typeOptions = visibleProjectTypes(editorial?.types)
   const params = await searchParams
   const filters = parseProjectFilters(params)
   const viewParam = Array.isArray(params.view) ? params.view[0] : params.view
   const mode = galleryMode(viewParam, filters)
   const portfolio = await loadPortfolio(locale, filters)
   const filtered = hasProjectFilters(filters)
-  const hero =
-    portfolio.covers.find((image) => image.filename === 'DSC03791.jpg') ||
-    portfolio.covers[0] ||
-    null
-  const projectTypes = [
-    { value: 'commercial' as const, label: copy.commercial },
-    { value: 'residential' as const, label: copy.residential },
-    { value: 'joinery' as const, label: copy.joinery },
-  ]
+  const cmsHero = resolveMedia(editorial?.hero, editorial?.heroAlt)
+  const hero = cmsHero.src
+    ? { src: cmsHero.src, alt: cmsHero.alt, projectTitle: '' }
+    : null
 
   const chipHref = (next: ProjectFilters, view: 'project' | 'room' = mode) =>
     withView(projectFilterHref(next, 'gallery'), view)
@@ -80,11 +82,11 @@ export default async function ProjectsPage({ searchParams }: Args) {
         <div className={`${wrap} relative flex flex-col gap-8 pb-14 sm:gap-10`}>
           <p className="flex items-center gap-4 text-[11px] uppercase tracking-[0.4em]">
             <span className="h-px w-12 bg-accent" aria-hidden />
-            {copy.eyebrow}
+            {editorial?.eyebrow}
           </p>
           <div className="flex flex-wrap items-end justify-between gap-10">
             <h1 className="w-full max-w-[12ch] font-serif text-[clamp(52px,8vw,128px)] font-light leading-[0.94] tracking-[-0.01em]">
-              {goldPhrase(copy.heading, copy.headingAccent)}
+              {goldPhrase(editorial?.heading, editorial?.headingAccent)}
             </h1>
             {hero?.projectTitle && (
               <span className="text-[11px] uppercase tracking-[0.3em] text-[#f5f2ec]/85">
@@ -99,7 +101,9 @@ export default async function ProjectsPage({ searchParams }: Args) {
         id="gallery"
         className={`${wrap} flex scroll-mt-24 flex-col gap-11 py-[clamp(96px,10vw,150px)]`}
       >
-        <p className="max-w-xl text-[15px] leading-8 text-[#5c564d]">{copy.intro}</p>
+        {editorial?.intro ? (
+          <p className="max-w-xl text-[15px] leading-8 text-[#5c564d]">{editorial.intro}</p>
+        ) : null}
         <div className="grid grid-cols-2 border border-foreground text-[12px] uppercase tracking-[0.28em]">
           <Link
             href={chipHref({ ...filters, space: undefined }, 'project')}
@@ -110,7 +114,7 @@ export default async function ProjectsPage({ searchParams }: Args) {
                 : 'flex items-center justify-center px-4 py-4 text-center text-muted-foreground'
             }
           >
-            {copy.byProject}
+            {editorial?.byProject}
           </Link>
           <Link
             href={chipHref({ ...filters, project: undefined, type: undefined }, 'room')}
@@ -121,16 +125,18 @@ export default async function ProjectsPage({ searchParams }: Args) {
                 : 'flex items-center justify-center border-l border-foreground px-4 py-4 text-center text-muted-foreground'
             }
           >
-            {copy.byRoom}
+            {editorial?.byRoom}
           </Link>
         </div>
 
         {mode === 'project' ? (
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-4">
-              <p className="font-serif text-lg italic text-[#5c564d]">{copy.type}</p>
+              {editorial?.typeHeading ? (
+                <p className="font-serif text-lg italic text-[#5c564d]">{editorial.typeHeading}</p>
+              ) : null}
               <div className="flex flex-wrap gap-2.5">
-                {projectTypes.map((type) => (
+                {typeOptions.map((type) => (
                   <StyleChip
                     key={type.value}
                     href={chipHref(toggleProjectType(filters, type.value), 'project')}
@@ -142,7 +148,9 @@ export default async function ProjectsPage({ searchParams }: Args) {
               </div>
             </div>
             <div className="flex flex-col gap-4">
-              <p className="font-serif text-lg italic text-[#5c564d]">{copy.filter}</p>
+              {editorial?.filterHeading ? (
+                <p className="font-serif text-lg italic text-[#5c564d]">{editorial.filterHeading}</p>
+              ) : null}
               <div className="flex flex-wrap items-center gap-2">
                 <StyleChip
                   href={withView(
@@ -194,7 +202,7 @@ export default async function ProjectsPage({ searchParams }: Args) {
                     <div className="flex flex-col gap-1.5 border-t border-[#c9c0b0] pt-4">
                       <span className="font-serif text-[28px] leading-tight">{project.title}</span>
                       <span className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
-                        {projectTypeLabel(project.type, copy)}
+                        {labelForProjectType(project.type, editorial?.types)}
                         {project.location ? ` · ${project.location}` : ''}
                       </span>
                     </div>
@@ -215,18 +223,15 @@ export default async function ProjectsPage({ searchParams }: Args) {
                 >
                   {copy.allSpaces}
                 </StyleChip>
-                {roomSlugs.map((slug) => {
-                  const space = portfolio.spaces.find((item) => item.slug === slug)
-                  return (
-                    <StyleChip
-                      key={slug}
-                      href={chipHref({ ...filters, space: slug, project: undefined }, 'room')}
-                      active={filters.space === slug}
-                    >
-                      {space?.name || copy.rooms[slug]}
-                    </StyleChip>
-                  )
-                })}
+                {portfolio.spaces.map((space) => (
+                  <StyleChip
+                    key={space.slug}
+                    href={chipHref({ ...filters, space: space.slug, project: undefined }, 'room')}
+                    active={filters.space === space.slug}
+                  >
+                    {space.name}
+                  </StyleChip>
+                ))}
               </div>
               <span className="font-serif text-lg italic text-muted-foreground">
                 {countLabel(copy, portfolio.images.length)}
@@ -239,6 +244,7 @@ export default async function ProjectsPage({ searchParams }: Args) {
                 styles={portfolio.styles}
                 spaces={portfolio.spaces}
                 projects={portfolio.projects}
+                types={typeOptions}
                 view="room"
               />
               <StyleChip
@@ -277,6 +283,7 @@ export default async function ProjectsPage({ searchParams }: Args) {
               styles={portfolio.styles}
               spaces={portfolio.spaces}
               projects={portfolio.projects}
+              types={typeOptions}
               view="room"
             />
             {portfolio.images.length ? (
@@ -292,17 +299,23 @@ export default async function ProjectsPage({ searchParams }: Args) {
         <div
           className={`${wrap} flex flex-col items-center gap-8 py-[clamp(100px,11vw,170px)] text-center`}
         >
-          <p className="text-[11px] uppercase tracking-[0.4em] text-accent">— {copy.bandEyebrow}</p>
-          <h2 className="max-w-[14ch] font-serif text-[clamp(44px,5.6vw,92px)] font-light leading-none">
-            <BandHeading text={copy.bandHeading} accent={copy.bandAccent} />
-          </h2>
-          <Button
-            asChild
-            variant="enquiry"
-            className="h-auto rounded-none px-10 py-5 text-[11px] font-normal uppercase tracking-[0.3em] shadow-none"
-          >
-            <Link href="/enquiry">{copy.enquire}</Link>
-          </Button>
+          {editorial?.bandEyebrow ? (
+            <p className="text-[11px] uppercase tracking-[0.4em] text-accent">— {editorial.bandEyebrow}</p>
+          ) : null}
+          {editorial?.bandHeading ? (
+            <h2 className="max-w-[14ch] font-serif text-[clamp(44px,5.6vw,92px)] font-light leading-none">
+              <BandHeading text={editorial.bandHeading} accent={editorial.bandAccent || ''} />
+            </h2>
+          ) : null}
+          {editorial?.enquireLabel && editorial.enquireUrl ? (
+            <Button
+              asChild
+              variant="enquiry"
+              className="h-auto rounded-none px-10 py-5 text-[11px] font-normal uppercase tracking-[0.3em] shadow-none"
+            >
+              <Link href={editorial.enquireUrl}>{editorial.enquireLabel}</Link>
+            </Button>
+          ) : null}
         </div>
       </section>
     </main>

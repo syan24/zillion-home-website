@@ -241,8 +241,11 @@ export const CtaBand: Block = {
         { label: 'Light', value: 'light' },
       ],
     },
+    { name: 'eyebrow', type: 'text', label: 'Eyebrow' },
     { name: 'heading', type: 'text' },
     { name: 'body', type: 'textarea' },
+    imageField(),
+    imageAltField,
     linksField,
   ],
 }
@@ -285,6 +288,12 @@ export const ServiceDetails: Block = {
   labels: { singular: 'Service details', plural: 'Service details' },
   ...marketingAdmin,
   fields: [
+    {
+      name: 'featuresLabel',
+      type: 'text',
+      label: 'Features label',
+      admin: { description: 'Shown above the feature list. Home and services can use different wording.' },
+    },
     {
       name: 'services',
       type: 'array',

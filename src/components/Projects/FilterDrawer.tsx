@@ -9,12 +9,15 @@ import type { PortfolioProjectOption, PortfolioTerm } from '@/lib/projects/loadP
 
 type Copy = Messages['projects']
 
+export type ProjectTypeFilterOption = { value: string; label: string }
+
 export function FilterDrawer({
   copy,
   filters,
   styles,
   spaces,
   projects,
+  types,
   view = 'project',
 }: {
   copy: Copy
@@ -22,6 +25,7 @@ export function FilterDrawer({
   styles: PortfolioTerm[]
   spaces: PortfolioTerm[]
   projects: PortfolioProjectOption[]
+  types: ProjectTypeFilterOption[]
   view?: 'project' | 'room'
 }) {
   const [open, setOpen] = useState(false)
@@ -68,6 +72,7 @@ export function FilterDrawer({
               styles={styles}
               spaces={spaces}
               projects={projects}
+              types={types}
             />
             <div className="mt-6 flex gap-3">
               <button
@@ -96,6 +101,7 @@ export function DesktopProjectFilter({
   styles,
   spaces,
   projects,
+  types,
   view = 'project',
 }: {
   copy: Copy
@@ -103,6 +109,7 @@ export function DesktopProjectFilter({
   styles: PortfolioTerm[]
   spaces: PortfolioTerm[]
   projects: PortfolioProjectOption[]
+  types: ProjectTypeFilterOption[]
   view?: 'project' | 'room'
 }) {
   return (
@@ -118,6 +125,7 @@ export function DesktopProjectFilter({
         styles={styles}
         spaces={spaces}
         projects={projects}
+        types={types}
       />
       <div className="flex gap-2">
         <button
@@ -143,12 +151,14 @@ function FilterFields({
   styles,
   spaces,
   projects,
+  types,
 }: {
   copy: Copy
   filters: ProjectFilters
   styles: PortfolioTerm[]
   spaces: PortfolioTerm[]
   projects: PortfolioProjectOption[]
+  types: ProjectTypeFilterOption[]
 }) {
   const selectClass = 'mt-1 w-full rounded border border-input bg-background px-3 py-2 text-sm'
 
@@ -158,9 +168,11 @@ function FilterFields({
         {copy.type}
         <select name="type" defaultValue={filters.type || ''} className={selectClass}>
           <option value="">{copy.allTypes}</option>
-          <option value="residential">{copy.residential}</option>
-          <option value="commercial">{copy.commercial}</option>
-          <option value="joinery">{copy.joinery}</option>
+          {types.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
         </select>
       </label>
       <label className="mt-4 block text-sm md:mt-0">
