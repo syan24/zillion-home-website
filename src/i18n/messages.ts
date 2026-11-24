@@ -1,7 +1,6 @@
 import type { SiteLocale } from '@/i18n/config'
 
 const en = {
-  enquiryCta: 'Start an Enquiry →',
   openMenu: 'Open menu',
   closeMenu: 'Close menu',
   switchToEnglish: 'Switch to English',
@@ -160,7 +159,6 @@ const en = {
 }
 
 const zh: typeof en = {
-  enquiryCta: '开始咨询 →',
   openMenu: '打开菜单',
   closeMenu: '关闭菜单',
   switchToEnglish: 'Switch to English',

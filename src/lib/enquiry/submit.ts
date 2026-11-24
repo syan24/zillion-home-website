@@ -10,7 +10,7 @@ import {
   storedEnquiryFilename,
   type IncomingBlob,
 } from '@/lib/enquiry/files'
-import { sendEnquiryNotification } from '@/lib/enquiry/mail'
+import { labelsFromFormFields, sendEnquiryNotification } from '@/lib/enquiry/mail'
 import {
   ENQUIRY_RATE_LIMIT,
   ENQUIRY_RATE_WINDOW_MS,
@@ -271,7 +271,29 @@ async function recordNotification(
     adminURL: string
   },
 ) {
-  const result = await sendEnquiryNotification(input)
+  const form = await payload
+    .find({
+      collection: 'forms',
+      depth: 0,
+      limit: 1,
+      locale: input.locale,
+      fallbackLocale: false,
+      overrideAccess: true,
+      sort: 'createdAt',
+      where: { enquiryForm: { equals: true } },
+    })
+    .catch(() => null)
+  const settings = await payload
+    .findGlobal({ slug: 'enquiry-notifications', overrideAccess: true })
+    .catch(() => null)
+  const result = await sendEnquiryNotification({
+    ...input,
+    labels: labelsFromFormFields(form?.docs[0]?.fields),
+    notify: {
+      to: settings?.notifyTo,
+      from: settings?.notifyFrom,
+    },
+  })
   payload.logger.info(
     `Enquiry ${input.submissionReference} saved. Notification ${result.status}. ${result.detail}`,
   )

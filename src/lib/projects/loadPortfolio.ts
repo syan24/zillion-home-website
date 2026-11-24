@@ -147,7 +147,8 @@ export async function loadPortfolio(locale: SiteLocale, filters: ProjectFilters)
     }),
     payload.find({
       collection: 'spaces',
-      limit: 50,
+      where: { active: { equals: true } },
+      limit: 200,
       sort: 'displayOrder',
       pagination: false,
       ...localeOptions,

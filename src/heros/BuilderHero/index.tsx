@@ -8,6 +8,7 @@ import { resolveMedia } from '@/components/Marketing/media'
 type BuilderHeroProps = {
   eyebrow?: string | null
   headline?: string | null
+  headlineAccent?: string | null
   description?: string | null
   badgePrimary?: string | null
   badgeSecondary?: string | null
@@ -30,6 +31,7 @@ type BuilderHeroProps = {
 export const BuilderHero: React.FC<BuilderHeroProps> = ({
   eyebrow,
   headline,
+  headlineAccent,
   description,
   badgePrimary,
   badgeSecondary,
@@ -58,24 +60,17 @@ export const BuilderHero: React.FC<BuilderHeroProps> = ({
     })
     .filter((link) => link.label && link.href)
 
-  const buttonLinks =
-    links == null
-      ? [{ label: 'Start an Enquiry →', href: '/enquiry', variant: 'enquiry' as const }]
-      : mappedLinks
-
   return (
     <HomeHero
-      eyebrow={eyebrow ?? 'Builders & Joiners · Est. Melbourne'}
-      headline={headline ?? 'Built from the ground up.'}
-      description={
-        description ??
-        'Residential construction, renovation, commercial fit-out and custom joinery — delivered by one team, with precision and care.'
-      }
+      eyebrow={eyebrow}
+      headline={headline}
+      headlineAccent={headlineAccent}
+      description={description}
       image={resolveMedia(media)}
-      badgePrimary={badgePrimary ?? 'Residential'}
-      badgeSecondary={badgeSecondary ?? 'Commercial'}
-      badgeMuted={badgeMuted ?? 'Joinery'}
-      links={buttonLinks}
+      badgePrimary={badgePrimary}
+      badgeSecondary={badgeSecondary}
+      badgeMuted={badgeMuted}
+      links={mappedLinks}
     />
   )
 }

@@ -1,17 +1,5 @@
 import { isProjectType, type ProjectType } from '@/lib/projects/types'
 
-export const roomSlugs = [
-  'kitchen',
-  'bathroom',
-  'living',
-  'bedroom',
-  'wardrobe',
-  'laundry',
-  'home-office',
-  'outdoor',
-] as const
-
-export type RoomSlug = (typeof roomSlugs)[number]
 export type ProjectTypeFilter = ProjectType
 
 export type ProjectFilters = {

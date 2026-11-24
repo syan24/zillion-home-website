@@ -75,5 +75,24 @@ describe('editor strings render as stored', () => {
     expect(screen.getByText('Keep Residential')).toBeTruthy()
     expect(screen.getByText('Interior Fit-out')).toBeTruthy()
     expect(screen.queryByText('Our Services')).toBeNull()
+    expect(screen.queryByText('Start an Enquiry →')).toBeNull()
+  })
+
+  it('does not invent a features label or a header enquiry button', () => {
+    render(
+      <ServiceDetails
+        services={[{ anchor: 'joinery', title: 'Custom Joinery', features: [{ text: 'Wardrobes' }] }]}
+      />,
+    )
+    expect(screen.queryByText('What we deliver')).toBeNull()
+    expect(screen.getByText('Wardrobes')).toBeTruthy()
+
+    render(
+      <HeaderNav
+        data={{ id: 1, navItems: [], secondaryNavItems: [], updatedAt: '', createdAt: '' }}
+        locale="en"
+      />,
+    )
+    expect(screen.queryByRole('link', { name: 'Start an Enquiry →' })).toBeNull()
   })
 })

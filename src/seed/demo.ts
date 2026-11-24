@@ -4,11 +4,14 @@ import { seedEnquiry } from '@/seed/enquiry'
 import { seedEnquiryForm } from '@/seed/enquiryForm'
 import { seedPortfolio } from '@/seed/portfolio'
 import { seedSwms } from '@/seed/swms'
+import { seedEditorial } from '@/seed/editorial'
 import { seedWebsite } from '@/seed/website'
 
 export async function seedDemo(payload: Payload) {
   console.log('Seeding website baseline...')
   await seedWebsite(payload)
+  console.log('Seeding editorial fields...')
+  await seedEditorial(payload)
   console.log('Seeding project portfolio...')
   await seedPortfolio(payload)
   console.log('Seeding SWMS demo...')

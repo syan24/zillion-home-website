@@ -19,6 +19,7 @@ export const homeContentZh = {
     ...homeContent.hero,
     eyebrow: '建筑与木作 · 墨尔本',
     headline: '从施工落地开始。',
+    headlineAccent: '开始',
     description: '住宅施工、翻新、商业装修与定制木作，由同一个团队完成，讲究精度和用心。',
     badgePrimary: '住宅',
     badgeSecondary: '商业',
@@ -91,6 +92,7 @@ export const homeContentZh = {
   },
   cta: {
     ...homeContent.cta,
+    eyebrow: '开始一个项目',
     heading: '准备开始您的项目？',
     body: '告诉我们您的想法。我们会用扎实的施工、精确的木作和清楚的项目交付，帮您把它做出来。',
     links: [enquiryLink],
@@ -127,6 +129,7 @@ export const aboutContentZh = {
   },
   cta: {
     ...aboutContent.cta,
+    eyebrow: '开始一个项目',
     heading: '一起把项目做出来',
     body: '准备开始了吗？联系我们，说说您的想法。我们会给出建议，并帮您迈出下一步。',
     links: [enquiryLink, { label: '查看服务', href: '/services', variant: 'outline' as const }],
@@ -145,6 +148,7 @@ export const servicesContentZh = {
     description: '三项核心业务由同一个团队完成：住宅施工与翻新、商业装修和定制木作。',
   },
   details: {
+    featuresLabel: '交付内容',
     services: [
       {
         ...servicesContent.details.services[0],
@@ -189,6 +193,7 @@ export const servicesContentZh = {
   },
   cta: {
     ...servicesContent.cta,
+    eyebrow: '开始一个项目',
     heading: '准备谈谈您的项目？',
     body: '告诉我们需求，我们会说明可以如何把您的想法做出来。',
     links: [enquiryLink],

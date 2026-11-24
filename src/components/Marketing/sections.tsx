@@ -113,13 +113,6 @@ export function goldPhrase(text?: string | null, phrase?: string | null, accentC
   )
 }
 
-function homeAccent(headline?: string | null) {
-  const value = headline || ''
-  if (/ground/i.test(value)) return 'ground'
-  if (value.includes('开始')) return '开始'
-  return null
-}
-
 function flowingTitle(heading?: string | null, accent?: string | null) {
   const lead = (heading || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
   const mark = (accent || '').replace(/\s*\n\s*/g, ' ').replace(/[ \t]+/g, ' ').trim()
@@ -169,6 +162,7 @@ export function MarketingLinks({
 export function HomeHero({
   eyebrow,
   headline,
+  headlineAccent,
   description,
   image,
   badgePrimary,
@@ -178,6 +172,7 @@ export function HomeHero({
 }: {
   eyebrow?: string | null
   headline?: string | null
+  headlineAccent?: string | null
   description?: string | null
   image?: MarketingImage | null
   badgePrimary?: string | null
@@ -206,7 +201,7 @@ export function HomeHero({
           </Eyebrow>
           {headline && (
             <h1 className={cn(display, 'w-full max-w-[12ch] text-[clamp(56px,9vw,148px)] leading-[0.92]')}>
-              {goldPhrase(headline, homeAccent(headline))}
+              {goldPhrase(headline, headlineAccent)}
             </h1>
           )}
         </div>
@@ -702,13 +697,8 @@ export function ProcessSection({
 }) {
   const list = steps || []
   const columns = list.length > 4 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'
-  const chinese = Boolean(
-    trustItems?.some((item) => item.title?.match(/[\u4e00-\u9fff]/)) ||
-      trustHeading?.match(/[\u4e00-\u9fff]/) ||
-      heading?.match(/[\u4e00-\u9fff]/),
-  )
-  const whyEyebrow = trustEyebrow || (chinese ? '为什么选择 Zillion Home' : 'Why Zillion Home')
-  const whyHeading = trustHeading || (chinese ? '始终把整体放在心里。' : 'Built with the bigger picture in mind.')
+  const whyEyebrow = trustEyebrow || ''
+  const whyHeading = trustHeading || ''
 
   return (
     <>
@@ -748,9 +738,11 @@ export function ProcessSection({
           <div className={cn(wrap, 'flex flex-col gap-16 border-t border-border pt-[clamp(80px,8vw,120px)]')}>
             <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
               <Eyebrow>{whyEyebrow}</Eyebrow>
-              <h2 className={cn(display, 'max-w-[18ch] text-[clamp(36px,4vw,60px)] italic leading-tight')}>
-                {whyHeading}
-              </h2>
+              {whyHeading ? (
+                <h2 className={cn(display, 'max-w-[18ch] text-[clamp(36px,4vw,60px)] italic leading-tight')}>
+                  {whyHeading}
+                </h2>
+              ) : null}
             </div>
             <div className="grid gap-12 md:grid-cols-3">
               {trustItems.map((item) => (
@@ -797,12 +789,14 @@ export function CategoryBar({
 }
 
 export function CtaBand({
+  eyebrow,
   tone = 'dark',
   heading,
   body,
   links,
   image,
 }: {
+  eyebrow?: string | null
   tone?: 'dark' | 'light' | null
   heading?: string | null
   body?: string | null
@@ -811,7 +805,6 @@ export function CtaBand({
 }) {
   const photo = Boolean(image?.src)
   const dark = photo || tone !== 'light'
-  const chinese = Boolean(heading?.match(/[\u4e00-\u9fff]/) || body?.match(/[\u4e00-\u9fff]/))
   const lastSpace = heading ? heading.lastIndexOf(' ') : -1
   const headingLead = lastSpace > 0 ? heading!.slice(0, lastSpace) : heading
   const headingAccent = lastSpace > 0 ? heading!.slice(lastSpace + 1) : null
@@ -835,9 +828,7 @@ export function CtaBand({
         </div>
       )}
       <div className={cn(wrap, 'relative flex flex-col items-center gap-8 py-[clamp(100px,11vw,170px)] text-center')}>
-        <Eyebrow tone={photo ? 'photo' : dark ? 'dark' : 'light'}>
-          {chinese ? '开始一个项目' : 'Begin a project'}
-        </Eyebrow>
+        <Eyebrow tone={photo ? 'photo' : dark ? 'dark' : 'light'}>{eyebrow}</Eyebrow>
         {heading && (
           <h2 className={cn(display, 'max-w-[16ch] text-[clamp(44px,5.6vw,92px)] leading-none')}>
             {headingLead}
@@ -860,7 +851,7 @@ export function CtaBand({
 
 export function ServiceDetails({
   services,
-  featuresLabel = 'What we deliver',
+  featuresLabel,
 }: {
   services?: {
     anchor?: string | null
@@ -913,7 +904,9 @@ export function ServiceDetails({
             {service.description && <p className="max-w-lg text-base leading-8 text-foreground-soft">{service.description}</p>}
             {!!service.features?.length && (
               <div>
-                <p className="pb-2.5 text-[10px] uppercase tracking-[0.34em] text-muted-foreground">{featuresLabel}</p>
+                {featuresLabel ? (
+                  <p className="pb-2.5 text-[10px] uppercase tracking-[0.34em] text-muted-foreground">{featuresLabel}</p>
+                ) : null}
                 <ul className="grid list-none sm:grid-cols-2 sm:gap-x-8">
                   {service.features.map((feature) => (
                     <li key={feature.text} className="border-t border-border py-3.5 text-[15px]">

@@ -209,8 +209,8 @@ describe('enquiry mail plan', () => {
       expect(result.status).toBe('sent')
       const body = JSON.parse(calls[0] || '{}') as { text?: string; to?: string[] }
       expect(body.to).toEqual(['office@example.com'])
-      expect(body.text).toContain('Project type: Commercial')
-      expect(body.text).toContain('Scope: Office Fit-out, Other')
+      expect(body.text).toContain('Project type: commercial')
+      expect(body.text).toContain('Scope: office-fit-out, commercial-other')
     } finally {
       globalThis.fetch = original
     }
@@ -236,6 +236,49 @@ describe('enquiry mail plan', () => {
       env: {},
     })
     expect(result.status).toBe('skipped')
+  })
+
+  it('uses saved form labels and a saved recipient before the environment', async () => {
+    const calls: string[] = []
+    const original = globalThis.fetch
+    globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
+      calls.push(String(init?.body || ''))
+      return new Response('{}', { status: 200 })
+    }) as typeof fetch
+    try {
+      const result = await sendEnquiryNotification({
+        enquiry: {
+          clientSubmissionId: valid.clientSubmissionId,
+          name: 'Alex Chen',
+          phone: '',
+          email: 'alex@example.com',
+          address: 'Richmond',
+          projectType: 'commercial',
+          scope: ['office-fit-out'],
+          spaces: [],
+          notes: '',
+        },
+        locale: 'zh',
+        submissionReference: 'ENQ-2603',
+        attachmentNames: [],
+        adminURL: 'http://localhost:3000/admin/collections/enquiries/3',
+        env: {
+          ENQUIRY_NOTIFY_TO: 'env@example.com',
+          ENQUIRY_NOTIFY_FROM: 'Env <env@example.com>',
+          RESEND_API_KEY: 're_test',
+        },
+        labels: { commercial: '商业装修', 'office-fit-out': '办公室装修' },
+        notify: { to: 'saved@example.com', from: 'Saved <saved@example.com>' },
+      })
+      expect(result.status).toBe('sent')
+      const body = JSON.parse(calls[0] || '{}') as { text?: string; to?: string[] }
+      expect(body.to).toEqual(['saved@example.com'])
+      expect(body.text).toContain('Project type: 商业装修')
+      expect(body.text).toContain('Scope: 办公室装修')
+      expect(body.text).not.toContain('Commercial')
+    } finally {
+      globalThis.fetch = original
+    }
   })
 
   it('uses SMTP when Resend is absent', () => {

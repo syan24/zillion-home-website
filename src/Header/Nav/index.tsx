@@ -27,36 +27,13 @@ const menuType = 'font-sans text-[11px] font-light uppercase tracking-[0.24em]'
 
 const linkClass = cn(menuType, 'text-current no-underline transition-opacity hover:no-underline hover:opacity-70')
 
-function defaultPrimary(locale: SiteLocale): NavItemRecord[] {
-  return [
-    { link: { type: 'custom', url: '/', label: locale === 'zh' ? '首页' : 'Home' } },
-    {
-      link: { type: 'custom', url: '/services', label: locale === 'zh' ? '我们的服务' : 'Our Services' },
-      children: [
-        { link: { type: 'custom', url: '/services#residential', label: locale === 'zh' ? '住宅施工' : 'Residential' } },
-        { link: { type: 'custom', url: '/services#commercial', label: locale === 'zh' ? '商业装修' : 'Commercial' } },
-        { link: { type: 'custom', url: '/services#joinery', label: locale === 'zh' ? '定制木作' : 'Custom Joinery' } },
-      ],
-    },
-  ]
-}
-
-function defaultSecondary(locale: SiteLocale): NavItemRecord[] {
-  return [
-    { link: { type: 'custom', url: '/projects', label: locale === 'zh' ? '项目' : 'Projects' } },
-    { link: { type: 'custom', url: '/about', label: locale === 'zh' ? '关于我们' : 'About Us' } },
-  ]
-}
-
 export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = false, onDark = false }) => {
   const copy = getMessages(locale)
   const pathname = usePathname()
-  const cmsNavItems = asNavItems(data?.navItems)
-  const cmsSecondaryItems = asNavItems(data?.secondaryNavItems)
-  const seeded = Boolean(data?.contentSeeded)
-  const navItems = cmsNavItems.length > 0 ? cmsNavItems : seeded ? [] : defaultPrimary(locale)
-  const secondaryItems =
-    cmsSecondaryItems.length > 0 ? cmsSecondaryItems : seeded ? [] : defaultSecondary(locale)
+  const navItems = asNavItems(data?.navItems)
+  const secondaryItems = asNavItems(data?.secondaryNavItems)
+  const enquiryLabel = data?.enquiryLabel?.trim() || ''
+  const enquiryUrl = data?.enquiryUrl?.trim() || ''
 
   const active = (href: string) => {
     const path = href.split('#')[0] || '/'
@@ -110,18 +87,20 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ data, locale, mobile = fal
           </form>
         </div>
 
-        <Button
-          asChild
-          variant={onDark ? 'outlineDark' : 'enquiry'}
-          className={cn(
-            menuType,
-            'h-auto rounded-none px-5 py-3 shadow-none',
-            mobile && 'w-full',
-            onDark && 'border-current text-current hover:bg-white/10',
-          )}
-        >
-          <Link href="/enquiry">{copy.enquiryCta}</Link>
-        </Button>
+        {enquiryLabel && enquiryUrl ? (
+          <Button
+            asChild
+            variant={onDark ? 'outlineDark' : 'enquiry'}
+            className={cn(
+              menuType,
+              'h-auto rounded-none px-5 py-3 shadow-none',
+              mobile && 'w-full',
+              onDark && 'border-current text-current hover:bg-white/10',
+            )}
+          >
+            <Link href={enquiryUrl}>{enquiryLabel}</Link>
+          </Button>
+        ) : null}
       </div>
     </nav>
   )

@@ -1,4 +1,4 @@
-import { MigrateUpArgs, MigrateDownArgs } from '@payloadcms/db-postgres'
+import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 import { applyEditorBaseline } from '@/seed/editorBaseline'
 
@@ -11,7 +11,13 @@ import { applyEditorBaseline } from '@/seed/editorBaseline'
  * no backup of the values this migration changes. Seed after this migration
  * only creates missing pages and an empty header or footer.
  */
-export async function up({ payload }: MigrateUpArgs): Promise<void> {
+export async function up({ db, payload }: MigrateUpArgs): Promise<void> {
+  // Later fields are part of the current Local API select list. A brand-new
+  // database has no pages yet, so this one-off has nothing to correct. The
+  // first seed writes the current baseline after every column exists.
+  const result = await db.execute<{ count: number }>(sql`SELECT count(*)::int AS count FROM "pages"`)
+  const count = Number(result.rows?.[0]?.count ?? 0)
+  if (count === 0) return
   await applyEditorBaseline(payload)
 }
 

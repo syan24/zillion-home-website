@@ -139,10 +139,16 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    'projects-page': ProjectsPage;
+    'enquiry-page': EnquiryPage;
+    'enquiry-notifications': EnquiryNotification;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    'projects-page': ProjectsPageSelect<false> | ProjectsPageSelect<true>;
+    'enquiry-page': EnquiryPageSelect<false> | EnquiryPageSelect<true>;
+    'enquiry-notifications': EnquiryNotificationsSelect<false> | EnquiryNotificationsSelect<true>;
   };
   locale: 'en' | 'zh';
   widgets: {
@@ -189,9 +195,13 @@ export interface Page {
     type: 'none' | 'builder' | 'highImpact' | 'mediumImpact' | 'lowImpact';
     eyebrow?: string | null;
     /**
-     * Wraps on its own. In the default headline, the word “ground” is shown in gold italic.
+     * Wraps on its own.
      */
     headline?: string | null;
+    /**
+     * Words from the headline shown in gold italic. Leave empty for no accent.
+     */
+    headlineAccent?: string | null;
     description?: string | null;
     badgePrimary?: string | null;
     badgeSecondary?: string | null;
@@ -933,8 +943,14 @@ export interface CategoryBarBlock {
  */
 export interface CtaBandBlock {
   tone?: ('dark' | 'light') | null;
+  eyebrow?: string | null;
   heading?: string | null;
   body?: string | null;
+  image?: (number | null) | Media;
+  /**
+   * Overrides the alt text stored on the media item for this placement.
+   */
+  imageAlt?: string | null;
   links?:
     | {
         label: string;
@@ -988,6 +1004,10 @@ export interface CapabilityListBlock {
  * via the `definition` "ServiceDetailsBlock".
  */
 export interface ServiceDetailsBlock {
+  /**
+   * Shown above the feature list. Home and services can use different wording.
+   */
+  featuresLabel?: string | null;
   services?:
     | {
         /**
@@ -1975,6 +1995,7 @@ export interface PagesSelect<T extends boolean = true> {
         type?: T;
         eyebrow?: T;
         headline?: T;
+        headlineAccent?: T;
         description?: T;
         badgePrimary?: T;
         badgeSecondary?: T;
@@ -2221,8 +2242,11 @@ export interface CategoryBarBlockSelect<T extends boolean = true> {
  */
 export interface CtaBandBlockSelect<T extends boolean = true> {
   tone?: T;
+  eyebrow?: T;
   heading?: T;
   body?: T;
+  image?: T;
+  imageAlt?: T;
   links?:
     | T
     | {
@@ -2267,6 +2291,7 @@ export interface CapabilityListBlockSelect<T extends boolean = true> {
  * via the `definition` "ServiceDetailsBlock_select".
  */
 export interface ServiceDetailsBlockSelect<T extends boolean = true> {
+  featuresLabel?: T;
   services?:
     | T
     | {
@@ -3084,6 +3109,14 @@ export interface Header {
    * Set when the first seed fills an empty header. Later seeds do not refill fields an editor cleared.
    */
   contentSeeded?: boolean | null;
+  /**
+   * Shown at the end of the header. Leave empty to hide the button.
+   */
+  enquiryLabel?: string | null;
+  /**
+   * Path or URL for the header enquiry button.
+   */
+  enquiryUrl?: string | null;
   navItems?:
     | {
         link: {
@@ -3188,11 +3221,100 @@ export interface Footer {
   createdAt?: string | null;
 }
 /**
+ * Public portfolio introduction, gallery hero, view labels, project-type chip labels, and the closing band. Room chips come from Spaces.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects-page".
+ */
+export interface ProjectsPage {
+  id: number;
+  contentSeeded?: boolean | null;
+  eyebrow?: string | null;
+  heading?: string | null;
+  headingAccent?: string | null;
+  intro?: string | null;
+  /**
+   * Large image at the top of the projects page. Leave empty for no photo.
+   */
+  hero?: (number | null) | Media;
+  heroAlt?: string | null;
+  byProject?: string | null;
+  byRoom?: string | null;
+  typeHeading?: string | null;
+  filterHeading?: string | null;
+  /**
+   * Public names for the existing project type values. The value stays in the address (?type=residential) and on each project. Drag to reorder. Turn Active off to hide a chip and filter.
+   */
+  types?:
+    | {
+        value: 'residential' | 'commercial' | 'joinery';
+        label: string;
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  bandEyebrow?: string | null;
+  bandHeading?: string | null;
+  bandAccent?: string | null;
+  enquireLabel?: string | null;
+  enquireUrl?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * The public introduction beside and above the enquiry form. Questions, options, and the submit button are edited on the Enquiry form.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-page".
+ */
+export interface EnquiryPage {
+  id: number;
+  contentSeeded?: boolean | null;
+  overlayEyebrow?: string | null;
+  overlayTitle?: string | null;
+  overlayAccent?: string | null;
+  overlayBody?: string | null;
+  overlayLine1?: string | null;
+  overlayLine2?: string | null;
+  image?: (number | null) | Media;
+  imageAlt?: string | null;
+  formEyebrow?: string | null;
+  formHeading?: string | null;
+  formIntro?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Who receives a new enquiry, and the From address. Leave a field empty to use ENQUIRY_NOTIFY_TO or ENQUIRY_NOTIFY_FROM. API keys and SMTP passwords stay in the host environment and are not stored here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-notifications".
+ */
+export interface EnquiryNotification {
+  id: number;
+  /**
+   * One or more email addresses, separated by commas. Not shown on the public site.
+   */
+  notifyTo?: string | null;
+  /**
+   * From address, for example Name <hello@example.com>. Not shown on the public site.
+   */
+  notifyFrom?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
   contentSeeded?: T;
+  enquiryLabel?: T;
+  enquiryUrl?: T;
   navItems?:
     | T
     | {
@@ -3276,6 +3398,75 @@ export interface FooterSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "projects-page_select".
+ */
+export interface ProjectsPageSelect<T extends boolean = true> {
+  contentSeeded?: T;
+  eyebrow?: T;
+  heading?: T;
+  headingAccent?: T;
+  intro?: T;
+  hero?: T;
+  heroAlt?: T;
+  byProject?: T;
+  byRoom?: T;
+  typeHeading?: T;
+  filterHeading?: T;
+  types?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        active?: T;
+        id?: T;
+      };
+  bandEyebrow?: T;
+  bandHeading?: T;
+  bandAccent?: T;
+  enquireLabel?: T;
+  enquireUrl?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-page_select".
+ */
+export interface EnquiryPageSelect<T extends boolean = true> {
+  contentSeeded?: T;
+  overlayEyebrow?: T;
+  overlayTitle?: T;
+  overlayAccent?: T;
+  overlayBody?: T;
+  overlayLine1?: T;
+  overlayLine2?: T;
+  image?: T;
+  imageAlt?: T;
+  formEyebrow?: T;
+  formHeading?: T;
+  formIntro?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "enquiry-notifications_select".
+ */
+export interface EnquiryNotificationsSelect<T extends boolean = true> {
+  notifyTo?: T;
+  notifyFrom?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

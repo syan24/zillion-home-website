@@ -99,6 +99,7 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
           type: 'builder' as const,
           eyebrow: homeContent.hero.eyebrow,
           headline: homeContent.hero.headline,
+          headlineAccent: homeContent.hero.headlineAccent,
           description: homeContent.hero.description,
           badgePrimary: homeContent.hero.badgePrimary,
           badgeSecondary: homeContent.hero.badgeSecondary,
@@ -169,8 +170,11 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
           {
             blockType: 'ctaBand' as const,
             tone: homeContent.cta.tone,
+            eyebrow: homeContent.cta.eyebrow,
             heading: homeContent.cta.heading,
             body: homeContent.cta.body,
+            image: ids.serviceJoinery,
+            imageAlt: 'Custom joinery',
             links: bandLinks(homeContent.cta.links),
           },
         ],
@@ -216,6 +220,7 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
           {
             blockType: 'ctaBand' as const,
             tone: aboutContent.cta.tone,
+            eyebrow: aboutContent.cta.eyebrow,
             heading: aboutContent.cta.heading,
             body: aboutContent.cta.body,
             links: bandLinks(aboutContent.cta.links),
@@ -248,6 +253,7 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
           },
           {
             blockType: 'serviceDetails' as const,
+            featuresLabel: servicesContent.details.featuresLabel,
             services: servicesContent.details.services.map((service) => ({
               anchor: service.anchor,
               title: service.title,
@@ -281,8 +287,11 @@ function pageDefinitions(copy: ReturnType<typeof getMarketing>, ids: MediaIds) {
           {
             blockType: 'ctaBand' as const,
             tone: servicesContent.cta.tone,
+            eyebrow: servicesContent.cta.eyebrow,
             heading: servicesContent.cta.heading,
             body: servicesContent.cta.body,
+            image: ids.heroHouse,
+            imageAlt: 'House at dusk',
             links: bandLinks(servicesContent.cta.links),
           },
         ],
@@ -617,6 +626,8 @@ async function seedGlobals(payload: Payload) {
     if (!header.secondaryNavItems?.length) {
       headerData.secondaryNavItems = english.header.secondary.map(navLink)
     }
+    if (!header.enquiryLabel) headerData.enquiryLabel = 'Start an Enquiry →'
+    if (!header.enquiryUrl) headerData.enquiryUrl = '/enquiry'
     await payload.updateGlobal({
       slug: 'header',
       overrideAccess: true,
@@ -666,17 +677,18 @@ async function fillHeaderLocale(
   })
   const navItems = localizeNav(header.navItems, copy.primary)
   const secondaryNavItems = localizeNav(header.secondaryNavItems, copy.secondary)
-  if (!navItems && !secondaryNavItems) return 'header: zh kept'
+  const data: Record<string, unknown> = {}
+  if (navItems) data.navItems = navItems
+  if (secondaryNavItems) data.secondaryNavItems = secondaryNavItems
+  if (!header.enquiryLabel) data.enquiryLabel = '开始咨询 →'
+  if (!Object.keys(data).length) return 'header: zh kept'
 
   await payload.updateGlobal({
     slug: 'header',
     overrideAccess: true,
     locale: 'zh' as TypedLocale,
     context: seedContext,
-    data: {
-      ...(navItems ? { navItems } : {}),
-      ...(secondaryNavItems ? { secondaryNavItems } : {}),
-    },
+    data,
   })
   return 'header: zh filled'
 }

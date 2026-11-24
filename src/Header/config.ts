@@ -22,6 +22,20 @@ export const Header: GlobalConfig = {
       },
     },
     {
+      name: 'enquiryLabel',
+      type: 'text',
+      localized: true,
+      label: 'Enquiry button',
+      admin: { description: 'Shown at the end of the header. Leave empty to hide the button.' },
+    },
+    {
+      name: 'enquiryUrl',
+      type: 'text',
+      label: 'Enquiry button link',
+      defaultValue: '/enquiry',
+      admin: { description: 'Path or URL for the header enquiry button.' },
+    },
+    {
       name: 'navItems',
       type: 'array',
       fields: [

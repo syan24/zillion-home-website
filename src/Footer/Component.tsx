@@ -2,7 +2,6 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import Link from 'next/link'
 import React from 'react'
 
-import { getMarketing } from '@/content/getMarketing'
 import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
 import { getLocale } from '@/i18n/getLocale'
@@ -11,14 +10,12 @@ import { getMessages } from '@/i18n/messages'
 export async function Footer() {
   const locale = await getLocale()
   const copy = getMessages(locale)
-  const footerContent = getMarketing(locale).footer
   const footerData = await getCachedGlobal('footer', 1, locale)()
-  const seeded = Boolean(footerData?.contentSeeded)
   const navItems = footerData?.navItems ?? []
   const serviceLinks = footerData?.serviceLinks ?? []
-  const blurb = seeded ? footerData?.blurb || '' : footerData?.blurb || footerContent.blurb
-  const tagline = seeded ? footerData?.tagline || '' : footerData?.tagline || footerContent.tagline
-  const location = seeded ? footerData?.location || '' : footerData?.location || footerContent.location
+  const blurb = footerData?.blurb || ''
+  const tagline = footerData?.tagline || ''
+  const location = footerData?.location || ''
   const legal = [
     { name: copy.footer.privacy, href: '/privacy' },
     { name: copy.footer.terms, href: '/terms' },
@@ -41,28 +38,16 @@ export async function Footer() {
 
           <div className="flex flex-col gap-3.5 text-sm">
             <h3 className={columnLabel}>{copy.footer.services}</h3>
-            {serviceLinks.length > 0
-              ? serviceLinks.map(({ link }, i) => <CMSLink key={i} {...link} className={itemClass} />)
-              : seeded
-                ? null
-                : footerContent.services.map((item) => (
-                  <Link key={item.href} href={item.href} className={itemClass}>
-                    {item.label}
-                  </Link>
-                ))}
+            {serviceLinks.map(({ link }, i) => (
+              <CMSLink key={i} {...link} className={itemClass} />
+            ))}
           </div>
 
           <div className="flex flex-col gap-3.5 text-sm">
             <h3 className={columnLabel}>{copy.footer.company}</h3>
-            {navItems.length > 0
-              ? navItems.map(({ link }, i) => <CMSLink key={i} {...link} className={itemClass} />)
-              : seeded
-                ? null
-                : footerContent.company.map((item) => (
-                  <Link key={item.href} href={item.href} className={itemClass}>
-                    {item.label}
-                  </Link>
-                ))}
+            {navItems.map(({ link }, i) => (
+              <CMSLink key={i} {...link} className={itemClass} />
+            ))}
             {location && <span>{location}</span>}
           </div>
         </div>
