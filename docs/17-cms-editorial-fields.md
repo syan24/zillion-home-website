@@ -38,6 +38,8 @@ Notification API keys and SMTP passwords are not copied into the CMS and are not
 
 Saving Header, Footer, Projects page, or Enquiry page in the running site clears that global’s cache. The next request shows the save. A seed writes with revalidation disabled and does not clear the running cache by itself.
 
+The enquiry form is read for the locale in the request, with no fallback to the other language. Select placeholders were previously one shared column. Saving the Chinese demo text wrote it for both languages, and migration `20261123_150000_editor_content_schema` copied that same string onto the English row. Migration `20261124_090000_enquiry_locale_leak` replaces an English string only when it is still exactly that known Chinese demo text for the same field, option, submit button, or confirmation. A custom value and a blank stay. The Chinese row is not rewritten, and later seeds do not run the repair again.
+
 ## Service names are not synchronised
 
 | Placement | Admin path |
