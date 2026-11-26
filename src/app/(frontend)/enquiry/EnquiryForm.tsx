@@ -433,7 +433,7 @@ export function EnquiryForm({
 
       <div className="flex flex-col gap-4 border-t border-border pt-8">
         <div className="flex flex-wrap items-center justify-between gap-6">
-          <p className="max-w-sm text-xs leading-7 text-muted-foreground">{copy.consent}</p>
+          <ConsentNotice text={copy.consent} />
           <Button
             type="submit"
             size="lg"
@@ -445,6 +445,24 @@ export function EnquiryForm({
         </div>
       </div>
     </form>
+  )
+}
+
+function ConsentNotice({ text }: { text: string }) {
+  const label = text.includes('隐私政策') ? '隐私政策' : 'privacy policy'
+  const index = text.indexOf(label)
+  if (index < 0) {
+    return <p className="max-w-sm text-xs leading-7 text-muted-foreground">{text}</p>
+  }
+
+  return (
+    <p className="max-w-sm text-xs leading-7 text-muted-foreground">
+      {text.slice(0, index)}
+      <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+        {text.slice(index, index + label.length)}
+      </Link>
+      {text.slice(index + label.length)}
+    </p>
   )
 }
 

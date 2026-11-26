@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import type { Payload, TypedLocale } from 'payload'
 
 import { getMarketing } from '@/content/getMarketing'
+import { legalPageDefinitions, pageLayoutIsEmpty } from '@/content/legalPages'
 import {
   marketingImages,
   type ImageRef,
@@ -538,16 +539,33 @@ async function alignPhase1Page(
   return `page ${saved.slug}: phase 1 copy aligned (${locale})`
 }
 
+const legalSlugs = new Set(['privacy', 'terms'])
+
+const chinesePageTitles: Record<string, string> = {
+  home: '首页',
+  about: '关于我们',
+  services: '服务',
+  privacy: '隐私政策',
+  terms: '服务条款',
+}
+
+/**
+ * Privacy and Terms are created when missing. An empty layout is filled once
+ * and published. A layout an editor has saved is left as stored. Chinese copy
+ * is written when that locale has no title yet, or when the layout was empty
+ * and has just been filled.
+ */
 async function seedPages(payload: Payload, ids: MediaIds) {
-  const english = pageDefinitions(getMarketing('en'), ids)
-  const chinese = pageDefinitions(getMarketing('zh'), ids)
+  const english = [...pageDefinitions(getMarketing('en'), ids), ...legalPageDefinitions('en')]
+  const chinese = [...pageDefinitions(getMarketing('zh'), ids), ...legalPageDefinitions('zh')]
   const summary: string[] = []
 
   for (const page of english) {
     const zhPage = chinese.find((item) => item.slug === page.slug)
     const existing = await findPage(payload, page.slug)
     let id = existing?.id
-    const draft = existing?.draft ?? false
+    let draft = existing?.draft ?? false
+    let filledEmptyLayout = false
 
     if (!id) {
       const created = await payload.create({
@@ -559,7 +577,41 @@ async function seedPages(payload: Payload, ids: MediaIds) {
         data: page.data,
       })
       id = created.id
+      draft = false
       summary.push(`page ${page.slug}: created`)
+    } else if (legalSlugs.has(page.slug)) {
+      const enSaved = await payload.findByID({
+        collection: 'pages',
+        id,
+        depth: 0,
+        draft,
+        locale: 'en',
+        fallbackLocale: false,
+        overrideAccess: true,
+      })
+      if (pageLayoutIsEmpty(enSaved.layout)) {
+        await payload.update({
+          collection: 'pages',
+          id,
+          draft: false,
+          locale: 'en',
+          overrideAccess: true,
+          context: seedContext,
+          data: {
+            title: enSaved.title || page.data.title,
+            ...(heroIsUntouched(enSaved.hero) ? { hero: page.data.hero } : {}),
+            layout: page.data.layout as never,
+            meta: withBlankMeta(enSaved.meta, page.data.meta) as never,
+            _status: 'published',
+            generateSlug: false,
+          },
+        })
+        draft = false
+        filledEmptyLayout = true
+        summary.push(`page ${page.slug}: english filled`)
+      } else {
+        summary.push(`page ${page.slug}: english kept`)
+      }
     } else {
       summary.push(`page ${page.slug}: english kept`)
     }
@@ -576,7 +628,7 @@ async function seedPages(payload: Payload, ids: MediaIds) {
       overrideAccess: true,
     })
 
-    if (zhSaved.title) {
+    if (zhSaved.title && !filledEmptyLayout) {
       summary.push(`page ${page.slug}: zh kept`)
       continue
     }
@@ -599,16 +651,34 @@ async function seedPages(payload: Payload, ids: MediaIds) {
       overrideAccess: true,
       context: seedContext,
       data: {
-        title: ({ home: '首页', about: '关于我们', services: '服务' } as Record<string, string>)[page.slug] || zhPage.data.title,
+        title: zhSaved.title || chinesePageTitles[page.slug] || zhPage.data.title,
         hero: mergeLocale(enSaved.hero, zhPage.data.hero) as never,
         layout: mergeLocale(enSaved.layout, zhPage.data.layout) as never,
-        meta: mergeLocale(enSaved.meta, zhPage.data.meta) as never,
+        meta: (zhSaved.title
+          ? withBlankMeta(zhSaved.meta, zhPage.data.meta)
+          : mergeLocale(enSaved.meta, zhPage.data.meta)) as never,
       },
     })
     summary.push(`page ${page.slug}: zh filled`)
   }
 
   return summary
+}
+
+function heroIsUntouched(hero: unknown) {
+  if (!isRecord(hero)) return true
+  if (hero.type === 'builder' || hero.type === 'highImpact' || hero.type === 'mediumImpact') return false
+  if (hero.richText || hero.headline || hero.description || hero.eyebrow) return false
+  return true
+}
+
+function withBlankMeta(current: unknown, seed: { title?: string; description?: string } | undefined) {
+  const meta = isRecord(current) ? { ...current } : {}
+  if ((typeof meta.title !== 'string' || !meta.title.trim()) && seed?.title) meta.title = seed.title
+  if ((typeof meta.description !== 'string' || !meta.description.trim()) && seed?.description) {
+    meta.description = seed.description
+  }
+  return meta
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

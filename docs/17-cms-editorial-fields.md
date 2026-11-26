@@ -21,12 +21,31 @@ An empty optional field stays empty. Pages, the Projects page, and the Enquiry p
 | Room chips and the room filter | Collections → Spaces. Active rooms are listed in Display order. Turning Active off removes the chip and the filter option. |
 | Enquiry side panel and the text above the form | Globals → Enquiry page |
 | Form questions, placeholders, option labels, submit button | Collections → Forms → the enquiry form |
+| Privacy Policy | Collections → Pages → Privacy Policy (slug `privacy`) |
+| Terms of Service | Collections → Pages → Terms of Service (slug `terms`) |
 | Who receives a new enquiry, and the From address | Globals → Enquiry notifications. Staff only. Empty fields use `ENQUIRY_NOTIFY_TO` and `ENQUIRY_NOTIFY_FROM`. |
 | Project title, type value, cover, gallery | Collections → Projects and Project images |
 
 Project type values stay `residential`, `commercial`, and `joinery`. The public name, order, and Active flag are on Globals → Projects page → Project types. A hidden type can still be opened with `?type=`. The address does not change.
 
 `/projects?view=project` is By Project. `/projects?view=room` is By Room. Each service’s “view related project” link still uses those addresses.
+
+## Privacy Policy and Terms of Service
+
+Visitors open `/privacy` and `/terms`. The footer links stay on those addresses. The page they see is the Pages document with that slug, in the locale selected on the site (English or 中文).
+
+| What visitors see | Admin path |
+| --- | --- |
+| Privacy Policy | Collections → Pages → Privacy Policy. Slug `privacy`. Chinese title 隐私政策. |
+| Terms of Service | Collections → Pages → Terms of Service. Slug `terms`. Chinese title 服务条款. |
+
+Switch the Admin locale and edit both English and 中文. The same slug is used for both. Hero type is None. The layout is one Page intro, then one Prose section for each heading. In a Prose section, separate paragraphs with a blank line.
+
+The first seed writes this version in both languages. A later seed creates a missing page, and fills a page whose layout is still empty. It does not replace a layout an editor has saved. Chinese is filled only when that page has no Chinese title yet, or when the layout was empty and has just been filled. To put the seed copy back, delete the page in Admin and run the seed again.
+
+The first version does not publish a legal entity name, ABN, postal address, or a dedicated privacy email. Those details are not on the public site. The page tells readers to ask through the enquiry form. Add them on the page if they should be published. Do not add a public draft banner.
+
+The enquiry form consent line links to `/privacy`. The consent sentence itself stays in `src/i18n/messages.ts`.
 
 ## First deploy of these fields
 
@@ -57,7 +76,7 @@ These stay in `src/i18n/messages.ts`. They are controls and status text, not the
 
 - Open and close menu, and the locale switch labels
 - Footer column headings (Services, Company, Get in Touch), privacy and terms link labels, and “All rights reserved.”
-- Not-found and the placeholder privacy and terms pages
+- Not-found, and the privacy and terms fallback. That fallback is the same first-version text, shown only when the Pages document has no layout. After seed, the Pages document is what visitors see.
 - Enquiry validation, file rules, consent, thank-you, and “form is not available”
 - Project controls: Filters, Apply, Clear, Close, All types, All spaces, All styles, All projects, empty states, image count, lightbox, copy link, back, and related projects
 
