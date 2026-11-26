@@ -4,7 +4,7 @@ Status: Stage 2 content path
 
 Primary marketing pages are Payload Pages. Admins edit them in **Pages**, plus **Header** and **Footer**. A fresh database does not show the Zillion Home design until `pnpm seed:demo` has run, or until a Vercel deploy runs with `SEED_DEMO=true`.
 
-Until that seed exists, Home, About and Services still render the previous hardcoded fallbacks. A published CMS page replaces the fallback. Deleting the page, or saving it with no hero and no blocks, brings the fallback back.
+Until that seed exists, Home, About and Services still render the previous hardcoded fallbacks. Privacy and Terms render the same first-version text from the interface dictionary until their Pages documents have a layout. A published CMS page replaces the fallback. Deleting the page, or saving it with no hero and no blocks, brings the fallback back.
 
 ## What admin can edit
 
@@ -16,6 +16,7 @@ Until that seed exists, Home, About and Services still render the previous hardc
 | Header navigation | Globals → Header | Primary links can include dropdown children. Our Services holds Residential, Commercial, and Custom Joinery. The beige **Start an Enquiry** button stays in code and always goes to `/enquiry` |
 | Footer | Globals → Footer | Blurb, tagline, location, service links, company links |
 | Images | Media, then the upload field on the hero or block | Replace the file in Media, or choose a different image on the block. Home 02 (“What makes us different”) still uses `feature-interior.jpg` and `trust-qualified.jpg`; those files are also used on Home 01 and About. No other seed photo shows drawings or an early design conversation, so the seed leaves them. Replace either card in Pages → Home |
+| Privacy Policy and Terms of Service | Pages → Privacy Policy (`privacy`) and Terms of Service (`terms`) | English and 中文 on the same document. See `docs/17-cms-editorial-fields.md` |
 
 Marketing blocks (group **Marketing** in the layout editor):
 
@@ -66,7 +67,6 @@ These are intentionally not CMS pages in this stage:
 | Header enquiry button | Always the beige enquiry style, always `/enquiry` |
 | EN / 中文 toggle | Sets a `locale` cookie and switches marketing copy between English and Simplified Chinese. See `docs/03-assumptions.md` A1 |
 | Process and category icons | Chosen by item order. Labels are editable; the SVG set is not |
-| Privacy and Terms links | Placeholder routes. No CMS pages yet |
 | SWMS worker flow | Stages 5–6. Demo records come from the same seed |
 
 Page title, hero, marketing blocks, SEO text, and header/footer labels are Payload-localised (`en` and `zh`). `pnpm seed:demo` fills Chinese when that locale is still empty, and clears the four old bilingual subtitle lines on English pages. It does not overwrite Chinese copy an admin has already saved.
@@ -79,7 +79,7 @@ The homepage hero uses a dusk architectural photograph with a dark left-to-right
 
 `pnpm seed:demo` is idempotent for pages and records:
 
-- creates published Home, About and Services pages only when that slug does not already exist
+- creates published Home, About, Services, Privacy, and Terms pages only when that slug does not already exist. Privacy and Terms with an empty layout are filled once. A saved layout is left alone
 - fills Header and Footer only when `contentSeeded` is still false (the first empty seed). A later empty field is left empty
 - runs the existing SWMS demo (Rosebery Residence, Linfield House, Marrickville Duplex)
 - uploads stock images from `src/seed/assets` (marketing images and portfolio images)

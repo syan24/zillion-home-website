@@ -17,7 +17,7 @@ Status: Draft v0.1
 └── /terms                            [ASSUMPTION]
 ```
 
-`/privacy` and `/terms` are placeholder pages until the client supplies legal copy. A published CMS page with the same slug replaces the placeholder.
+`/privacy` and `/terms` are Pages documents (slugs `privacy` and `terms`), seeded in English and Chinese. The client edits both locales in Admin. An empty layout still shows the same first-version text from the interface dictionary until the page has layout blocks. See `docs/17-cms-editorial-fields.md`.
 
 ### Home
 **Purpose:** introduce company, establish trust, show services and strong project imagery, drive users to projects or enquiry.

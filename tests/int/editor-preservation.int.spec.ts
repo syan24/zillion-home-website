@@ -1,8 +1,11 @@
 // @vitest-environment node
 
+import { sql } from '@payloadcms/db-postgres'
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+
+import { legalPageCopy, type LegalSlug } from '@/content/legalPages'
 
 vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
@@ -341,4 +344,196 @@ describe('deploy seed keeps editor content', () => {
       expect(savedMedia.filesize).toBe(heroMedia.filesize)
     }
   }, 120000)
+
+  it('creates privacy and terms in both locales and keeps later edits', async () => {
+    const deleteLegal = async () => {
+      for (const slug of ['privacy', 'terms'] as const) {
+        const found = await payload.find({
+          collection: 'pages',
+          depth: 0,
+          limit: 1,
+          overrideAccess: true,
+          where: { slug: { equals: slug } },
+        })
+        if (found.docs[0]) {
+          await payload.delete({
+            collection: 'pages',
+            id: found.docs[0].id,
+            overrideAccess: true,
+          })
+        }
+      }
+    }
+
+    await deleteLegal()
+
+    try {
+      const first = await seedWebsite(payload)
+      expect(first).toEqual(
+        expect.arrayContaining([
+          'page privacy: created',
+          'page privacy: zh filled',
+          'page terms: created',
+          'page terms: zh filled',
+        ]),
+      )
+
+      for (const slug of ['privacy', 'terms'] as const) {
+        for (const locale of ['en', 'zh'] as const) {
+          const doc = await legalDoc(payload, slug, locale)
+          const copy = legalPageCopy(locale)[slug]
+          expect(doc._status).toBe('published')
+          expect(doc.hero?.type).toBe('none')
+          expect(doc.title).toBe(copy.title)
+          expect(doc.meta?.title).toBe(copy.metaTitle)
+          expect(doc.meta?.description).toBe(copy.metaDescription)
+          expect(proseHeadings(doc.layout)).toEqual(copy.sections.map((section) => section.heading))
+          const intro = blocks(doc.layout).find((block) => block.blockType === 'pageIntro')
+          expect(intro?.eyebrow).toBe(copy.eyebrow)
+          expect(intro?.heading).toBe(copy.heading)
+          expect(intro?.description).toBe(copy.description)
+          const firstSection = blocks(doc.layout).find((block) => block.blockType === 'proseSection')
+          expect(firstSection?.body).toBe(copy.sections[0]?.paragraphs.join('\n\n'))
+        }
+      }
+
+      const privacy = await legalDoc(payload, 'privacy', 'en')
+      const privacyZh = await legalDoc(payload, 'privacy', 'zh')
+      const terms = await legalDoc(payload, 'terms', 'en')
+      await payload.update({
+        collection: 'pages',
+        id: privacy.id,
+        locale: 'en',
+        overrideAccess: true,
+        context: { disableRevalidate: true },
+        data: {
+          title: 'Privacy Policy edited',
+          layout: withProseEdit(privacy.layout, 'Last updated', {
+            heading: 'Editor last updated',
+            body: 'Editor kept this privacy sentence.',
+          }) as never,
+        },
+      })
+      await payload.update({
+        collection: 'pages',
+        id: privacyZh.id,
+        locale: 'zh',
+        overrideAccess: true,
+        context: { disableRevalidate: true },
+        data: {
+          title: '隐私政策（已改）',
+          layout: withProseEdit(privacyZh.layout, '更新日期', {
+            heading: '客户更新日期',
+            body: '客户保留的这句话。',
+          }) as never,
+        },
+      })
+      await payload.update({
+        collection: 'pages',
+        id: terms.id,
+        locale: 'en',
+        overrideAccess: true,
+        context: { disableRevalidate: true },
+        data: {
+          layout: withProseEdit(terms.layout, 'Governing law', {
+            heading: 'Editor governing law',
+          }) as never,
+        },
+      })
+
+      const kept = await seedWebsite(payload)
+      await seedWebsite(payload)
+      expect(kept).toEqual(
+        expect.arrayContaining([
+          'page privacy: english kept',
+          'page privacy: zh kept',
+          'page terms: english kept',
+          'page terms: zh kept',
+        ]),
+      )
+
+      const savedPrivacy = await legalDoc(payload, 'privacy', 'en')
+      const savedPrivacyZh = await legalDoc(payload, 'privacy', 'zh')
+      const savedTerms = await legalDoc(payload, 'terms', 'en')
+      expect(savedPrivacy.title).toBe('Privacy Policy edited')
+      expect(proseHeadings(savedPrivacy.layout)).toContain('Editor last updated')
+      expect(proseHeadings(savedPrivacy.layout)).toContain('Who we are')
+      expect(blocks(savedPrivacy.layout).find((block) => block.heading === 'Editor last updated')?.body).toBe(
+        'Editor kept this privacy sentence.',
+      )
+      expect(savedPrivacyZh.title).toBe('隐私政策（已改）')
+      expect(proseHeadings(savedPrivacyZh.layout)).toEqual(
+        expect.arrayContaining(['客户更新日期', '我们是谁']),
+      )
+      expect(blocks(savedPrivacyZh.layout).find((block) => block.heading === '客户更新日期')?.body).toBe(
+        '客户保留的这句话。',
+      )
+      expect(proseHeadings(savedTerms.layout)).toContain('Editor governing law')
+      expect(blocks(savedTerms.layout).find((block) => block.heading === 'Contact')?.body).toBe(
+        'Questions about these terms can be sent through the enquiry form on this website.',
+      )
+
+      await payload.db.drizzle.execute(
+        sql`DELETE FROM pages_blocks_page_intro WHERE _parent_id = ${savedPrivacy.id}`,
+      )
+      await payload.db.drizzle.execute(
+        sql`DELETE FROM pages_blocks_prose_section WHERE _parent_id = ${savedPrivacy.id}`,
+      )
+      const filled = await seedWebsite(payload)
+      expect(filled).toEqual(
+        expect.arrayContaining(['page privacy: english filled', 'page privacy: zh filled', 'page terms: english kept', 'page terms: zh kept']),
+      )
+      const refilled = await legalDoc(payload, 'privacy', 'en')
+      const refilledZh = await legalDoc(payload, 'privacy', 'zh')
+      const termsAfter = await legalDoc(payload, 'terms', 'en')
+      expect(refilled.title).toBe('Privacy Policy edited')
+      expect(refilled.hero?.type).toBe('none')
+      expect(proseHeadings(refilled.layout)).toEqual(
+        legalPageCopy('en').privacy.sections.map((section) => section.heading),
+      )
+      expect(refilledZh.title).toBe('隐私政策（已改）')
+      expect(proseHeadings(refilledZh.layout)).toEqual(
+        legalPageCopy('zh').privacy.sections.map((section) => section.heading),
+      )
+      expect(blocks(refilledZh.layout).find((block) => block.heading === '我们是谁')?.body).toContain(
+        'Zillion Home 是一家位于墨尔本的注册建筑商',
+      )
+      expect(proseHeadings(termsAfter.layout)).toContain('Editor governing law')
+    } finally {
+      await deleteLegal()
+      await seedWebsite(payload)
+    }
+  }, 240000)
 })
+
+async function legalDoc(payload: Payload, slug: LegalSlug, locale: 'en' | 'zh') {
+  const found = await payload.find({
+    collection: 'pages',
+    depth: 0,
+    limit: 1,
+    locale,
+    fallbackLocale: false,
+    overrideAccess: true,
+    where: { slug: { equals: slug } },
+  })
+  const doc = found.docs[0]
+  if (!doc) throw new Error(`Missing ${locale} page ${slug}`)
+  return doc
+}
+
+function proseHeadings(layout: unknown) {
+  return blocks(layout)
+    .filter((block) => block.blockType === 'proseSection')
+    .map((block) => block.heading)
+}
+
+function withProseEdit(
+  layout: unknown,
+  heading: string,
+  next: { heading: string; body?: string },
+) {
+  return blocks(layout).map((block) => {
+    if (block.blockType !== 'proseSection' || block.heading !== heading) return block
+    return { ...block, heading: next.heading, ...(next.body ? { body: next.body } : {}) }
+  })
+}
